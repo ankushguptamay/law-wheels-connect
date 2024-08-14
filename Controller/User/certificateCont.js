@@ -1,30 +1,28 @@
 const {
-  validateExperience,
+  validateCertificate,
 } = require("../../Middleware/Validation/userProfileValidation");
 const { FirmCompany } = require("../../Model/Master/firmModel");
-const { JobTitle } = require("../../Model/Master/jobTitleModel");
-const { Experience } = require("../../Model/User/Experience/experienceModel");
 const {
-  ExperienceUpdationHistory,
-} = require("../../Model/User/Experience/experienceUpdationHistoryModel");
+  Certificate,
+} = require("../../Model/User/Cretificate/certificateModel");
+const {
+  CertificateUpdationHistory,
+} = require("../../Model/User/Cretificate/certificateUpdationHistoryModel");
 const { capitalizeFirstLetter } = require("../../Util/utility");
 
-exports.addExperience = async (req, res) => {
+exports.addCertificate = async (req, res) => {
   try {
     // Body Validation
-    const { error } = validateExperience(req.body);
+    const { error } = validateCertificate(req.body);
     if (error) {
       return res.status(400).json({
         success: false,
         message: error.details[0].message,
       });
     }
-    const { startDate, endDate, isRecent, isOngoing } = req.body;
+    const { certificate_number, certificate_name, issueDate } = req.body;
     const firmName = capitalizeFirstLetter(
       req.body.firmName.replace(/\s+/g, " ").trim()
-    );
-    const jobTitle = capitalizeFirstLetter(
-      req.body.jobTitle.replace(/\s+/g, " ").trim()
     );
     // Create this firm if not exist
     await FirmCompany.findOneAndUpdate(
@@ -32,25 +30,17 @@ exports.addExperience = async (req, res) => {
       { updatedAt: new Date() },
       { upsert: true, new: true, setDefaultsOnInsert: true }
     );
-    // Create this job title if not exist
-    await JobTitle.findOneAndUpdate(
-      { name: jobTitle },
-      { updatedAt: new Date() },
-      { upsert: true, new: true, setDefaultsOnInsert: true }
-    );
-    // Store experience
-    await Experience.create({
-      jobTitle,
+    // Store certificate
+    await Certificate.create({
+      certificate_name,
+      certificate_number,
       firmName,
-      startDate,
-      endDate,
-      isRecent,
-      isOngoing,
+      issueDate,
       user: req.user._id,
     });
     res.status(200).json({
       success: true,
-      message: "Experience added successfully!",
+      message: "Certificate added successfully!",
     });
   } catch (err) {
     res.status(500).json({
@@ -60,16 +50,16 @@ exports.addExperience = async (req, res) => {
   }
 };
 
-exports.getMyExperience = async (req, res) => {
+exports.getMyCertificate = async (req, res) => {
   try {
-    const experience = await Experience.find({
+    const certificate = await Certificate.find({
       user: req.user._id,
       isDelete: false,
     });
     res.status(200).json({
       success: true,
-      message: "Experience fetched successfully!",
-      data: experience,
+      message: "Certificate fetched successfully!",
+      data: certificate,
     });
   } catch (err) {
     res.status(500).json({
@@ -79,15 +69,15 @@ exports.getMyExperience = async (req, res) => {
   }
 };
 
-exports.getExperienceById = async (req, res) => {
+exports.getCertificateById = async (req, res) => {
   try {
-    const experience = await Experience.findOne({
+    const certificate = await Certificate.findOne({
       _id: req.params.id,
     });
     res.status(200).json({
       success: true,
-      message: "Experience fetched successfully!",
-      data: experience,
+      message: "Certificate fetched successfully!",
+      data: certificate,
     });
   } catch (err) {
     res.status(500).json({
@@ -97,10 +87,10 @@ exports.getExperienceById = async (req, res) => {
   }
 };
 
-exports.updateExperience = async (req, res) => {
+exports.updateCertificate = async (req, res) => {
   try {
     // Body Validation
-    const { error } = validateExperience(req.body);
+    const { error } = validateCertificate(req.body);
     if (error) {
       return res.status(400).json({
         success: false,
@@ -112,29 +102,21 @@ exports.updateExperience = async (req, res) => {
     const firmName = capitalizeFirstLetter(
       req.body.firmName.replace(/\s+/g, " ").trim()
     );
-    const jobTitle = capitalizeFirstLetter(
-      req.body.jobTitle.replace(/\s+/g, " ").trim()
-    );
     // Create this firm if not exist
     await FirmCompany.findOneAndUpdate(
       { name: firmName },
       { updatedAt: new Date() },
       { upsert: true, new: true, setDefaultsOnInsert: true }
     );
-    await JobTitle.findOneAndUpdate(
-      { name: jobTitle },
-      { updatedAt: new Date() },
-      { upsert: true, new: true, setDefaultsOnInsert: true }
-    );
     const _id = req.params.id;
 
-    const experience = await Experience.findOne({
+    const certificate = await Certificate.findOne({
       _id,
     });
-    if (!experience) {
+    if (!certificate) {
       return res.status(400).json({
         success: false,
-        message: "This experience is not present!",
+        message: "This certificate is not present!",
       });
     }
     // Create this firm if not exist
@@ -144,29 +126,25 @@ exports.updateExperience = async (req, res) => {
       { upsert: true, new: true, setDefaultsOnInsert: true }
     );
     // Store History
-    await ExperienceUpdationHistory.create({
-      jobTitle: experience.jobTitle,
-      firmName: experience.firmName,
-      startDate: experience.startDate,
-      endDate: experience.endDate,
+    await CertificateUpdationHistory.create({
+      certificate_name: certificate.certificate_name,
+      certificate_number: certificate.certificate_number,
+      firmName: certificate.firmName,
+      issueDate: certificate.issueDate,
       user: req.user._id,
-      experience: experience._id,
-      isRecent: experience.isRecent,
-      isOngoing: experience.isOngoing,
+      certificate: certificate._id,
     });
 
     // Update Collection
-    await experience.updateOne({
-      jobTitle,
+    await certificate.updateOne({
+      certificate_name,
+      certificate_number,
       firmName,
-      startDate,
-      endDate,
-      isRecent,
-      isOngoing,
+      issueDate,
     });
     res.status(200).json({
       success: true,
-      message: "Experience Updated successfully!",
+      message: "Certificate Updated successfully!",
     });
   } catch (err) {
     res.status(500).json({
@@ -176,29 +154,29 @@ exports.updateExperience = async (req, res) => {
   }
 };
 
-exports.softDeleteExperience = async (req, res) => {
+exports.softDeleteCertificate = async (req, res) => {
   try {
     // return;
     const _id = req.params.id;
 
-    const experience = await Experience.findOne({
+    const certificate = await Certificate.findOne({
       _id,
       isDelete: false,
     });
-    if (!experience) {
+    if (!certificate) {
       return res.status(400).json({
         success: false,
-        message: "This experience is not present!",
+        message: "This certificate is not present!",
       });
     }
     // Update is
-    await experience.updateOne({
+    await certificate.updateOne({
       isDelete: true,
       deleted_at: new Date(),
     });
     res.status(200).json({
       success: true,
-      message: "Experience deleted successfully!",
+      message: "Certificate deleted successfully!",
     });
   } catch (err) {
     res.status(500).json({

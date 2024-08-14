@@ -2,7 +2,7 @@ const { Schema, model, models, Types } = require("mongoose");
 
 const schema = new Schema(
   {
-    skillName: {
+    practiceArea: {
       type: String,
       required: true,
     },
@@ -22,4 +22,5 @@ const schema = new Schema(
   { timestamps: true }
 );
 
-exports.UserSkill = models.UserSkill || model("UserSkill", schema);
+exports.UserPracticeArea =
+  models.UserPracticeArea || model("UserPracticeArea", schema);

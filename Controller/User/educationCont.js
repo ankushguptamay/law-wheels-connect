@@ -7,7 +7,7 @@ const {
 } = require("../../Model/Master/school_universityModel");
 const {
   validateEducation,
-} = require("../../Middleware/Validation/educationValidation");
+} = require("../../Middleware/Validation/userProfileValidation");
 const { capitalizeFirstLetter } = require("../../Util/utility");
 
 exports.addEducation = async (req, res) => {
@@ -87,7 +87,7 @@ exports.getEducationById = async (req, res) => {
   try {
     const education = await Education.findOne({
       _id: req.params.id,
-    }).populate("user");
+    });
     res.status(200).json({
       success: true,
       message: "Education fetched successfully!",

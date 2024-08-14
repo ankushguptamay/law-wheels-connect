@@ -2,9 +2,18 @@ const { Schema, model, models, Types } = require("mongoose");
 
 const schema = new Schema(
   {
-    skillName: {
+    certificate_number: {
       type: String,
       required: true,
+    },
+    firmName: {
+      type: String,
+    },
+    issueDate: {
+      type: Date,
+    },
+    certificate_name: {
+      type: String,
     },
     user: {
       type: Types.ObjectId,
@@ -22,4 +31,4 @@ const schema = new Schema(
   { timestamps: true }
 );
 
-exports.UserSkill = models.UserSkill || model("UserSkill", schema);
+exports.Certificate = models.Certificate || model("Certificate", schema);
