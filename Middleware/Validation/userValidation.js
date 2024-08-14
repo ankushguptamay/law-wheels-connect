@@ -71,6 +71,9 @@ exports.validateIsAdvocatePage = (data) => {
         arg: joi.string().valid("country", "state", "city"),
         value: joi.string(),
       })
+      .pattern(/country/, joi.string())
+      .pattern(/state/, joi.string())
+      .pattern(/city/, joi.string())
       .required(),
     jobTitle: joi.string().min(3).optional(),
     firmName: joi.string().min(3).optional(),
@@ -86,6 +89,9 @@ exports.validateUpdateUser = (data) => {
         arg: joi.string().valid("country", "state", "city"),
         value: joi.string(),
       })
+      .pattern(/country/, joi.string())
+      .pattern(/state/, joi.string())
+      .pattern(/city/, joi.string())
       .required(),
     isProfileVisible: joi.boolean().required(),
     bar_council_license_number: joi.string().optional(),

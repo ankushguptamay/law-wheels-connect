@@ -26,12 +26,49 @@ const {
   generateFixedLengthRandomNumber,
   sendOTPToMoblie,
 } = require("../../Util/otp");
+const { JobTitle } = require("../../Model/Master/jobTitleModel");
 
 const { OTP_DIGITS_LENGTH, OTP_VALIDITY_IN_MILLISECONDS } = process.env;
 
 exports.getUser = async (req, res) => {
   try {
-    const user = await User.findOne({ email: req.user.email });
+    // const user = await User.findOne({ email: req.user.email });
+    var id = new mongoose.Types.ObjectId(req.user._id);
+    const user = await User.aggregate([
+      {
+        $match: {
+          _id: {
+            $eq: id,
+          },
+        },
+      },
+      {
+        $lookup: {
+          from: "educations",
+          localField: "_id",
+          foreignField: "user",
+          as: "educations",
+        },
+      },
+      {
+        $lookup: {
+          from: "experiences",
+          localField: "_id",
+          foreignField: "user",
+          as: "experiences",
+        },
+      },
+      //   },
+      // },
+      // {
+      //   $project: {
+      //     experiences: 1,
+      //     experiences: {
+      //       $project: { _id: 1 },
+      //     },
+      //   },
+      // },
+    ]);
 
     res.status(200).json({
       success: true,
@@ -160,9 +197,7 @@ exports.verifyMobileOTP = async (req, res) => {
     const { mobileNumber, otp } = req.body;
     // Is Email Otp exist
     const isOtp = await OTP.findOne({
-      where: {
-        otp: otp,
-      },
+      otp: otp,
     });
     if (!isOtp) {
       return res.status(400).send({
@@ -183,13 +218,13 @@ exports.verifyMobileOTP = async (req, res) => {
     // is email otp expired?
     const isOtpExpired = new Date().getTime() > parseInt(isOtp.validTill);
     if (isOtpExpired) {
-      await OTP.remove({ receiverId: isOtp.receiverId });
+      await OTP.deleteOne({ receiverId: isOtp.receiverId });
       return res.status(400).send({
         success: false,
         message: `OTP expired!`,
       });
     }
-    await OTP.remove({ receiverId: isOtp.receiverId });
+    await OTP.deleteOne({ receiverId: isOtp.receiverId });
     // Update user
     if (!user.isMobileNumberVerified) {
       await user.updateOne({ isMobileNumberVerified: true });
@@ -360,9 +395,16 @@ exports.isAdvocatePage = async (req, res) => {
           firmName.replace(/\s+/g, " ").trim()
         );
         message = "advocate";
+        codePreFix = "LWUA";
         // Create this firm if not exist
         await FirmCompany.findOneAndUpdate(
           { name: newFirmName }, // Query
+          { updatedAt: new Date() }, // update
+          { upsert: true, new: true, setDefaultsOnInsert: true } // Options
+        );
+        // Create this job title if not exist
+        await JobTitle.findOneAndUpdate(
+          { name: newJobTitle }, // Query
           { updatedAt: new Date() }, // update
           { upsert: true, new: true, setDefaultsOnInsert: true } // Options
         );
@@ -385,6 +427,7 @@ exports.isAdvocatePage = async (req, res) => {
           school_university.replace(/\s+/g, " ").trim()
         );
         message = "student";
+        codePreFix = "LWUS";
         // Create this university if not exist
         await SchoolUniversity.findOneAndUpdate(
           { name: newSchool_university },
@@ -408,10 +451,11 @@ exports.isAdvocatePage = async (req, res) => {
 
     // generate User code
     let code;
-    const query = `/^${codePreFix}/`;
-    const isUserCode = await User.find({ userCode: parseInt(query) }).sort({
+    const query = new RegExp("^" + codePreFix);
+    const isUserCode = await User.find({ userCode: query }).sort({
       createdAt: 1,
     });
+    console.log(isUserCode);
     if (isUserCode.length == 0) {
       code = codePreFix + 1000;
     } else {

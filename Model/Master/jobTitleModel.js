@@ -6,12 +6,8 @@ const schema = new Schema(
       type: String,
       required: true,
     },
-    firmPic: {
-      fileName: { type: String },
-      url: { type: String },
-    },
   },
   { timestamps: true }
 );
 
-exports.FirmCompany = models.FirmCompany || model("FirmCompany", schema);
+exports.JobTitle = models.JobTitle || model("JobTitle", schema);

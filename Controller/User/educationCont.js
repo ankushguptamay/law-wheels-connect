@@ -87,7 +87,7 @@ exports.getEducationById = async (req, res) => {
   try {
     const education = await Education.findOne({
       _id: req.params.id,
-    }).populate("user_Id");
+    }).populate("user");
     res.status(200).json({
       success: true,
       message: "Education fetched successfully!",
@@ -166,7 +166,6 @@ exports.updateEducation = async (req, res) => {
       startDate,
       endDate,
       activities,
-      description,
       isRecent,
       isOngoing,
     });
@@ -189,6 +188,7 @@ exports.softDeleteEducation = async (req, res) => {
 
     const education = await Education.findOne({
       _id,
+      isDelete: false,
     });
     if (!education) {
       return res.status(400).json({

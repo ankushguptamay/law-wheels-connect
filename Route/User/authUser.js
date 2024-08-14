@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 
-const userEducation = require("./userEducation");
+const userProfile = require("./userProfile");
 
 const {
   getUser,
@@ -55,6 +55,6 @@ router.delete("/profilePic", verifyUserJWT, deleteProfilePic);
 router.delete("/coverPic", verifyUserJWT, deleteCoverPic);
 router.delete("/licensePic", verifyUserJWT, deleteLicensePic);
 
-router.use(userEducation);
+router.use(userProfile);
 
 module.exports = router;
