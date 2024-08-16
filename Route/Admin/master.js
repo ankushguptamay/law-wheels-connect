@@ -46,7 +46,7 @@ router.delete("/practiceArea/:id", deletePracticeArea);
 
 // Firm
 router.post("/firm", uploadImage.single("FirmImage"), addFirm);
-router.get("/practiceArea", getFirm);
+router.get("/firm", getFirm);
 router.put("/firm/:id", uploadImage.single("FirmImage"), updateFirm);
 router.delete("/firm/:id", deleteFirm);
 
