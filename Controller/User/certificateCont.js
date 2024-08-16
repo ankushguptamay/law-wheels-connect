@@ -98,7 +98,7 @@ exports.updateCertificate = async (req, res) => {
       });
     }
 
-    const { startDate, endDate, isRecent, isOngoing } = req.body;
+    const { certificate_number, certificate_name, issueDate } = req.body;
     const firmName = capitalizeFirstLetter(
       req.body.firmName.replace(/\s+/g, " ").trim()
     );
@@ -112,6 +112,7 @@ exports.updateCertificate = async (req, res) => {
 
     const certificate = await Certificate.findOne({
       _id,
+      isDelete: false,
     });
     if (!certificate) {
       return res.status(400).json({

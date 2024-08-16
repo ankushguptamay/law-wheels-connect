@@ -130,6 +130,7 @@ exports.updateExperience = async (req, res) => {
 
     const experience = await Experience.findOne({
       _id,
+      isDelete: false,
     });
     if (!experience) {
       return res.status(400).json({

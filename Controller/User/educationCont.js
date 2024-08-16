@@ -129,6 +129,7 @@ exports.updateEducation = async (req, res) => {
 
     const education = await Education.findOne({
       _id,
+      isDelete: false,
     });
     if (!education) {
       return res.status(400).json({
