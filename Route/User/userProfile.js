@@ -34,6 +34,12 @@ const {
   getPracticeAreaById,
   softDeletePracticeArea,
 } = require("../../Controller/User/practiceAreaCont");
+const {
+  addMedia,
+  getMyMedia,
+  getMediaById,
+  softDeleteMedia,
+} = require("../../Controller/User/mediaController");
 
 //middleware
 const { verifyUserJWT } = require("../../Middleware/verifyJWTToken");
@@ -73,5 +79,11 @@ router.post("/practiceArea", addPracticeArea);
 router.get("/practiceArea/:id", getPracticeAreaById);
 router.get("/practiceArea", getMyPracticeArea);
 router.delete("/practiceArea/:id", softDeletePracticeArea); // soft delete
+
+// media
+router.post("/media", uploadImage.single("MediaPic"), addMedia);
+router.get("/media/:id", getMediaById);
+router.get("/media", getMyMedia);
+router.delete("/media/:id", softDeleteMedia); // soft delete
 
 module.exports = router;

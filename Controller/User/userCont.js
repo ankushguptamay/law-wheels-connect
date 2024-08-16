@@ -27,6 +27,7 @@ const {
   sendOTPToMoblie,
 } = require("../../Util/otp");
 const { JobTitle } = require("../../Model/Master/jobTitleModel");
+const { Follower } = require("../../Model/User/Connection/followerModel");
 
 const { OTP_DIGITS_LENGTH, OTP_VALIDITY_IN_MILLISECONDS } = process.env;
 
@@ -504,6 +505,13 @@ exports.updateUser = async (req, res) => {
     const name = capitalizeFirstLetter(
       req.body.name.replace(/\s+/g, " ").trim()
     );
+    // Update name in follower table
+    if (name !== req.user.name) {
+      await Follower.updateMany(
+        { "follower.followerId": req.user._id },
+        { $set: { "follower.name": name } }
+      );
+    }
     // Update user
     await User.findOneAndUpdate(
       {

@@ -19,7 +19,7 @@ exports.verifyUserJWT = async (req, res, next) => {
         message: "Unauthorized!",
       });
     }
-    req.user = decode;
+    req.user = user;
     return next();
   } catch (err) {
     res.status(500).json({
