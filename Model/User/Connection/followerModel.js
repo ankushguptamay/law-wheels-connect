@@ -9,12 +9,6 @@ const schema = new Schema(
           ref: "User",
           required: true,
         },
-        profilePic: {
-          type: String,
-        },
-        name: {
-          type: String,
-        },
       },
     ],
     user: {

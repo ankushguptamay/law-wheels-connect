@@ -505,13 +505,6 @@ exports.updateUser = async (req, res) => {
     const name = capitalizeFirstLetter(
       req.body.name.replace(/\s+/g, " ").trim()
     );
-    // Update name in follower table
-    if (name !== req.user.name) {
-      await Follower.updateMany(
-        { "follower.followerId": req.user._id },
-        { $set: { "follower.name": name } }
-      );
-    }
     // Update user
     await User.findOneAndUpdate(
       {

@@ -62,11 +62,35 @@ exports.addFirm = async (req, res) => {
 
 exports.getFirm = async (req, res) => {
   try {
-    const frim = await FirmCompany.find();
+    const resultPerPage = req.query.resultPerPage
+      ? parseInt(req.query.resultPerPage)
+      : 20;
+    const page = req.query.page ? parseInt(req.query.page) : 1;
+    const skip = (page - 1) * resultPerPage;
+
+    //Search
+    let query = {};
+    if (req.query.search) {
+      const startWith = new RegExp("^" + req.query.search.toLowerCase(), "i");
+      query = { name: startWith };
+    }
+    const [frim, totalFirm] = await Promise.all([
+      FirmCompany.find(query)
+        .sort({ name: -1 })
+        .skip(skip)
+        .limit(resultPerPage)
+        .lean(),
+      FirmCompany.countDocuments(query),
+    ]);
+
+    const totalPages = Math.ceil(totalFirm / resultPerPage) || 0;
+
     res.status(200).json({
       success: true,
       message: "Firm fetched successfully!",
       data: frim,
+      totalPages: totalPages,
+      currentPage: page,
     });
   } catch (err) {
     res.status(500).json({

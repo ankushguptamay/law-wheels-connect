@@ -43,11 +43,34 @@ exports.addJobTitle = async (req, res) => {
 
 exports.getJobTitle = async (req, res) => {
   try {
-    const title = await JobTitle.find();
+    const resultPerPage = req.query.resultPerPage
+      ? parseInt(req.query.resultPerPage)
+      : 20;
+    const page = req.query.page ? parseInt(req.query.page) : 1;
+    const skip = (page - 1) * resultPerPage;
+
+    //Search
+    let query = {};
+    if (req.query.search) {
+      const startWith = new RegExp("^" + req.query.search.toLowerCase(), "i");
+      query = { name: startWith };
+    }
+    const [title, totalTitle] = await Promise.all([
+      JobTitle.find(query)
+        .sort({ name: -1 })
+        .skip(skip)
+        .limit(resultPerPage)
+        .lean(),
+      JobTitle.countDocuments(query),
+    ]);
+
+    const totalPages = Math.ceil(totalTitle / resultPerPage) || 0;
     res.status(200).json({
       success: true,
       message: "Job Title fetched successfully!",
       data: title,
+      totalPages: totalPages,
+      currentPage: page,
     });
   } catch (err) {
     res.status(500).json({

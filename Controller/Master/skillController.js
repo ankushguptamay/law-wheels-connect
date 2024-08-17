@@ -46,11 +46,34 @@ exports.addSkill = async (req, res) => {
 
 exports.getSkill = async (req, res) => {
   try {
-    const skill = await Skill.find();
+    const resultPerPage = req.query.resultPerPage
+      ? parseInt(req.query.resultPerPage)
+      : 20;
+    const page = req.query.page ? parseInt(req.query.page) : 1;
+    const skip = (page - 1) * resultPerPage;
+
+    //Search
+    let query = {};
+    if (req.query.search) {
+      const startWith = new RegExp("^" + req.query.search.toLowerCase(), "i");
+      query = { name: startWith };
+    }
+    const [skill, totalSkill] = await Promise.all([
+      Skill.find(query)
+        .sort({ name: -1 })
+        .skip(skip)
+        .limit(resultPerPage)
+        .lean(),
+      Skill.countDocuments(query),
+    ]);
+
+    const totalPages = Math.ceil(totalSkill / resultPerPage) || 0;
     res.status(200).json({
       success: true,
       message: "Skill fetched successfully!",
       data: skill,
+      totalPages: totalPages,
+      currentPage: page,
     });
   } catch (err) {
     res.status(500).json({

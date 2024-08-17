@@ -64,11 +64,34 @@ exports.addSchoolUniversity = async (req, res) => {
 
 exports.getSchoolUniversity = async (req, res) => {
   try {
-    const school = await SchoolUniversity.find();
+    const resultPerPage = req.query.resultPerPage
+      ? parseInt(req.query.resultPerPage)
+      : 20;
+    const page = req.query.page ? parseInt(req.query.page) : 1;
+    const skip = (page - 1) * resultPerPage;
+
+    //Search
+    let query = {};
+    if (req.query.search) {
+      const startWith = new RegExp("^" + req.query.search.toLowerCase(), "i");
+      query = { name: startWith };
+    }
+    const [school, totalSchool] = await Promise.all([
+      SchoolUniversity.find(query)
+        .sort({ name: -1 })
+        .skip(skip)
+        .limit(resultPerPage)
+        .lean(),
+      SchoolUniversity.countDocuments(query),
+    ]);
+
+    const totalPages = Math.ceil(totalSchool / resultPerPage) || 0;
     res.status(200).json({
       success: true,
       message: "School/University fetched successfully!",
       data: school,
+      totalPages: totalPages,
+      currentPage: page,
     });
   } catch (err) {
     res.status(500).json({
