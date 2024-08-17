@@ -31,7 +31,6 @@ const schema = new Schema(
     },
     userCode: {
       type: String,
-      unique: true,
     },
     location: {
       country: { type: String },

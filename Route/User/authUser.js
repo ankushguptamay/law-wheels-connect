@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 
 const userProfile = require("./userProfile");
+const connection = require("./userConnection");
 
 const {
   getUser,
@@ -56,5 +57,6 @@ router.delete("/coverPic", verifyUserJWT, deleteCoverPic);
 router.delete("/licensePic", verifyUserJWT, deleteLicensePic);
 
 router.use(userProfile);
+router.use(connection);
 
 module.exports = router;
