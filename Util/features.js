@@ -39,3 +39,13 @@ exports.sendToken = (res, user, code, message, tokenName) => {
     message,
   });
 };
+
+exports.getOtherExceptGiven = (all, given) => {
+  const newAlls = [];
+  for (let i = 0; i < all.length; i++) {
+    if (all[i].fileName !== given) {
+      newAlls.push(all[i]);
+    }
+  }
+  return newAlls;
+};

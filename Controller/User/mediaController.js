@@ -1,5 +1,8 @@
-const { UserMedia } = require("../../Model/User/mediaModel");
+const { UserMedia } = require("../../Model/User/userMediaModel");
 const { deleteSingleFile } = require("../../Util/utility");
+const { uploadFileToBunny, deleteFileToBunny } = require("../../Util/bunny");
+const bunnyFolderName = "profile";
+const fs = require("fs");
 
 exports.addMedia = async (req, res) => {
   try {
@@ -9,12 +12,16 @@ exports.addMedia = async (req, res) => {
     // Validation
     let typeOfMedia, mimeType, fileName, url;
     if (file) {
+      //Upload file to bunny
+      const fileStream = fs.createReadStream(file.path);
+      await uploadFileToBunny(bunnyFolderName, fileStream, file.filename);
+      deleteSingleFile(file.path);
       if (file.mimetype == "image") {
         mimeType = "image";
       }
       typeOfMedia = "File";
       fileName = file.filename;
-      url = file.path;
+      url = `${process.env.SHOW_BUNNY_FILE_HOSTNAME}/${bunnyFolderName}/${file.filename}`;
     } else if (link) {
       url = link;
       typeOfMedia = "Link";
@@ -95,10 +102,6 @@ exports.softDeleteMedia = async (req, res) => {
         success: false,
         message: "This media is not present!",
       });
-    }
-    // Delete file
-    if (media.typeOfMedia === "File") {
-      deleteSingleFile(media.url);
     }
     // Update is
     await media.updateOne({

@@ -3,6 +3,7 @@ const router = express.Router();
 
 const userProfile = require("./userProfile");
 const connection = require("./userConnection");
+const post = require("./userPost");
 
 const {
   getUser,
@@ -58,5 +59,6 @@ router.delete("/licensePic", verifyUserJWT, deleteLicensePic);
 
 router.use(userProfile);
 router.use(connection);
+router.use(post);
 
 module.exports = router;

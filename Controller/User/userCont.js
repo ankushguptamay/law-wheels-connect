@@ -30,6 +30,10 @@ const { JobTitle } = require("../../Model/Master/jobTitleModel");
 
 const { OTP_DIGITS_LENGTH, OTP_VALIDITY_IN_MILLISECONDS } = process.env;
 
+const { uploadFileToBunny, deleteFileToBunny } = require("../../Util/bunny");
+const bunnyFolderName = "profile";
+const fs = require("fs");
+
 exports.getUser = async (req, res) => {
   try {
     // const user = await User.findOne({ email: req.user.email });
@@ -268,13 +272,23 @@ exports.addUpdateProfilePic = async (req, res) => {
     const isProfilePic = await User.findOne({
       _id: req.user._id,
     });
-    if (isProfilePic.profilePic.fileName) {
-      deleteSingleFile(isProfilePic.profilePic.url);
-    }
+
+    //Upload file to bunny
+    const fileStream = fs.createReadStream(req.file.path);
+    await uploadFileToBunny(bunnyFolderName, fileStream, req.file.filename);
+    deleteSingleFile(file.path);
     const profilePic = {
       fileName: req.file.filename,
-      url: req.file.path,
+      url: `${process.env.SHOW_BUNNY_FILE_HOSTNAME}/${bunnyFolderName}/${req.file.filename}`,
     };
+
+    if (isProfilePic.profilePic.fileName) {
+      await deleteFileToBunny(
+        bunnyFolderName,
+        isProfilePic.profilePic.fileName
+      );
+    }
+
     await isProfilePic.updateOne({
       profilePic: profilePic,
     });
@@ -303,13 +317,20 @@ exports.addUpdateCoverPic = async (req, res) => {
     const isCoverPic = await User.findOne({
       _id: req.user._id,
     });
-    if (isCoverPic.coverPic.fileName) {
-      deleteSingleFile(isCoverPic.coverPic.url);
-    }
+
+    //Upload file to bunny
+    const fileStream = fs.createReadStream(req.file.path);
+    await uploadFileToBunny(bunnyFolderName, fileStream, req.file.filename);
+    deleteSingleFile(file.path);
     const coverPic = {
       fileName: req.file.filename,
-      url: req.file.path,
+      url: `${process.env.SHOW_BUNNY_FILE_HOSTNAME}/${bunnyFolderName}/${req.file.filename}`,
     };
+
+    if (isCoverPic.coverPic.fileName) {
+      await deleteFileToBunny(bunnyFolderName, isCoverPic.coverPic.fileName);
+    }
+
     await isCoverPic.updateOne({
       coverPic: coverPic,
     });
@@ -338,13 +359,23 @@ exports.addUpdateLicensePic = async (req, res) => {
     const isLicensePic = await User.findOne({
       _id: req.user._id,
     });
-    if (isLicensePic.licensePic.fileName) {
-      deleteSingleFile(isLicensePic.licensePic.url);
-    }
+
+    //Upload file to bunny
+    const fileStream = fs.createReadStream(req.file.path);
+    await uploadFileToBunny(bunnyFolderName, fileStream, req.file.filename);
+    deleteSingleFile(file.path);
     const licensePic = {
       fileName: req.file.filename,
-      url: req.file.path,
+      url: `${process.env.SHOW_BUNNY_FILE_HOSTNAME}/${bunnyFolderName}/${req.file.filename}`,
     };
+
+    if (isLicensePic.licensePic.fileName) {
+      await deleteFileToBunny(
+        bunnyFolderName,
+        isLicensePic.licensePic.fileName
+      );
+    }
+
     await isLicensePic.updateOne({
       licensePic: licensePic,
     });
@@ -537,7 +568,10 @@ exports.deleteProfilePic = async (req, res) => {
       _id: req.user._id,
     });
     if (isProfilePic.profilePic.fileName) {
-      deleteSingleFile(isProfilePic.profilePic.url);
+      await deleteFileToBunny(
+        bunnyFolderName,
+        isProfilePic.profilePic.fileName
+      );
     }
     const profilePic = {
       fileName: null,
@@ -565,7 +599,7 @@ exports.deleteCoverPic = async (req, res) => {
       _id: req.user._id,
     });
     if (isCoverPic.coverPic.fileName) {
-      deleteSingleFile(isCoverPic.coverPic.url);
+      await deleteFileToBunny(isCoverPic.coverPic.fileName);
     }
     const coverPic = {
       fileName: null,
@@ -593,7 +627,10 @@ exports.deleteLicensePic = async (req, res) => {
       _id: req.user._id,
     });
     if (isLicensePic.licensePic.fileName) {
-      deleteSingleFile(isLicensePic.licensePic.url);
+      await deleteFileToBunny(
+        bunnyFolderName,
+        isLicensePic.licensePic.fileName
+      );
     }
     const licensePic = {
       fileName: null,
