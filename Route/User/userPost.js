@@ -20,6 +20,15 @@ const {
   softDeletePost,
 } = require("../../Controller/User/postController");
 
+const {
+  addComment,
+  getCommentByPost,
+  softDeleteComment,
+  replyOnComment,
+  getReplyByComment,
+  softDeleteReply,
+} = require("../../Controller/User/commentController");
+
 //middleware
 const { verifyUserJWT } = require("../../Middleware/verifyJWTToken");
 const uploadImage = require("../../Middleware/UploadFile/image");
@@ -67,5 +76,14 @@ router.put(
   uploadImage.single("TemplateFile"),
   updateTemplatePost
 );
+
+// Comment
+router.post("/comment/:id", addComment);
+router.get("/comment/:id", getCommentByPost);
+router.delete("/comment/:id", softDeleteComment);
+// Reply
+router.post("/reply/:id", replyOnComment);
+router.get("/reply/:id", getReplyByComment);
+router.delete("/reply/:id", softDeleteReply);
 
 module.exports = router;

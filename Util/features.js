@@ -40,7 +40,7 @@ exports.sendToken = (res, user, code, message, tokenName) => {
   });
 };
 
-exports.getOtherExceptGiven = (all, given) => {
+exports.getOtherExceptGivenFileName = (all, given) => {
   const newAlls = [];
   for (let i = 0; i < all.length; i++) {
     if (all[i].fileName !== given) {

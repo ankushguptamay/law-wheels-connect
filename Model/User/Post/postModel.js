@@ -37,7 +37,7 @@ const schema = new Schema(
       fileName: { type: String },
     },
     celebrate: {
-      person: [Types.ObjectId],
+      person: [{ type: Types.ObjectId, ref: "User" }],
       url: { type: String },
       fileName: { type: String },
     },

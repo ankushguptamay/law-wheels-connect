@@ -60,3 +60,11 @@ exports.deleteMediaPost = (data) => {
   });
   return schema.validate(data);
 };
+
+exports.validateComment = (data) => {
+  const schema = joi.object().keys({
+    content: joi.string().min(3).required(),
+    tagedUser: joi.array().optional()
+  });
+  return schema.validate(data);
+};

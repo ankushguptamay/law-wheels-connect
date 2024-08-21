@@ -7,7 +7,7 @@ const {
 } = require("../../Middleware/Validation/postValidation");
 const { Post } = require("../../Model/User/Post/postModel");
 const { uploadFileToBunny, deleteFileToBunny } = require("../../Util/bunny");
-const { getOtherExceptGiven } = require("../../Util/features");
+const { getOtherExceptGivenFileName } = require("../../Util/features");
 const { deleteSingleFile } = require("../../Util/utility");
 const bunnyFolderName = "post";
 const fs = require("fs");
@@ -580,7 +580,7 @@ exports.deleteMediaFile = async (req, res) => {
       await deleteFileToBunny(bunnyFolderName, fileName);
     }
     // New Media
-    const newMediaArray = getOtherExceptGiven(post.media, fileName);
+    const newMediaArray = getOtherExceptGivenFileName(post.media, fileName);
     // Create text post
     await post.updateOne({
       media: newMediaArray,
