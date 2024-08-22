@@ -4,11 +4,11 @@ const {
   addPollPost,
   addCelebratePost,
   deleteMediaPost,
-} = require("../../Middleware/Validation/postValidation");
-const { Post } = require("../../Model/User/Post/postModel");
-const { uploadFileToBunny, deleteFileToBunny } = require("../../Util/bunny");
-const { getOtherExceptGivenFileName } = require("../../Util/features");
-const { deleteSingleFile } = require("../../Util/utility");
+} = require("../../../Middleware/Validation/postValidation");
+const { Post } = require("../../../Model/User/Post/postModel");
+const { uploadFileToBunny, deleteFileToBunny } = require("../../../Util/bunny");
+const { getOtherExceptGivenFileName } = require("../../../Util/features");
+const { deleteSingleFile } = require("../../../Util/utility");
 const bunnyFolderName = "post";
 const fs = require("fs");
 

@@ -18,16 +18,20 @@ const {
   getMyPost,
   getPostById,
   softDeletePost,
-} = require("../../Controller/User/postController");
+} = require("../../Controller/User/Post/postController");
 
 const {
   addComment,
   getCommentByPost,
   softDeleteComment,
+  updateComment,
+} = require("../../Controller/User/Post/commentController");
+const {
   replyOnComment,
   getReplyByComment,
   softDeleteReply,
-} = require("../../Controller/User/commentController");
+  updateReply,
+} = require("../../Controller/User/Post/replyController");
 
 //middleware
 const { verifyUserJWT } = require("../../Middleware/verifyJWTToken");
@@ -81,9 +85,11 @@ router.put(
 router.post("/comment/:id", addComment);
 router.get("/comment/:id", getCommentByPost);
 router.delete("/comment/:id", softDeleteComment);
+router.put("/comment/:id", updateComment);
 // Reply
-router.post("/reply/:id", replyOnComment);
+router.post("/reply", replyOnComment);
 router.get("/reply/:id", getReplyByComment);
 router.delete("/reply/:id", softDeleteReply);
+router.put("/reply/:id", updateReply);
 
 module.exports = router;

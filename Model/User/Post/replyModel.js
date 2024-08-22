@@ -7,6 +7,11 @@ const schema = new Schema(
       required: true,
     },
     tagedUser: [{ type: Types.ObjectId, ref: "User" }],
+    comment: {
+      type: Types.ObjectId,
+      ref: "Comment",
+      required: true,
+    },
     post: {
       type: Types.ObjectId,
       ref: "Post",
@@ -28,4 +33,4 @@ const schema = new Schema(
   { timestamps: true }
 );
 
-exports.Comment = models.Comment || model("Comment", schema);
+exports.Replies = models.Replies || model("Replies", schema);
