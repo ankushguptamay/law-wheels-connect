@@ -18,6 +18,9 @@ const {
   getMyPost,
   getPostById,
   softDeletePost,
+  reactOnPost,
+  unReactOnPost,
+  getReactionPost,
 } = require("../../Controller/User/Post/postController");
 
 const {
@@ -25,12 +28,18 @@ const {
   getCommentByPost,
   softDeleteComment,
   updateComment,
+  reactOnComment,
+  unReactOnComment,
+  getReactionComment,
 } = require("../../Controller/User/Post/commentController");
 const {
   replyOnComment,
   getReplyByComment,
   softDeleteReply,
   updateReply,
+  reactOnReply,
+  unReactOnReply,
+  getReactionReply,
 } = require("../../Controller/User/Post/replyController");
 
 //middleware
@@ -81,15 +90,27 @@ router.put(
   updateTemplatePost
 );
 
+router.put("/reactionOnPost/:id", reactOnPost);
+router.delete("/reactionOnPost/:id", unReactOnPost);
+router.get("/reactionOnPost/:id", getReactionPost);
+
 // Comment
 router.post("/comment/:id", addComment);
 router.get("/comment/:id", getCommentByPost);
 router.delete("/comment/:id", softDeleteComment);
 router.put("/comment/:id", updateComment);
+
+router.put("/reactionOnComment/:id", reactOnComment);
+router.delete("/reactionOnComment/:id", unReactOnComment);
+router.get("/reactionOnComment/:id", getReactionComment);
 // Reply
 router.post("/reply", replyOnComment);
 router.get("/reply/:id", getReplyByComment);
 router.delete("/reply/:id", softDeleteReply);
 router.put("/reply/:id", updateReply);
+
+router.put("/reactionOnReply/:id", reactOnReply);
+router.delete("/reactionOnReply/:id", unReactOnReply);
+router.get("/reactionOnReply/:id", getReactionReply);
 
 module.exports = router;

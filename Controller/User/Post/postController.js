@@ -6,7 +6,11 @@ const {
   deleteMediaPost,
 } = require("../../../Middleware/Validation/postValidation");
 const { Post } = require("../../../Model/User/Post/postModel");
+const {
+  ReactionOnPost,
+} = require("../../../Model/User/Post/reactionOnPostModel");
 const { uploadFileToBunny, deleteFileToBunny } = require("../../../Util/bunny");
+const { emitEvent, NEW_LIKE } = require("../../../Util/event");
 const { getOtherExceptGivenFileName } = require("../../../Util/features");
 const { deleteSingleFile } = require("../../../Util/utility");
 const bunnyFolderName = "post";
@@ -695,11 +699,18 @@ exports.getMyPost = async (req, res) => {
       Post.countDocuments(query),
     ]);
 
+    const transFormData = await Promise.all(
+      post.map(async (p) => {
+        const reaction = await ReactionOnPost.countDocuments({ post: p._id });
+        return { ...p, totalReaction: reaction };
+      })
+    );
+    
     const totalPages = Math.ceil(totalPost / resultPerPage) || 0;
     res.status(200).json({
       success: true,
       message: "Post fetched successfully!",
-      data: post,
+      data: transFormData,
       totalPages: totalPages,
       currentPage: page,
     });
@@ -751,6 +762,219 @@ exports.softDeletePost = async (req, res) => {
     res.status(200).json({
       success: true,
       message: "Post deleted successfully!",
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};
+
+exports.reactOnPost = async (req, res) => {
+  try {
+    const {
+      like = false,
+      support = false,
+      love = false,
+      funny = false,
+      insightful = false,
+      celebrate = false,
+    } = req.body;
+    const _id = req.params.id; // post _id
+    const post = await Post.findOne({
+      _id: _id,
+      isDelete: false,
+    });
+    if (!post) {
+      return res.status(400).json({
+        success: true,
+        message: "This post is not present!",
+      });
+    }
+    // Create if not exist
+    await ReactionOnPost.findOneAndUpdate(
+      { user: req.user._id, post: _id }, // Query
+      {
+        updatedAt: new Date(),
+        like,
+        support,
+        love,
+        funny,
+        insightful,
+        celebrate,
+      }, // update
+      { upsert: true, new: true, setDefaultsOnInsert: true } // Options
+    );
+
+    // Event
+    const user = {
+      _id: req.user._id,
+      name: req.user.name,
+      profilePic: req.user.profilePic ? req.user.profilePic.url : null,
+    };
+    const users = [req.user._id, post.user.toString()];
+    emitEvent(req, NEW_LIKE, users, {
+      message: `${req.user.name} reacted on your post!`,
+      user,
+    });
+
+    res.status(200).json({
+      success: true,
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};
+
+exports.unReactOnPost = async (req, res) => {
+  try {
+    const _id = req.params.id; // post _id
+    const post = await Post.findOne({
+      _id: _id,
+      isDelete: false,
+    });
+    if (!post) {
+      return res.status(400).json({
+        success: true,
+        message: "This post is not present!",
+      });
+    }
+
+    await ReactionOnPost.deleteOne({ user: req.user._id, post: _id });
+
+    res.status(200).json({
+      success: true,
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};
+
+exports.getReactionPost = async (req, res) => {
+  try {
+    const resultPerPage = req.query.resultPerPage
+      ? parseInt(req.query.resultPerPage)
+      : 40;
+    const page = req.query.page ? parseInt(req.query.page) : 1;
+    const skip = (page - 1) * resultPerPage;
+    const {
+      like = false,
+      support = false,
+      love = false,
+      funny = false,
+      insightful = false,
+      celebrate = false,
+    } = req.query;
+    const _id = req.params.id; // post _id
+    let query;
+    if (like) {
+      query = { post: _id, like: true };
+    } else if (support) {
+      query = { post: _id, support: true };
+    } else if (love) {
+      query = { post: _id, love: true };
+    } else if (celebrate) {
+      query = { post: _id, celebrate: true };
+    } else if (insightful) {
+      query = { post: _id, insightful: true };
+    } else if (funny) {
+      query = { post: _id, funny: true };
+    } else {
+      query = { post: _id };
+    }
+    const [
+      reaction,
+      totalReaction,
+      totalLike,
+      totalSupport,
+      totalCelebrate,
+      totalLove,
+      totalInsightful,
+      totalFunny,
+    ] = await Promise.all([
+      ReactionOnPost.find(query)
+        .sort({ createdAt: 1 })
+        .skip(skip)
+        .limit(resultPerPage)
+        .populate("user")
+        .lean(),
+        ReactionOnPost.countDocuments({ post: _id }),
+        ReactionOnPost.countDocuments({ post: _id, like: true }),
+      ReactionOnPost.countDocuments({ post: _id, support: true }),
+      ReactionOnPost.countDocuments({ post: _id, celebrate: true }),
+      ReactionOnPost.countDocuments({ post: _id, love: true }),
+      ReactionOnPost.countDocuments({ post: _id, insightful: true }),
+      ReactionOnPost.countDocuments({ post: _id, funny: true }),
+    ]);
+
+    let totalPages;
+    if (like) {
+      totalPages = Math.ceil(totalLike / resultPerPage) || 0;
+    } else if (support) {
+      totalPages = Math.ceil(totalSupport / resultPerPage) || 0;
+    } else if (love) {
+      totalPages = Math.ceil(totalLove / resultPerPage) || 0;
+    } else if (celebrate) {
+      totalPages = Math.ceil(totalCelebrate / resultPerPage) || 0;
+    } else if (insightful) {
+      totalPages = Math.ceil(totalInsightful / resultPerPage) || 0;
+    } else if (funny) {
+      totalPages = Math.ceil(totalFunny / resultPerPage) || 0;
+    } else {
+      totalPages = Math.ceil(totalReaction / resultPerPage) || 0;
+    }
+    const transformData = reaction.map(
+      ({
+        _id,
+        post,
+        user,
+        like,
+        support,
+        celebrate,
+        love,
+        insightful,
+        funny,
+        createdAt,
+      }) => {
+        return {
+          _id,
+          like,
+          support,
+          celebrate,
+          love,
+          insightful,
+          funny,
+          user: {
+            _id: user._id,
+            url: user.profilePic ? user.profilePic.url : null,
+            name: user.name,
+          },
+          post,
+          createdAt,
+        };
+      }
+    );
+    res.status(200).json({
+      success: true,
+      data: {
+        reaction: transformData,
+        totalReaction,
+        totalLike,
+        totalSupport,
+        totalCelebrate,
+        totalLove,
+        totalInsightful,
+        totalFunny,
+      },
+      totalPages: totalPages,
+      currentPage: page,
     });
   } catch (err) {
     res.status(500).json({
