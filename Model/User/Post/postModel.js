@@ -54,6 +54,18 @@ const schema = new Schema(
       ref: "User",
       required: true,
     },
+    totalReaction: {
+      type: Number,
+      default: 0,
+    },
+    totalComment: {
+      type: Number,
+      default: 0,
+    },
+    totalRepost: {
+      type: Number,
+      default: 0,
+    },
     isDelete: {
       type: Boolean,
       default: false,

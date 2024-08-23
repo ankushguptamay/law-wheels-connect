@@ -43,6 +43,9 @@ exports.addComment = async (req, res) => {
       tagedUser: tagedUser,
       post: _id,
     });
+    // Increase total comment count
+    const newTotalComment = parseInt(post.totalComment) + 1;
+    await post.updateOne({ totalComment: newTotalComment });
 
     // Event
     const user = {
@@ -201,7 +204,7 @@ exports.softDeleteComment = async (req, res) => {
     const comment = await Comment.findOne({
       _id: _id,
       isDelete: false,
-    }).populate("post", "user");
+    }).populate("post", ["user","totalComment"]);
     if (!comment) {
       return res.status(400).json({
         success: true,
@@ -209,16 +212,23 @@ exports.softDeleteComment = async (req, res) => {
       });
     }
 
+    const post = comment.post;
     if (req.user._id == comment.post.user.toString()) {
       await comment.updateOne({
         isDelete: true,
         deleted_at: new Date(),
       });
+      // Decrease total comment count
+      const newTotalComment = parseInt(post.totalComment) - 1;
+      await post.updateOne({ totalComment: newTotalComment });
     } else if (req.user._id == comment.user.toString()) {
       await comment.updateOne({
         isDelete: true,
         deleted_at: new Date(),
       });
+      // Increase total comment count
+      const newTotalComment = parseInt(post.totalComment) - 1;
+      await post.updateOne({ totalComment: newTotalComment });
     } else {
       return res.status(400).json({
         success: true,

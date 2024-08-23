@@ -699,18 +699,11 @@ exports.getMyPost = async (req, res) => {
       Post.countDocuments(query),
     ]);
 
-    const transFormData = await Promise.all(
-      post.map(async (p) => {
-        const reaction = await ReactionOnPost.countDocuments({ post: p._id });
-        return { ...p, totalReaction: reaction };
-      })
-    );
-    
     const totalPages = Math.ceil(totalPost / resultPerPage) || 0;
     res.status(200).json({
       success: true,
       message: "Post fetched successfully!",
-      data: transFormData,
+      data: post,
       totalPages: totalPages,
       currentPage: page,
     });
@@ -793,31 +786,36 @@ exports.reactOnPost = async (req, res) => {
       });
     }
     // Create if not exist
-    await ReactionOnPost.findOneAndUpdate(
-      { user: req.user._id, post: _id }, // Query
-      {
-        updatedAt: new Date(),
+    const reaction = await ReactionOnPost.findOne({
+      user: req.user._id,
+      post: _id,
+    });
+    if (!reaction) {
+      await ReactionOnPost.create({
         like,
         support,
         love,
         funny,
         insightful,
         celebrate,
-      }, // update
-      { upsert: true, new: true, setDefaultsOnInsert: true } // Options
-    );
-
-    // Event
-    const user = {
-      _id: req.user._id,
-      name: req.user.name,
-      profilePic: req.user.profilePic ? req.user.profilePic.url : null,
-    };
-    const users = [req.user._id, post.user.toString()];
-    emitEvent(req, NEW_LIKE, users, {
-      message: `${req.user.name} reacted on your post!`,
-      user,
-    });
+        user: req.user._id,
+        post: _id,
+      });
+      // Increase total reaction count
+      const newTotalReaction = parseInt(post.totalReaction) + 1;
+      await post.updateOne({ totalReaction: newTotalReaction });
+      // Event
+      const user = {
+        _id: req.user._id,
+        name: req.user.name,
+        profilePic: req.user.profilePic ? req.user.profilePic.url : null,
+      };
+      const users = [req.user._id, post.user.toString()];
+      emitEvent(req, NEW_LIKE, users, {
+        message: `${req.user.name} reacted on your post!`,
+        user,
+      });
+    }
 
     res.status(200).json({
       success: true,
@@ -843,8 +841,17 @@ exports.unReactOnPost = async (req, res) => {
         message: "This post is not present!",
       });
     }
-
-    await ReactionOnPost.deleteOne({ user: req.user._id, post: _id });
+    // Delete if exist
+    const reaction = await ReactionOnPost.findOne({
+      user: req.user._id,
+      post: _id,
+    });
+    if (reaction) {
+      await reaction.deleteOne();
+      // Decrease total reaction count
+      const newTotalReaction = parseInt(post.totalReaction) - 1;
+      await post.updateOne({ totalReaction: newTotalReaction });
+    }
 
     res.status(200).json({
       success: true,
@@ -905,8 +912,8 @@ exports.getReactionPost = async (req, res) => {
         .limit(resultPerPage)
         .populate("user")
         .lean(),
-        ReactionOnPost.countDocuments({ post: _id }),
-        ReactionOnPost.countDocuments({ post: _id, like: true }),
+      ReactionOnPost.countDocuments({ post: _id }),
+      ReactionOnPost.countDocuments({ post: _id, like: true }),
       ReactionOnPost.countDocuments({ post: _id, support: true }),
       ReactionOnPost.countDocuments({ post: _id, celebrate: true }),
       ReactionOnPost.countDocuments({ post: _id, love: true }),
