@@ -30,7 +30,7 @@ exports.addComment = async (req, res) => {
     const post = await Post.findById(_id);
     if (!post) {
       return res.status(400).json({
-        success: true,
+        success: false,
         message: "This post is not present!",
       });
     }
@@ -154,7 +154,7 @@ exports.updateComment = async (req, res) => {
     }).populate("post", "user");
     if (!comment) {
       return res.status(400).json({
-        success: true,
+        success: false,
         message: "This comment is not present!",
       });
     }
@@ -186,7 +186,7 @@ exports.updateComment = async (req, res) => {
       });
     } else {
       return res.status(400).json({
-        success: true,
+        success: false,
         message: "You can not update this comment!",
       });
     }
@@ -204,10 +204,10 @@ exports.softDeleteComment = async (req, res) => {
     const comment = await Comment.findOne({
       _id: _id,
       isDelete: false,
-    }).populate("post", ["user","totalComment"]);
+    }).populate("post", ["user", "totalComment"]);
     if (!comment) {
       return res.status(400).json({
-        success: true,
+        success: false,
         message: "This comment is not present!",
       });
     }
@@ -231,7 +231,7 @@ exports.softDeleteComment = async (req, res) => {
       await post.updateOne({ totalComment: newTotalComment });
     } else {
       return res.status(400).json({
-        success: true,
+        success: false,
         message: "You can not delete this comment!",
       });
     }
@@ -265,7 +265,7 @@ exports.reactOnComment = async (req, res) => {
     });
     if (!comment) {
       return res.status(400).json({
-        success: true,
+        success: false,
         message: "This comment is not present!",
       });
     }
@@ -316,7 +316,7 @@ exports.unReactOnComment = async (req, res) => {
     });
     if (!comment) {
       return res.status(400).json({
-        success: true,
+        success: false,
         message: "This comment is not present!",
       });
     }

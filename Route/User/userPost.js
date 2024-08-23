@@ -41,6 +41,11 @@ const {
   unReactOnReply,
   getReactionReply,
 } = require("../../Controller/User/Post/replyController");
+const {
+  savePost,
+  unSavePost,
+  getSavePost,
+} = require("../../Controller/User/Post/savedPostController");
 
 //middleware
 const { verifyUserJWT } = require("../../Middleware/verifyJWTToken");
@@ -112,5 +117,10 @@ router.put("/reply/:id", updateReply);
 router.put("/reactionOnReply/:id", reactOnReply);
 router.delete("/reactionOnReply/:id", unReactOnReply);
 router.get("/reactionOnReply/:id", getReactionReply);
+
+// Saved Post
+router.post("/savePost/:id", savePost); // post _id
+router.get("/savePost", getSavePost);
+router.delete("/savePost/:id", unSavePost); // post _id
 
 module.exports = router;

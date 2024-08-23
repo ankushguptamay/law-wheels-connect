@@ -781,7 +781,7 @@ exports.reactOnPost = async (req, res) => {
     });
     if (!post) {
       return res.status(400).json({
-        success: true,
+        success: false,
         message: "This post is not present!",
       });
     }
@@ -837,7 +837,7 @@ exports.unReactOnPost = async (req, res) => {
     });
     if (!post) {
       return res.status(400).json({
-        success: true,
+        success: false,
         message: "This post is not present!",
       });
     }

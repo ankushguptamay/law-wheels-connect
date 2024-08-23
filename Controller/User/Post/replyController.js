@@ -35,7 +35,7 @@ exports.replyOnComment = async (req, res) => {
     }).populate("post", "user");
     if (!comment) {
       return res.status(400).json({
-        success: true,
+        success: false,
         message: "This comment is not present!",
       });
     }
@@ -146,13 +146,13 @@ exports.updateReply = async (req, res) => {
     });
     if (!reply) {
       return res.status(400).json({
-        success: true,
+        success: false,
         message: "This reply is not present!",
       });
     }
     if (reply.user.toString() != req.user._id) {
       return res.status(400).json({
-        success: true,
+        success: false,
         message: "You can not update this reply!",
       });
     }
@@ -197,7 +197,7 @@ exports.softDeleteReply = async (req, res) => {
     }).populate("post", "user");
     if (!reply) {
       return res.status(400).json({
-        success: true,
+        success: false,
         message: "This reply is not present!",
       });
     }
@@ -209,7 +209,7 @@ exports.softDeleteReply = async (req, res) => {
       await reply.updateOne({ isDelete: true, deleted_at: new Date() });
     } else {
       return res.status(400).json({
-        success: true,
+        success: false,
         message: "You can not delete this reply!",
       });
     }
@@ -242,7 +242,7 @@ exports.reactOnReply = async (req, res) => {
     });
     if (!reply) {
       return res.status(400).json({
-        success: true,
+        success: false,
         message: "This reply is not present!",
       });
     }
@@ -293,7 +293,7 @@ exports.unReactOnReply = async (req, res) => {
     });
     if (!reply) {
       return res.status(400).json({
-        success: true,
+        success: false,
         message: "This reply is not present!",
       });
     }
