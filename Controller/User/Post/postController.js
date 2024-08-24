@@ -1,3 +1,5 @@
+const mongoose = require("mongoose");
+
 const {
   validateTextPost,
   addMediaPost,
@@ -675,15 +677,32 @@ exports.getMyPost = async (req, res) => {
     const skip = (page - 1) * resultPerPage;
 
     //Search
-    let query = { user: req.user._id, isDelete: false };
+    let query = {
+      $or: [
+        {
+          $and: [{ user: req.user._id }, { isDelete: false }],
+        },
+        {
+          $and: [{ isDelete: false }, { rePostedBy: req.user }],
+        },
+      ],
+    };
     if (req.query.search) {
       const startWith = new RegExp("^" + req.query.search.toLowerCase(), "i");
       const containInString = new RegExp(req.query.search, "i");
       const constainInArray = { $regex: `${req.query.search}`, $options: "i" };
       query = {
         $and: [
-          { user: req.user._id },
-          { isDelete: false },
+          {
+            $or: [
+              {
+                $and: [{ user: req.user._id }, { isDelete: false }],
+              },
+              {
+                $and: [{ isDelete: false }, { rePostedBy: req.user._id }],
+              },
+            ],
+          },
           {
             $or: [{ content: containInString }, { hash_tag: constainInArray }],
           },
@@ -695,11 +714,18 @@ exports.getMyPost = async (req, res) => {
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(resultPerPage)
-        .lean(),
+        .lean()
+        .populate({
+          path: "rePostedBy",
+          select: "name _id",
+          match: { _id: new mongoose.Types.ObjectId(req.user._id) },
+          options: { limit: 1 },
+        }),
       Post.countDocuments(query),
     ]);
 
     const totalPages = Math.ceil(totalPost / resultPerPage) || 0;
+    
     res.status(200).json({
       success: true,
       message: "Post fetched successfully!",

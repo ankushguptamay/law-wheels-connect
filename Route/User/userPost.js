@@ -46,6 +46,11 @@ const {
   unSavePost,
   getSavePost,
 } = require("../../Controller/User/Post/savedPostController");
+const {
+  rePost,
+  removeFromRePost,
+  rePostBy,
+} = require("../../Controller/User/Post/rePostController");
 
 //middleware
 const { verifyUserJWT } = require("../../Middleware/verifyJWTToken");
@@ -122,5 +127,10 @@ router.get("/reactionOnReply/:id", getReactionReply);
 router.post("/savePost/:id", savePost); // post _id
 router.get("/savePost", getSavePost);
 router.delete("/savePost/:id", unSavePost); // post _id
+
+//Repost
+router.post("/rePost/:id", rePost); // post _id
+router.get("/rePost/:id", rePostBy); // post _id
+router.delete("/rePost/:id", removeFromRePost); // post _id
 
 module.exports = router;

@@ -49,6 +49,7 @@ const schema = new Schema(
       option4: { type: String },
       expireIn: { type: String },
     },
+    rePostedBy: [{ type: Types.ObjectId, ref: "User" }],
     user: {
       type: Types.ObjectId,
       ref: "User",
@@ -58,7 +59,7 @@ const schema = new Schema(
       type: Number,
       default: 0,
     },
-    totalComment: {
+    totalReaction: {
       type: Number,
       default: 0,
     },

@@ -11,7 +11,6 @@ exports.savePost = async (req, res) => {
       _id: postId,
       isDelete: false,
     });
-    console.log(post);
     if (!post) {
       return res.status(400).json({
         success: false,
