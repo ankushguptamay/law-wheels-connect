@@ -22,7 +22,6 @@ const {
   unReactOnPost,
   getReactionPost,
 } = require("../../Controller/User/Post/postController");
-
 const {
   addComment,
   getCommentByPost,

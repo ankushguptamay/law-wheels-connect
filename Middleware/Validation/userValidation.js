@@ -100,3 +100,25 @@ exports.validateUpdateUser = (data) => {
   });
   return schema.validate(data);
 };
+
+exports.connectionRequest = (data) => {
+  const schema = joi.object().keys({
+    userId: joi.string().required(),
+  });
+  return schema.validate(data);
+};
+
+exports.getMyConnection = (data) => {
+  const schema = joi.object().keys({
+    status: joi.string().valid("pending", "accepted").required(),
+  });
+  return schema.validate(data);
+};
+
+exports.acceptConnect = (data) => {
+  const schema = joi.object().keys({
+    accept: joi.boolean().required(),
+    connectId: joi.string().required(),
+  });
+  return schema.validate(data);
+};

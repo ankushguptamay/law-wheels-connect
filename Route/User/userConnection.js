@@ -8,11 +8,15 @@ const {
   following,
   unFollow,
   removeFollower,
-} = require("../../Controller/User/followerController");
+} = require("../../Controller/User/Connection/followerController");
+const {
+  sendConnectionRequest,
+  getMyConnection,
+  acceptConnect,
+} = require("../../Controller/User/Connection/connectionCont");
 
 //middleware
 const { verifyUserJWT } = require("../../Middleware/verifyJWTToken");
-const uploadImage = require("../../Middleware/UploadFile/image");
 
 router.use(verifyUserJWT);
 
@@ -22,5 +26,9 @@ router.get("/follower", follower);
 router.get("/following", following);
 router.delete("/unFollow", unFollow);
 router.delete("/removeFollower", removeFollower);
+
+router.post("/connection", sendConnectionRequest);
+router.get("/connection", getMyConnection);
+router.put("/connection", acceptConnect);
 
 module.exports = router;
