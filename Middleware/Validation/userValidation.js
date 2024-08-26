@@ -122,3 +122,10 @@ exports.acceptConnect = (data) => {
   });
   return schema.validate(data);
 };
+
+exports.profileViewer = (data) => {
+  const schema = joi.object().keys({
+    userId: joi.string().required(),
+  });
+  return schema.validate(data);
+};

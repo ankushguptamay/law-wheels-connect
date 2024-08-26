@@ -16,10 +16,10 @@ exports.rePost = async (req, res) => {
       });
     }
 
-    if (post.user.toString() == userId) {
+    if (post.user.toString() == userId.toString()) {
       return res.status(400).json({
         success: false,
-        message: "You can not repost yuor own post!",
+        message: "You can not repost your own post!",
       });
     }
 

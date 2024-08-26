@@ -77,3 +77,11 @@ exports.validateReply = (data) => {
   });
   return schema.validate(data);
 };
+
+exports.postImpression = (data) => {
+  const schema = joi.object().keys({
+    postId: joi.string().required(),
+    userId: joi.string().required(),
+  });
+  return schema.validate(data);
+};

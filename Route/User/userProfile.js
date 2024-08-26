@@ -40,6 +40,14 @@ const {
   getMediaById,
   softDeleteMedia,
 } = require("../../Controller/User/mediaController");
+const {
+  postImpression,
+  getPostImpression,
+} = require("../../Controller/User/Analytics/postImpressionCont");
+const {
+  profileViewer,
+  getProfileViewer,
+} = require("../../Controller/User/Analytics/profileViewCont");
 
 //middleware
 const { verifyUserJWT } = require("../../Middleware/verifyJWTToken");
@@ -85,5 +93,13 @@ router.post("/media", uploadImage.single("MediaPic"), addMedia);
 router.get("/media/:id", getMediaById);
 router.get("/media", getMyMedia);
 router.delete("/media/:id", softDeleteMedia); // soft delete
+
+// Profile View
+router.post("/profileViewer", profileViewer);
+router.get("/profileViewer", getProfileViewer);
+
+// Post Impression
+router.post("/postImpression", postImpression);
+router.get("/postImpression", getPostImpression);
 
 module.exports = router;
