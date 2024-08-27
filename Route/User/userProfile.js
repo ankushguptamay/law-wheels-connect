@@ -47,6 +47,7 @@ const {
 const {
   profileViewer,
   getProfileViewer,
+  getAnalytics,
 } = require("../../Controller/User/Analytics/profileViewCont");
 
 //middleware
@@ -101,5 +102,7 @@ router.get("/profileViewer", getProfileViewer);
 // Post Impression
 router.post("/postImpression", postImpression);
 router.get("/postImpression", getPostImpression);
+
+router.get("/getAnalytics", getAnalytics);
 
 module.exports = router;

@@ -220,3 +220,66 @@ exports.unFollow = async (req, res) => {
     });
   }
 };
+
+exports.getFollowerAnalytics = async (req, res) => {
+  try {
+    const { past7Days, past14Days, past28Days, past90Days, past365Days } =
+      req.query;
+    const dayInMilliSecond = 1000 * 60 * 60 * 24;
+    const today = new Date();
+
+    // For Current
+    const lastDays = new Date();
+    const compareLastDays = new Date();
+
+    const _id = req.user._id;
+    let query, follows, message, days, pastQuery;
+
+    if (past14Days) {
+      days = 14;
+    } else if (past28Days) {
+      days = 28;
+    } else if (past90Days) {
+      days = 90;
+    } else if (past365Days) {
+      days = 365;
+    } else {
+      days = 7;
+    }
+    lastDays.setDate(lastDays.getDate() - days);
+    compareLastDays.setDate(compareLastDays.getDate() - days * 2);
+    follows = new Array(days).fill(0);
+    message = `Past ${days} days follows!`;
+    query = { followee: _id, updatedAt: { $gte: lastDays } };
+    pastQuery = {
+      followee: _id,
+      updatedAt: { $gte: compareLastDays, $lt: lastDays },
+    };
+
+    const [totalFollowers, followersWithRespectivePastTime, lastDaysFollowers] =
+      await Promise.all([
+        Follow.countDocuments(query),
+        Follow.countDocuments(pastQuery),
+        Follow.find(query).select("updatedAt"),
+      ]);
+
+    lastDaysFollowers.forEach((follow) => {
+      const indexApprox =
+        (today.getTime() - follow.updatedAt.getTime()) / dayInMilliSecond;
+      const index = Math.floor(indexApprox);
+      follows[days - 1 - index]++;
+    });
+
+    const status = {
+      totalFollowers,
+      followersWithRespectivePastTime,
+      chart: follows,
+    };
+    return res.status(200).json({ success: true, message, data: status });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};

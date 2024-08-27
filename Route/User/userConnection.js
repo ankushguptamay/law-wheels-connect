@@ -8,6 +8,7 @@ const {
   following,
   unFollow,
   removeFollower,
+  getFollowerAnalytics,
 } = require("../../Controller/User/Connection/followerController");
 const {
   sendConnectionRequest,
@@ -26,6 +27,7 @@ router.get("/follower", follower);
 router.get("/following", following);
 router.delete("/unFollow", unFollow);
 router.delete("/removeFollower", removeFollower);
+router.get("/followerAnalytics", getFollowerAnalytics);
 
 router.post("/connection", sendConnectionRequest);
 router.get("/connection", getMyConnection);

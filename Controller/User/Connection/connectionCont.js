@@ -6,7 +6,11 @@ const {
 const {
   Connection,
 } = require("../../../Model/User/Connection/connectionModel");
-const { NEW_CONNECTION, INVITATION_ACCEPTED, emitEvent } = require("../../../Util/event");
+const {
+  NEW_CONNECTION,
+  INVITATION_ACCEPTED,
+  emitEvent,
+} = require("../../../Util/event");
 
 exports.sendConnectionRequest = async (req, res) => {
   try {
@@ -47,6 +51,12 @@ exports.sendConnectionRequest = async (req, res) => {
       sender: req.user._id,
       receiver: userId,
     });
+
+    await Follow.findOneAndUpdate(
+      { follower: req.user._id, followee: userId }, // Query
+      { updatedAt: new Date() }, // update
+      { upsert: true, new: true, setDefaultsOnInsert: true } // Options
+    );
 
     emitEvent(req, NEW_CONNECTION, [userId]);
 
@@ -163,6 +173,12 @@ exports.acceptConnect = async (req, res) => {
     }
 
     await connecte.updateOne({ status: "accepted" });
+
+    await Follow.findOneAndUpdate(
+      { follower: _id, followee: connecte.sender }, // Query
+      { updatedAt: new Date() }, // update
+      { upsert: true, new: true, setDefaultsOnInsert: true } // Options
+    );
 
     emitEvent(req, INVITATION_ACCEPTED, [connecte.sender.toString()]);
 

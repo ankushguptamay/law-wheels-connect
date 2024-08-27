@@ -58,78 +58,32 @@ exports.getPostImpression = async (req, res) => {
     const today = new Date();
 
     // For Current
-    const last7Days = new Date();
-    const last14Days = new Date();
-    const last28Days = new Date();
-    const last90Days = new Date();
-    const last365Days = new Date();
+    const lastDays = new Date();
+    const compareLastDays = new Date();
 
     const _id = req.user._id;
-    let query, impressions, message, days, pastQuery;
-
-    // For Comparison
-    const compareLast7Days = new Date();
-    const compareLast14Days = new Date();
-    const compareLast28Days = new Date();
-    const compareLast90Days = new Date();
-    const compareLast365Days = new Date();
+    let query, impressions, message, pastQuery, days;
 
     if (past14Days) {
-      last14Days.setDate(last14Days.getDate() - 14);
-      query = { postOwner: _id, updatedAt: { $gte: last14Days } };
-      compareLast14Days.setDate(compareLast14Days.getDate() - 28);
-      pastQuery = {
-        postOwner: _id,
-        updatedAt: { $gte: compareLast14Days, $lt: last14Days },
-      };
-      impressions = new Array(14).fill(0);
-      message = "Past 14 days impressions!";
-      days = 13;
+      days = 14;
     } else if (past28Days) {
-      last28Days.setDate(last28Days.getDate() - 28);
-      query = { postOwner: _id, updatedAt: { $gte: last28Days } };
-      compareLast28Days.setDate(compareLast28Days.getDate() - 56);
-      pastQuery = {
-        postOwner: _id,
-        updatedAt: { $gte: compareLast28Days, $lt: last28Days },
-      };
-      impressions = new Array(28).fill(0);
-      message = "Past 28 days impressions!";
-      days = 27;
+      days = 28;
     } else if (past90Days) {
-      last90Days.setDate(last90Days.getDate() - 90);
-      query = { postOwner: _id, updatedAt: { $gte: last90Days } };
-      compareLast90Days.setDate(compareLast90Days.getDate() - 180);
-      pastQuery = {
-        postOwner: _id,
-        updatedAt: { $gte: compareLast90Days, $lt: last90Days },
-      };
-      impressions = new Array(90).fill(0);
-      message = "Past 90 days impressions!";
-      days = 81;
+      days = 90;
     } else if (past365Days) {
-      last365Days.setDate(last365Days.getDate() - 365);
-      query = { postOwner: _id, updatedAt: { $gte: last365Days } };
-      compareLast365Days.setDate(compareLast365Days.getDate() - 730);
-      pastQuery = {
-        postOwner: _id,
-        updatedAt: { $gte: compareLast365Days, $lt: last365Days },
-      };
-      impressions = new Array(365).fill(0);
-      message = "Past 365 days impressions!";
-      days = 364;
+      days = 365;
     } else {
-      last7Days.setDate(last7Days.getDate() - 7);
-      query = { postOwner: _id, updatedAt: { $gte: last7Days } };
-      compareLast7Days.setDate(compareLast7Days.getDate() - 14);
-      pastQuery = {
-        postOwner: _id,
-        updatedAt: { $gte: compareLast7Days, $lt: last7Days },
-      };
-      impressions = new Array(7).fill(0);
-      message = "Past 7 days impressions!";
-      days = 6;
+      days = 7;
     }
+    lastDays.setDate(lastDays.getDate() - days);
+    compareLastDays.setDate(compareLastDays.getDate() - days * 2);
+    impressions = new Array(days).fill(0);
+    message = `Past ${days} days impressions!`;
+    query = { postOwner: _id, updatedAt: { $gte: lastDays } };
+    pastQuery = {
+      postOwner: _id,
+      updatedAt: { $gte: compareLastDays, $lt: lastDays },
+    };
 
     const [
       totalImpressions,
@@ -145,7 +99,7 @@ exports.getPostImpression = async (req, res) => {
       const indexApprox =
         (today.getTime() - impression.updatedAt.getTime()) / dayInMilliSecond;
       const index = Math.floor(indexApprox);
-      impressions[days - index]++;
+      impressions[days - 1 - index]++;
     });
 
     const status = {
