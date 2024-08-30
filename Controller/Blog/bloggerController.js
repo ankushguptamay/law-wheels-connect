@@ -2,7 +2,7 @@ const {
   validateAdminRegistration,
   validateAdminLogin,
 } = require("../../Middleware/Validation/adminValidation");
-const { Bloger } = require("../../Model/Blog/blogerModel");
+const { Blogger } = require("../../Model/Blog/bloggerModel");
 const { sendToken, cookieOptions } = require("../../Util/features");
 const bcrypt = require("bcryptjs");
 const { capitalizeFirstLetter } = require("../../Util/utility");
@@ -10,11 +10,11 @@ const SALT = 10;
 
 exports.getBolger = async (req, res) => {
   try {
-    const bloger = await Bloger.findOne({ _id: req.bloger._id });
+    const blogger = await Blogger.findOne({ _id: req.blogger._id });
     res.status(200).json({
       success: true,
-      message: "Bloger fetched successfully!",
-      data: bloger,
+      message: "Blogger fetched successfully!",
+      data: blogger,
     });
   } catch (err) {
     res.status(500).json({
@@ -24,7 +24,7 @@ exports.getBolger = async (req, res) => {
   }
 };
 
-exports.registerBloger = async (req, res, next) => {
+exports.registerBlogger = async (req, res, next) => {
   try {
     // Body Validation
     const { error } = validateAdminRegistration(req.body);
@@ -39,24 +39,24 @@ exports.registerBloger = async (req, res, next) => {
     const name = capitalizeFirstLetter(
       req.body.name.replace(/\s+/g, " ").trim()
     );
-    const isBloger = await Bloger.findOne({ email: email });
-    if (isBloger) {
+    const isBlogger = await Blogger.findOne({ email: email });
+    if (isBlogger) {
       return res.status(400).json({
         success: false,
-        message: "Bloger already present!",
+        message: "Blogger already present!",
       });
     }
 
     const salt = await bcrypt.genSalt(SALT);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    const bloger = await Bloger.create({
+    const blogger = await Blogger.create({
       email: email,
       mobileNumber: mobileNumber,
       name: name,
       password: hashedPassword,
     });
-    sendToken(res, bloger, 201, "Bloger created", "link-bloger-token");
+    sendToken(res, blogger, 201, "Blogger created", "link-blogger-token");
   } catch (err) {
     res.status(500).json({
       success: false,
@@ -65,7 +65,7 @@ exports.registerBloger = async (req, res, next) => {
   }
 };
 
-exports.loginBloger = async (req, res) => {
+exports.loginBlogger = async (req, res) => {
   try {
     // Body Validation
     const { error } = validateAdminLogin(req.body);
@@ -78,15 +78,15 @@ exports.loginBloger = async (req, res) => {
 
     const { email, password } = req.body;
 
-    const isBloger = await Bloger.findOne({ email }).select("+password");
-    if (!isBloger) {
+    const isBlogger = await Blogger.findOne({ email }).select("+password");
+    if (!isBlogger) {
       return res.status(400).json({
         success: false,
         message: "Invalid email or password!",
       });
     }
 
-    const validPassword = await bcrypt.compare(password, isBloger.password);
+    const validPassword = await bcrypt.compare(password, isBlogger.password);
     if (!validPassword) {
       return res.status(400).send({
         success: false,
@@ -96,10 +96,10 @@ exports.loginBloger = async (req, res) => {
 
     sendToken(
       res,
-      isBloger,
+      isBlogger,
       200,
-      `Welcome Back, ${isBloger.name}`,
-      "link-bloger-token"
+      `Welcome Back, ${isBlogger.name}`,
+      "link-blogger-token"
     );
   } catch (err) {
     res.status(500).json({
@@ -113,7 +113,7 @@ exports.logOut = async (req, res) => {
   try {
     return res
       .status(200)
-      .cookie("link-bloger-token", "", { ...cookieOptions, maxAge: 0 })
+      .cookie("link-blogger-token", "", { ...cookieOptions, maxAge: 0 })
       .json({
         success: true,
         message: "Logged out successfully",

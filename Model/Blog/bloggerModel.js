@@ -24,4 +24,4 @@ const schema = new Schema(
   { timestamps: true }
 );
 
-exports.Bloger = models.Bloger || model("Bloger", schema);
+exports.Blogger = models.Blogger || model("Blogger", schema);

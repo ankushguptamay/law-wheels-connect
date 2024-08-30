@@ -4,7 +4,7 @@ const bodyParser = require("body-parser");
 const cors = require("cors");
 const authAdmin = require("./Route/Admin/authAdmin");
 const authUser = require("./Route/User/authUser");
-const bloger = require("./Route/Bloger/authBloger");
+const blogger = require("./Route/Blogger/authBlogger");
 const { connectDB } = require("./Util/features");
 const cookieParser = require("cookie-parser");
 
@@ -24,7 +24,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use("/user", authUser);
 app.use("/admin", authAdmin);
-app.use("/bloger", bloger);
+app.use("/blogger", blogger);
 
 app.get("/", (req, res) => {
   res.send("Hello World!");

@@ -6,7 +6,6 @@ const schema = new Schema(
     title: {
       type: String,
       required: true,
-      unique: true,
       trim: true,
     },
     slug: {
@@ -25,7 +24,7 @@ const schema = new Schema(
       fileName: { type: String },
       url: { type: String },
     },
-    addititionalPic: [
+    additionalPic: [
       {
         fileName: { type: String },
         url: { type: String },
@@ -34,10 +33,10 @@ const schema = new Schema(
     readTime: { type: String },
     author: {
       type: Types.ObjectId,
-      ref: "Bloger",
+      ref: "Blogger",
       required: true,
     },
-    publishDate: { type: Date },
+    publishDate: { type: Date, default: new Date() },
     description: {
       type: String,
       trim: true,

@@ -1,4 +1,7 @@
-const { tagValidation } = require("../../Middleware/Validation/blogValidation");
+const {
+  tagValidation,
+  slugValidation,
+} = require("../../Middleware/Validation/blogValidation");
 const { BlogTag } = require("../../Model/Blog/tagsModel");
 
 exports.addTag = async (req, res) => {
@@ -148,6 +151,37 @@ exports.deleteTag = async (req, res) => {
     res.status(200).json({
       success: true,
       message: "Tag deleted successfully!",
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};
+
+exports.tagSlug = async (req, res) => {
+  try {
+    // Body Validation
+    const { error } = slugValidation(req.body);
+    if (error) {
+      return res.status(400).json({
+        success: false,
+        message: error.details[0].message,
+      });
+    }
+    const slug = req.body.slug;
+    const isBlog = await BlogTag.findOne({ slug });
+    if (isBlog) {
+      return res.status(400).json({
+        success: false,
+        message: `Present`,
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "NotPresent!",
     });
   } catch (err) {
     res.status(500).json({

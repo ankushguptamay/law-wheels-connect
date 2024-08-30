@@ -1,6 +1,7 @@
 const {
   parentCategoriesValidation,
   categoriesValidation,
+  slugValidation,
 } = require("../../Middleware/Validation/blogValidation");
 const {
   ParentBlogCategories,
@@ -239,7 +240,7 @@ exports.updateParentCategories = async (req, res) => {
 
     if (name !== parentCategorie.name) {
       const isName = await ParentBlogCategories.findOne({ name });
-      if (!isName) {
+      if (isName) {
         if (req.file) {
           deleteSingleFile(req.file.path);
         }
@@ -252,7 +253,7 @@ exports.updateParentCategories = async (req, res) => {
 
     if (slug !== parentCategorie.slug) {
       const isSlug = await ParentBlogCategories.findOne({ slug });
-      if (!isSlug) {
+      if (isSlug) {
         if (req.file) {
           deleteSingleFile(req.file.path);
         }
@@ -327,7 +328,7 @@ exports.updateCategories = async (req, res) => {
 
     if (name !== categorie.name) {
       const isName = await BlogCategories.findOne({ name });
-      if (!isName) {
+      if (isName) {
         if (req.file) {
           deleteSingleFile(req.file.path);
         }
@@ -340,7 +341,7 @@ exports.updateCategories = async (req, res) => {
 
     if (slug !== categorie.slug) {
       const isSlug = await BlogCategories.findOne({ slug });
-      if (!isSlug) {
+      if (isSlug) {
         if (req.file) {
           deleteSingleFile(req.file.path);
         }
@@ -463,6 +464,68 @@ exports.deleteCategories = async (req, res) => {
     res.status(200).json({
       success: true,
       message: "Categories deleted successfully!",
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};
+
+exports.parentCategorySlug = async (req, res) => {
+  try {
+    // Body Validation
+    const { error } = slugValidation(req.body);
+    if (error) {
+      return res.status(400).json({
+        success: false,
+        message: error.details[0].message,
+      });
+    }
+    const slug = req.body.slug;
+    const isBlog = await ParentBlogCategories.findOne({ slug });
+    if (isBlog) {
+      return res.status(400).json({
+        success: false,
+        message: `Present`,
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "NotPresent!",
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};
+
+exports.categorySlug = async (req, res) => {
+  try {
+    // Body Validation
+    const { error } = slugValidation(req.body);
+    if (error) {
+      return res.status(400).json({
+        success: false,
+        message: error.details[0].message,
+      });
+    }
+    const slug = req.body.slug;
+    const isBlog = await BlogCategories.findOne({ slug });
+    if (isBlog) {
+      return res.status(400).json({
+        success: false,
+        message: `Present`,
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "NotPresent!",
     });
   } catch (err) {
     res.status(500).json({

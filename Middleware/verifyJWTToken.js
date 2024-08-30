@@ -2,8 +2,8 @@ const jwt = require("jsonwebtoken");
 const { ErrorHandler } = require("../Util/utility");
 const { Admin } = require("../Model/Admin/adminModel");
 const { User } = require("../Model/User/userModel");
-const { Bloger } = require("../Model/Blog/blogerModel");
-const { JWT_SECRET_KEY_ADMIN, JWT_SECRET_KEY_USER, JWT_SECRET_KEY_BLOGER } =
+const { Blogger } = require("../Model/Blog/bloggerModel");
+const { JWT_SECRET_KEY_ADMIN, JWT_SECRET_KEY_USER, JWT_SECRET_KEY_BLOGGER } =
   process.env;
 
 exports.verifyUserJWT = async (req, res, next) => {
@@ -56,22 +56,22 @@ exports.verifyAdminJWT = async (req, res, next) => {
   }
 };
 
-exports.verifyBlogerJWT = async (req, res, next) => {
+exports.verifyBloggerJWT = async (req, res, next) => {
   try {
-    const token = req.cookies["link-bloger-token"];
+    const token = req.cookies["link-blogger-token"];
 
     if (!token) return res.sendStatus(401);
 
-    const decode = jwt.verify(token, JWT_SECRET_KEY_BLOGER);
+    const decode = jwt.verify(token, JWT_SECRET_KEY_BLOGGER);
 
-    const bloger = await Bloger.findOne({ _id: decode._id });
-    if (!bloger) {
+    const blogger = await Blogger.findOne({ _id: decode._id });
+    if (!blogger) {
       return res.status(400).json({
         success: false,
         message: "Unauthorized!",
       });
     }
-    req.bloger = decode;
+    req.blogger = decode;
     return next();
   } catch (err) {
     res.status(500).json({
