@@ -1,19 +1,20 @@
-const { Admin } = require("../../Model/Admin/adminModel");
 const {
   validateAdminRegistration,
   validateAdminLogin,
 } = require("../../Middleware/Validation/adminValidation");
+const { Bloger } = require("../../Model/Blog/blogerModel");
 const { sendToken, cookieOptions } = require("../../Util/features");
 const bcrypt = require("bcryptjs");
+const { capitalizeFirstLetter } = require("../../Util/utility");
 const SALT = 10;
 
-exports.getAdmin = async (req, res) => {
+exports.getBolger = async (req, res) => {
   try {
-    const admin = await Admin.findOne({ _id: req.admin._id });
+    const bloger = await Bloger.findOne({ _id: req.bloger._id });
     res.status(200).json({
       success: true,
-      message: "Admin fetched successfully!",
-      data: admin,
+      message: "Bloger fetched successfully!",
+      data: bloger,
     });
   } catch (err) {
     res.status(500).json({
@@ -23,7 +24,7 @@ exports.getAdmin = async (req, res) => {
   }
 };
 
-exports.registerAdmin = async (req, res, next) => {
+exports.registerBloger = async (req, res, next) => {
   try {
     // Body Validation
     const { error } = validateAdminRegistration(req.body);
@@ -38,24 +39,24 @@ exports.registerAdmin = async (req, res, next) => {
     const name = capitalizeFirstLetter(
       req.body.name.replace(/\s+/g, " ").trim()
     );
-    const isAdmin = await Admin.findOne({ email: email });
-    if (isAdmin) {
+    const isBloger = await Bloger.findOne({ email: email });
+    if (isBloger) {
       return res.status(400).json({
         success: false,
-        message: "Admin already present!",
+        message: "Bloger already present!",
       });
     }
 
     const salt = await bcrypt.genSalt(SALT);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    const admin = await Admin.create({
+    const bloger = await Bloger.create({
       email: email,
       mobileNumber: mobileNumber,
       name: name,
       password: hashedPassword,
     });
-    sendToken(res, admin, 201, "Admin created", "link-admin-token");
+    sendToken(res, bloger, 201, "Bloger created", "link-bloger-token");
   } catch (err) {
     res.status(500).json({
       success: false,
@@ -64,7 +65,7 @@ exports.registerAdmin = async (req, res, next) => {
   }
 };
 
-exports.loginAdmin = async (req, res) => {
+exports.loginBloger = async (req, res) => {
   try {
     // Body Validation
     const { error } = validateAdminLogin(req.body);
@@ -77,15 +78,15 @@ exports.loginAdmin = async (req, res) => {
 
     const { email, password } = req.body;
 
-    const isAdmin = await Admin.findOne({ email }).select("+password");
-    if (!isAdmin) {
+    const isBloger = await Bloger.findOne({ email }).select("+password");
+    if (!isBloger) {
       return res.status(400).json({
         success: false,
         message: "Invalid email or password!",
       });
     }
 
-    const validPassword = await bcrypt.compare(password, isAdmin.password);
+    const validPassword = await bcrypt.compare(password, isBloger.password);
     if (!validPassword) {
       return res.status(400).send({
         success: false,
@@ -95,10 +96,10 @@ exports.loginAdmin = async (req, res) => {
 
     sendToken(
       res,
-      isAdmin,
+      isBloger,
       200,
-      `Welcome Back, ${isAdmin.name}`,
-      "link-admin-token"
+      `Welcome Back, ${isBloger.name}`,
+      "link-bloger-token"
     );
   } catch (err) {
     res.status(500).json({
@@ -112,7 +113,7 @@ exports.logOut = async (req, res) => {
   try {
     return res
       .status(200)
-      .cookie("link-admin-token", "", { ...cookieOptions, maxAge: 0 })
+      .cookie("link-bloger-token", "", { ...cookieOptions, maxAge: 0 })
       .json({
         success: true,
         message: "Logged out successfully",

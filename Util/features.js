@@ -26,6 +26,11 @@ exports.sendToken = (res, user, code, message, tokenName) => {
       { _id: user._id, email: user.email },
       process.env.JWT_SECRET_KEY_ADMIN
     );
+  } else if (tokenName === "link-bloger-token") {
+    token = jwt.sign(
+      { _id: user._id, email: user.email },
+      process.env.JWT_SECRET_KEY_BLOGER
+    );
   } else {
     token = jwt.sign(
       { _id: user._id, email: user.email },
