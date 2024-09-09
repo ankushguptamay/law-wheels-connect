@@ -30,7 +30,7 @@ const {
   deleteBlog,
   blogSlug,
   getBlogs,
-  getBlogById
+  getBlogBySlug,
 } = require("../../Controller/Blog/blogController");
 
 //middleware
@@ -82,7 +82,7 @@ router.post(
   createBlog
 );
 router.get("/blog", getBlogs);
-router.get("/blog/:id", getBlogById);
+router.get("/blog/:slug", getBlogBySlug);
 router.put(
   "/featuredPic/:id",
   uploadImage.single("FeaturedPic"),

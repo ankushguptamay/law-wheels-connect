@@ -3,6 +3,7 @@ const {
   getMyConnection,
   acceptConnect,
 } = require("../../../Middleware/Validation/userValidation");
+const { Chat } = require("../../../Model/Chat/chatModel");
 const {
   Connection,
 } = require("../../../Model/User/Connection/connectionModel");
@@ -170,6 +171,16 @@ exports.acceptConnect = async (req, res) => {
         success: true,
         message: "Invitation ignored!",
       });
+    }
+
+    // Is chat present
+    const chat = await Chat.findOne({
+      groupChat: false,
+      members: { $all: [connecte.sender, req.user._id] },
+    });
+    if (chat) {
+      chat.privateConnection = true;
+      await chat.save();
     }
 
     await connecte.updateOne({ status: "accepted" });

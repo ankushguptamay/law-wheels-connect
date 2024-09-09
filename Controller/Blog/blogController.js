@@ -484,10 +484,40 @@ exports.getBlogs = async (req, res) => {
   }
 };
 
-exports.getBlogById = async (req, res) => {
+exports.getBlogBySlug = async (req, res) => {
   try {
     const isBlog = await Blog.findOne({
-      _id: req.params.id,
+      slug: req.params.slug,
+    });
+    if (!isBlog) {
+      return res.status(400).json({
+        success: false,
+        message: `This blog is not present!`,
+      });
+    }
+
+    // delete
+    await isBlog.deleteOne();
+    res.status(200).json({
+      success: true,
+      message: "Blog fetched successfully!",
+      data: isBlog,
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};
+
+exports.getBlogBySlugForUser = async (req, res) => {
+  try {
+    const today = new Date();
+    const isBlog = await Blog.findOne({
+      slug: req.params.slug,
+      publishDate: { $lte: today },
+      status: "Published",
     });
     if (!isBlog) {
       return res.status(400).json({

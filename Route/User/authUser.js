@@ -4,6 +4,7 @@ const router = express.Router();
 const userProfile = require("./userProfile");
 const connection = require("./userConnection");
 const post = require("./userPost");
+const chat = require("./chatRoute");
 
 const {
   getUser,
@@ -60,5 +61,6 @@ router.delete("/licensePic", verifyUserJWT, deleteLicensePic);
 router.use(userProfile);
 router.use(connection);
 router.use(post);
+router.use(chat);
 
 module.exports = router;

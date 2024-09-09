@@ -13,7 +13,7 @@ const filter = (req, file, cb) => {
 
 var storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, path.join(`${__dirname}/../Resource`));
+        cb(null, path.join(`${__dirname}/../../Resource`));
     },
     filename: (req, file, callback) => {
         var filename = `${Date.now()}-${file.originalname}`;
