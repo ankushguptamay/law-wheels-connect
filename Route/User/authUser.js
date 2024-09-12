@@ -5,6 +5,8 @@ const userProfile = require("./userProfile");
 const connection = require("./userConnection");
 const post = require("./userPost");
 const chat = require("./chatRoute");
+const advocateSlot = require("./slotRouteForAdvocate");
+const allUserSlot = require("./sloteForAllUser");
 
 const {
   getUser,
@@ -62,5 +64,7 @@ router.use(userProfile);
 router.use(connection);
 router.use(post);
 router.use(chat);
+router.use(allUserSlot);
+router.use(advocateSlot);
 
 module.exports = router;

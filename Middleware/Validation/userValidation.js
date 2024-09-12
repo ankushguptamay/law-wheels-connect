@@ -129,3 +129,20 @@ exports.profileViewer = (data) => {
   });
   return schema.validate(data);
 };
+
+exports.sloteValidation = (data) => {
+  const schema = joi.object().keys({
+    timeInMin: joi.number().required(),
+    date: joi.string().required(),
+    times: joi.array().required(),
+  });
+  return schema.validate(data);
+};
+
+exports.sloteForUserValidation = (data) => {
+  const schema = joi.object().keys({
+    advocate: joi.string().required(),
+    date: joi.string().optional(),
+  });
+  return schema.validate(data);
+};
