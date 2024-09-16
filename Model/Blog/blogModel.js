@@ -44,7 +44,7 @@ const schema = new Schema(
     status: {
       type: String,
       enum: {
-        values: ["Draft", "Published"],
+        values: ["Draft", "Published", "Unpublish"],
       },
       default: "Draft",
     },

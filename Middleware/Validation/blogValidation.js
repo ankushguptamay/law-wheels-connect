@@ -59,3 +59,10 @@ exports.slugValidation = (data) => {
   });
   return schema.validate(data);
 };
+
+exports.publishBlogValidation = (data) => {
+  const schema = joi.object().keys({
+    status: joi.string().valid("Draft", "Published", "Unpublish").required(),
+  });
+  return schema.validate(data);
+};

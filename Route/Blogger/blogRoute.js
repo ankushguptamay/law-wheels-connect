@@ -31,6 +31,7 @@ const {
   blogSlug,
   getBlogs,
   getBlogBySlug,
+  publishBlog,
 } = require("../../Controller/Blog/blogController");
 
 //middleware
@@ -98,4 +99,5 @@ router.delete("/additionalPic/:id", deleteAdditionalPic);
 router.put("/blog/:id", updateBlog);
 router.delete("/blog/:id", deleteBlog);
 router.put("/blogSlug", blogSlug);
+router.put("/publish/:id", publishBlog);
 module.exports = router;

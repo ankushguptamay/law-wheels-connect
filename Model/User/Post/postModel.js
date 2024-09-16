@@ -47,7 +47,7 @@ const schema = new Schema(
       option2: { type: String },
       option3: { type: String },
       option4: { type: String },
-      expireIn: { type: String },
+      expireIn: { type: Number },
     },
     rePostedBy: [{ type: Types.ObjectId, ref: "User" }],
     user: {

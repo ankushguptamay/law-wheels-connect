@@ -2,6 +2,7 @@ const {
   deleteAdditionalPicValidation,
   blogValidation,
   slugValidation,
+  publishBlogValidation,
 } = require("../../Middleware/Validation/blogValidation");
 const { deleteSingleFile } = require("../../Util/utility");
 const { uploadFileToBunny, deleteFileToBunny } = require("../../Util/bunny");
@@ -434,6 +435,38 @@ exports.blogSlug = async (req, res) => {
     res.status(200).json({
       success: true,
       message: "NotPresent!",
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};
+
+exports.publishBlog = async (req, res) => {
+  try {
+    // Body Validation
+    const { error } = publishBlogValidation(req.body);
+    if (error) {
+      return res.status(400).json({
+        success: false,
+        message: error.details[0].message,
+      });
+    }
+    const status = req.body.status;
+    const isBlog = await Blog.findById(req.params.id);
+    if (!isBlog) {
+      return res.status(400).json({
+        success: false,
+        message: `This blog is not present`,
+      });
+    }
+
+    await isBlog.updateOne(status);
+    res.status(200).json({
+      success: true,
+      message: `Blog ${status} successfully!`,
     });
   } catch (err) {
     res.status(500).json({
