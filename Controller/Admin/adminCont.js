@@ -3,8 +3,9 @@ const {
   validateAdminRegistration,
   validateAdminLogin,
 } = require("../../Middleware/Validation/adminValidation");
-const { sendToken, cookieOptions } = require("../../Util/features");
+const { sendToken } = require("../../Util/features");
 const bcrypt = require("bcryptjs");
+const { capitalizeFirstLetter } = require("../../Util/utility");
 const SALT = 10;
 
 exports.getAdmin = async (req, res) => {
@@ -55,7 +56,7 @@ exports.registerAdmin = async (req, res, next) => {
       name: name,
       password: hashedPassword,
     });
-    sendToken(res, admin, 201, "Admin created", "link-admin-token");
+    sendToken(res, admin, 201, "Admin created", "admin");
   } catch (err) {
     res.status(500).json({
       success: false,
@@ -93,32 +94,9 @@ exports.loginAdmin = async (req, res) => {
       });
     }
 
-    sendToken(
-      res,
-      isAdmin,
-      200,
-      `Welcome Back, ${isAdmin.name}`,
-      "link-admin-token"
-    );
+    sendToken(res, isAdmin, 200, `Welcome Back, ${isAdmin.name}`, "admin");
   } catch (err) {
     res.status(500).json({
-      success: false,
-      message: err.message,
-    });
-  }
-};
-
-exports.logOut = async (req, res) => {
-  try {
-    return res
-      .status(200)
-      .cookie("link-admin-token", "", { ...cookieOptions, maxAge: 0 })
-      .json({
-        success: true,
-        message: "Logged out successfully",
-      });
-  } catch (err) {
-    res.status(500).send({
       success: false,
       message: err.message,
     });

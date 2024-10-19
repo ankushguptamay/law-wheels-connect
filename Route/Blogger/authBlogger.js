@@ -6,7 +6,6 @@ const blog = require("./blogRoute");
 const {
   getBolger,
   registerBlogger,
-  logOut,
   loginBlogger,
 } = require("../../Controller/Blog/bloggerController");
 
@@ -15,9 +14,8 @@ const { verifyBloggerJWT } = require("../../Middleware/verifyJWTToken");
 
 router.post("/register", registerBlogger);
 router.post("/login", loginBlogger);
-router.get("/logOut", logOut);
 router.get("/", verifyBloggerJWT, getBolger);
 
-router.use(blog);
+router.use("/blog", blog);
 
 module.exports = router;

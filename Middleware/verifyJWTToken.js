@@ -8,7 +8,10 @@ const { JWT_SECRET_KEY_ADMIN, JWT_SECRET_KEY_USER, JWT_SECRET_KEY_BLOGGER } =
 
 exports.verifyUserJWT = async (req, res, next) => {
   try {
-    const token = req.cookies["link-user-token"];
+    const authHeader = req.headers.authorization || req.headers.Authorization;
+    // console.log('JWT Verif MW');
+    if (!authHeader?.startsWith("Bearer ")) return res.sendStatus(401);
+    const token = authHeader.split(" ")[1];
 
     if (!token) return res.sendStatus(401);
 
@@ -33,7 +36,10 @@ exports.verifyUserJWT = async (req, res, next) => {
 
 exports.verifyAdminJWT = async (req, res, next) => {
   try {
-    const token = req.cookies["link-admin-token"];
+    const authHeader = req.headers.authorization || req.headers.Authorization;
+    // console.log('JWT Verif MW');
+    if (!authHeader?.startsWith("Bearer ")) return res.sendStatus(401);
+    const token = authHeader.split(" ")[1];
 
     if (!token) return res.sendStatus(401);
 
@@ -58,7 +64,10 @@ exports.verifyAdminJWT = async (req, res, next) => {
 
 exports.verifyBloggerJWT = async (req, res, next) => {
   try {
-    const token = req.cookies["link-blogger-token"];
+    const authHeader = req.headers.authorization || req.headers.Authorization;
+    // console.log('JWT Verif MW');
+    if (!authHeader?.startsWith("Bearer ")) return res.sendStatus(401);
+    const token = authHeader.split(" ")[1];
 
     if (!token) return res.sendStatus(401);
 
@@ -81,26 +90,24 @@ exports.verifyBloggerJWT = async (req, res, next) => {
   }
 };
 
-// exports.socketAuthenticator = async (err, socket, next) => {
-//   try {
-//     if (err) return next(err);
+exports.socketAuthenticator = async (err, socket, next) => {
+  try {
+    const token =
+      socket.handshake.auth.token || socket.handshake.headers["authorization"];
 
-//     const authToken = socket.request.cookies["chat-user-token"];
+    if (!token)
+      return next(new ErrorHandler("Please login to access this route", 401));
 
-//     if (!authToken)
-//       return next(new ErrorHandler("Please login to access this route", 401));
+    const decodedData = jwt.verify(authToken, process.env.USER_JWT_SECRET_KEY);
 
-//     const decodedData = jwt.verify(authToken, process.env.USER_JWT_SECRET_KEY);
+    const user = await User.findOne({ where: { id: decodedData.id } });
 
-//     const user = await User.findOne({ where: { id: decodedData.id } });
+    if (!user)
+      return next(new ErrorHandler("Please login to access this route", 401));
+    socket.user = user;
 
-//     if (!user)
-//       return next(new ErrorHandler("Please login to access this route", 401));
-//     socket.user = user;
-
-//     return next();
-//   } catch (error) {
-//     console.log(error);
-//     return next(new ErrorHandler("Please login to access this route", 401));
-//   }
-// };
+    return next();
+  } catch (error) {
+    return next(new ErrorHandler("Please login to access this route", 401));
+  }
+};

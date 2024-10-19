@@ -12,34 +12,31 @@ exports.connectDB = (uri) => {
     });
 };
 
-exports.cookieOptions = {
-  maxAge: 15 * 24 * 60 * 60 * 1000,
-  sameSite: "none",
-  httpOnly: true,
-  secure: true,
-};
-
 exports.sendToken = (res, user, code, message, tokenName) => {
   let token;
-  if (tokenName === "link-admin-token") {
+  if (tokenName === "admin") {
     token = jwt.sign(
       { _id: user._id, email: user.email },
-      process.env.JWT_SECRET_KEY_ADMIN
+      process.env.JWT_SECRET_KEY_ADMIN,
+      { expiresIn: process.env.JWT_VALIDITY }
     );
-  } else if (tokenName === "link-blogger-token") {
+  } else if (tokenName === "blogger") {
     token = jwt.sign(
       { _id: user._id, email: user.email },
-      process.env.JWT_SECRET_KEY_BLOGGER
+      process.env.JWT_SECRET_KEY_BLOGGER,
+      { expiresIn: process.env.JWT_VALIDITY }
     );
   } else {
     token = jwt.sign(
       { _id: user._id, email: user.email },
-      process.env.JWT_SECRET_KEY_USER
+      process.env.JWT_SECRET_KEY_USER,
+      { expiresIn: process.env.JWT_VALIDITY }
     );
   }
 
-  return res.status(code).cookie(tokenName, token, this.cookieOptions).json({
+  return res.status(code).json({
     success: true,
+    AccessToken: token,
     user,
     message,
   });

@@ -11,7 +11,6 @@ const allUserSlot = require("./sloteForAllUser");
 const {
   getUser,
   register,
-  logOut,
   loginByMobile,
   addUpdateProfilePic,
   verifyMobileOTP,
@@ -30,7 +29,6 @@ const uploadImage = require("../../Middleware/UploadFile/image");
 
 router.post("/register", register);
 router.post("/loginByMobile", loginByMobile);
-router.post("/logOut", logOut);
 router.post("/verifyMobileOTP", verifyMobileOTP);
 
 router.get("/", verifyUserJWT, getUser);
@@ -60,11 +58,11 @@ router.delete("/profilePic", verifyUserJWT, deleteProfilePic);
 router.delete("/coverPic", verifyUserJWT, deleteCoverPic);
 router.delete("/licensePic", verifyUserJWT, deleteLicensePic);
 
-router.use(userProfile);
-router.use(connection);
-router.use(post);
-router.use(chat);
-router.use(allUserSlot);
-router.use(advocateSlot);
+router.use("/profile",userProfile);
+router.use("/conn",connection);
+router.use("/post",post);
+router.use("/chat",chat);
+router.use("/slot",allUserSlot);
+router.use("/aSlot",advocateSlot);
 
 module.exports = router;

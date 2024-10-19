@@ -3,7 +3,7 @@ const {
   validateAdminLogin,
 } = require("../../Middleware/Validation/adminValidation");
 const { Blogger } = require("../../Model/Blog/bloggerModel");
-const { sendToken, cookieOptions } = require("../../Util/features");
+const { sendToken } = require("../../Util/features");
 const bcrypt = require("bcryptjs");
 const { capitalizeFirstLetter } = require("../../Util/utility");
 const SALT = 10;
@@ -56,7 +56,7 @@ exports.registerBlogger = async (req, res, next) => {
       name: name,
       password: hashedPassword,
     });
-    sendToken(res, blogger, 201, "Blogger created", "link-blogger-token");
+    sendToken(res, blogger, 201, "Blogger created", "blogger");
   } catch (err) {
     res.status(500).json({
       success: false,
@@ -99,27 +99,10 @@ exports.loginBlogger = async (req, res) => {
       isBlogger,
       200,
       `Welcome Back, ${isBlogger.name}`,
-      "link-blogger-token"
+      "blogger"
     );
   } catch (err) {
     res.status(500).json({
-      success: false,
-      message: err.message,
-    });
-  }
-};
-
-exports.logOut = async (req, res) => {
-  try {
-    return res
-      .status(200)
-      .cookie("link-blogger-token", "", { ...cookieOptions, maxAge: 0 })
-      .json({
-        success: true,
-        message: "Logged out successfully",
-      });
-  } catch (err) {
-    res.status(500).send({
       success: false,
       message: err.message,
     });

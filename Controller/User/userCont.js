@@ -17,7 +17,7 @@ const {
   validateUpdateUser,
 } = require("../../Middleware/Validation/userValidation");
 
-const { sendToken, cookieOptions } = require("../../Util/features");
+const { sendToken } = require("../../Util/features");
 const {
   deleteSingleFile,
   capitalizeFirstLetter,
@@ -234,28 +234,11 @@ exports.verifyMobileOTP = async (req, res) => {
       await user.updateOne({ isMobileNumberVerified: true });
     }
     // Send Cookies
-    sendToken(res, user, 200, `Welcome, ${user.name}`, "link-user-token");
+    sendToken(res, user, 200, `Welcome, ${user.name}`, "user");
   } catch (err) {
     res.status(500).send({
       success: false,
       err: err.message,
-    });
-  }
-};
-
-exports.logOut = async (req, res) => {
-  try {
-    return res
-      .status(200)
-      .cookie("link-user-token", "", { ...cookieOptions, maxAge: 0 })
-      .json({
-        success: true,
-        message: "Logged out successfully",
-      });
-  } catch (err) {
-    res.status(500).send({
-      success: false,
-      message: err.message,
     });
   }
 };
