@@ -166,8 +166,8 @@ exports.loginByMobile = async (req, res) => {
     // Generate OTP for Email
     const otp = generateFixedLengthRandomNumber(OTP_DIGITS_LENGTH);
     // Sending OTP to mobile number
-    await sendOTPToMoblie(mobileNumber, otp);
-
+const resss=    await sendOTPToMoblie(mobileNumber, otp);
+console.log(resss)
     //  Store OTP
     await OTP.create({
       validTill: new Date().getTime() + parseInt(OTP_VALIDITY_IN_MILLISECONDS),

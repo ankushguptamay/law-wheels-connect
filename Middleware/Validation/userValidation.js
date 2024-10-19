@@ -31,7 +31,7 @@ exports.verifyMobileOTP = (data) => {
       .length(10)
       .pattern(/^[0-9]+$/)
       .required(),
-    otp: joi.string().length(6).required(),
+    otp: joi.string().length(4).required(),
   });
   return schema.validate(data);
 };

@@ -19,7 +19,7 @@ function generateFixedLengthRandomNumber(numberOfDigits) {
 
 const sendOTPToMoblie = async (phoneNumber, otp) => {
   try {
-    const message = `${otp} is your OTP/Verification code for YBREAK and is valid for 5 minutes. -YBREAK`;
+    const message = `${otp} is your login OTP for Swasti Bharat Partners App. Do not share it with anyone. fB6cKbM6aqn - SWASBT`;
     let response = await axios.post(
       `https://www.smsgatewayhub.com/api/mt/SendSMS?APIKey=${SMS_API_KEY}&senderid=${SMS_SENDER_ID}&channel=${SMS_CHANNEL}&DCS=0&flashsms=0&number=${phoneNumber}&text=${message}&route=${SMS_ROUTE_ID}&EntityId=${SMS_DLT_ENTITY_ID}&dlttemplateid=${SMS_DLT_TEMPLATE_ID}`
     );
