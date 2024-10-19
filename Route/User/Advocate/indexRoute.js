@@ -28,17 +28,14 @@ const { verifyUserJWT } = require("../../../Middleware/verifyJWTToken");
 const uploadImage = require("../../../Middleware/UploadFile/image");
 
 router.use(verifyUserJWT);
+router.use(isAdvocateUser);
 
 router.put(
   "/licensePic",
-  isAdvocateUser,
   uploadImage.single("LicensePic"),
   addUpdateLicensePic
 );
-
 router.get("/", getUser);
-
-router.use(isAdvocateVerified);
 
 router.put(
   "/profilePic",

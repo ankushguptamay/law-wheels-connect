@@ -375,7 +375,7 @@ exports.addUpdateLicensePic = async (req, res) => {
     await isLicensePic.updateOne({
       licensePic: licensePic,
       bar_council_license_number,
-      isLicenseVerified: true,
+      isLicenseVerified: false,
     });
     // Final response
     res.status(200).send({
