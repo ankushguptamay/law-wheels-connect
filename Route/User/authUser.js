@@ -8,10 +8,13 @@ const {
   rolePage,
 } = require("../../Controller/User/userCont");
 
+// Middle
+const { verifyUserJWT } = require("../../Middleware/verifyJWTToken");
+
 router.post("/register", register);
 router.post("/loginByMobile", loginByMobile);
 router.post("/verifyMobileOTP", verifyMobileOTP);
 
-router.put("/rolePage", rolePage);
+router.put("/rolePage", verifyUserJWT, rolePage);
 
 module.exports = router;

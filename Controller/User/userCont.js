@@ -656,8 +656,7 @@ exports.rolePage = async (req, res) => {
     }
     const { role } = req.body;
 
-    let codePreFix = "LWUN",
-      message = "user";
+    let codePreFix, message;
     if (role === "Advocate") {
       message = "advocate";
       codePreFix = "LWUA";
@@ -665,10 +664,8 @@ exports.rolePage = async (req, res) => {
       message = "student";
       codePreFix = "LWUS";
     } else {
-      return res.status(400).json({
-        success: false,
-        message: "Please select required fields!",
-      });
+      codePreFix = "LWUN";
+      message = "user";
     }
 
     // generate User code
@@ -693,7 +690,6 @@ exports.rolePage = async (req, res) => {
     while (await User.findOne({ userCode })) {
       userCode = `${startWith}${lastDigits++}`;
     }
-
     // Update user
     await User.findOneAndUpdate({ _id: req.user._id }, { role, userCode });
     // Final response
