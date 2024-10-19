@@ -83,7 +83,6 @@ exports.validateIsAdvocatePage = (data) => {
 
 exports.validateUpdateUser = (data) => {
   const schema = joi.object().keys({
-    isAdvocate: joi.boolean().required(),
     location: joi
       .object({
         arg: joi.string().valid("country", "state", "city"),
@@ -94,7 +93,6 @@ exports.validateUpdateUser = (data) => {
       .pattern(/city/, joi.string())
       .required(),
     isProfileVisible: joi.boolean().required(),
-    bar_council_license_number: joi.string().optional(),
     headLine: joi.string().optional(),
     name: joi.string().min(3).required(),
   });
@@ -143,6 +141,13 @@ exports.sloteForUserValidation = (data) => {
   const schema = joi.object().keys({
     advocate: joi.string().required(),
     date: joi.string().optional(),
+  });
+  return schema.validate(data);
+};
+
+exports.validateRolePage = (data) => {
+  const schema = joi.object().keys({
+    role: joi.string().valid("Advocate", "Student", "Nun").required(),
   });
   return schema.validate(data);
 };

@@ -6,13 +6,13 @@ const {
   mySloteForAdvocate,
   deactivateSlote,
   deleteSlote,
-} = require("../../Controller/User/Slot/slotController.js");
+} = require("../../../Controller/User/Slot/slotController.js");
 
 //middleware
-const { verifyUserJWT } = require("../../Middleware/verifyJWTToken.js");
+const { verifyUserJWT } = require("../../../Middleware/verifyJWTToken.js");
 
 router.use(verifyUserJWT, (req, res, next) => {
-  if (!req.user.isAdvocate) {
+  if (req.user.role !== "Advocate") {
     return res.status(400).json({
       success: false,
       message: "You are not allowed to do this functionality!",

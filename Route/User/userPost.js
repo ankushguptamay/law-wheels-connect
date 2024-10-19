@@ -52,11 +52,8 @@ const {
 } = require("../../Controller/User/Post/rePostController");
 
 //middleware
-const { verifyUserJWT } = require("../../Middleware/verifyJWTToken");
 const uploadImage = require("../../Middleware/UploadFile/image");
 const uploadPDF = require("../../Middleware/UploadFile/pdf");
-
-router.use(verifyUserJWT);
 
 router.post("/documentPost", uploadPDF.single("DocumentFile"), addDocumentPost);
 router.post("/mediaPost", uploadImage.array("MediaFile", 10), addMediaPost);

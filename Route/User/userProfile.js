@@ -51,10 +51,7 @@ const {
 } = require("../../Controller/User/Analytics/profileViewCont");
 
 //middleware
-const { verifyUserJWT } = require("../../Middleware/verifyJWTToken");
 const uploadImage = require("../../Middleware/UploadFile/image");
-
-router.use(verifyUserJWT);
 
 // Education
 router.post("/education", addEducation);

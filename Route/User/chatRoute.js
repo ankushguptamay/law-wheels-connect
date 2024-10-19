@@ -20,11 +20,8 @@ const {
 } = require("../../Controller/Chat/chatController.js");
 
 //middleware
-const { verifyUserJWT } = require("../../Middleware/verifyJWTToken");
 const imageAndPDF = require("../../Middleware/UploadFile/imageAndPDF.js");
 const image = require("../../Middleware/UploadFile/image.js");
-
-router.use(verifyUserJWT);
 
 router.post("/groupChat", newGroupChat);
 router.post("/privateChat", newPrivateChat);

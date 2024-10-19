@@ -7,11 +7,6 @@ const {sloteForUser,
   sloteByIdForUser,
 } = require("../../Controller/User/Slot/slotController.js");
 
-//middleware
-const { verifyUserJWT } = require("../../Middleware/verifyJWTToken.js");
-
-router.use(verifyUserJWT);
-
 router.get("/slotForUser", sloteForUser);
 router.post("/bookSlot/:id", bookASlote);
 router.get("/myBookSlot", mySloteForUser);

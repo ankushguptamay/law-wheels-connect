@@ -17,7 +17,10 @@ exports.verifyUserJWT = async (req, res, next) => {
 
     const decode = jwt.verify(token, JWT_SECRET_KEY_USER);
 
-    const user = await User.findOne({ _id: decode._id });
+    const user = await User.findOne(
+      { _id: decode._id },
+      "_id name email mobileNumber isLicenseVerified role"
+    );
     if (!user) {
       return res.status(400).json({
         success: false,
@@ -45,7 +48,10 @@ exports.verifyAdminJWT = async (req, res, next) => {
 
     const decode = jwt.verify(token, JWT_SECRET_KEY_ADMIN);
 
-    const admin = await Admin.findOne({ _id: decode._id });
+    const admin = await Admin.findOne(
+      { _id: decode._id },
+      "_id name email mobileNumber isLicenseVerified role"
+    );
     if (!admin) {
       return res.status(400).json({
         success: false,
@@ -73,7 +79,10 @@ exports.verifyBloggerJWT = async (req, res, next) => {
 
     const decode = jwt.verify(token, JWT_SECRET_KEY_BLOGGER);
 
-    const blogger = await Blogger.findOne({ _id: decode._id });
+    const blogger = await Blogger.findOne(
+      { _id: decode._id },
+      "_id name email mobileNumber isLicenseVerified role"
+    );
     if (!blogger) {
       return res.status(400).json({
         success: false,
@@ -100,7 +109,10 @@ exports.socketAuthenticator = async (err, socket, next) => {
 
     const decodedData = jwt.verify(authToken, process.env.USER_JWT_SECRET_KEY);
 
-    const user = await User.findOne({ where: { id: decodedData.id } });
+    const user = await User.findOne(
+      { _id: decodedData._id },
+      "_id name email mobileNumber isLicenseVerified role"
+    );
 
     if (!user)
       return next(new ErrorHandler("Please login to access this route", 401));

@@ -16,11 +16,6 @@ const {
   acceptConnect,
 } = require("../../Controller/User/Connection/connectionCont");
 
-//middleware
-const { verifyUserJWT } = require("../../Middleware/verifyJWTToken");
-
-router.use(verifyUserJWT);
-
 router.post("/follow", follow);
 router.get("/followCount", followCount);
 router.get("/follower", follower);

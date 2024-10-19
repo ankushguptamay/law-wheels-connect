@@ -23,6 +23,10 @@ const schema = new Schema(
       type: Boolean,
       default: false,
     },
+    isLicenseVerified: {
+      type: Boolean,
+      default: false,
+    },
     headLine: {
       type: String,
     },
@@ -49,8 +53,12 @@ const schema = new Schema(
       fileName: { type: String },
       url: { type: String },
     },
-    isAdvocate: {
-      type: Boolean, // If Value is true then user is advocate, if false user is student and if null none of the above
+    role: {
+      type: String,
+      enum: {
+        values: ["Advocate", "Student", "Nun"],
+        message: "{VALUE} is not supported",
+      },
     },
     isProfileVisible: {
       type: Boolean,

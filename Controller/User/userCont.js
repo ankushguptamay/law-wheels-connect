@@ -15,6 +15,7 @@ const {
   verifyMobileOTP,
   validateIsAdvocatePage,
   validateUpdateUser,
+  validateRolePage,
 } = require("../../Middleware/Validation/userValidation");
 
 const { sendToken } = require("../../Util/features");
@@ -166,8 +167,7 @@ exports.loginByMobile = async (req, res) => {
     // Generate OTP for Email
     const otp = generateFixedLengthRandomNumber(OTP_DIGITS_LENGTH);
     // Sending OTP to mobile number
-const resss=    await sendOTPToMoblie(mobileNumber, otp);
-console.log(resss)
+    await sendOTPToMoblie(mobileNumber, otp);
     //  Store OTP
     await OTP.create({
       validTill: new Date().getTime() + parseInt(OTP_VALIDITY_IN_MILLISECONDS),
@@ -210,9 +210,12 @@ exports.verifyMobileOTP = async (req, res) => {
       });
     }
     // Checking is user present or not
-    const user = await User.findOne({
-      $and: [{ mobileNumber: mobileNumber }, { _id: isOtp.receiverId }],
-    });
+    const user = await User.findOne(
+      {
+        $and: [{ mobileNumber: mobileNumber }, { _id: isOtp.receiverId }],
+      },
+      "_id name email mobileNumber isLicenseVerified role"
+    );
     if (!user) {
       return res.status(400).send({
         success: false,
@@ -336,11 +339,21 @@ exports.addUpdateLicensePic = async (req, res) => {
     if (!req.file) {
       return res.status(400).send({
         success: false,
-        message: "Please..upload an image!",
+        message: "Upload your bar council id image!",
       });
     }
+
+    const bar_council_license_number = req.body.bar_council_license_number;
+    if (!bar_council_license_number) {
+      return res.status(400).send({
+        success: false,
+        message: "Add your bar council enrolement number!",
+      });
+    }
+
     const isLicensePic = await User.findOne({
       _id: req.user._id,
+      bar_council_license_number,
     });
 
     //Upload file to bunny
@@ -361,6 +374,8 @@ exports.addUpdateLicensePic = async (req, res) => {
 
     await isLicensePic.updateOne({
       licensePic: licensePic,
+      bar_council_license_number,
+      isLicenseVerified: false,
     });
     // Final response
     res.status(200).send({
@@ -508,13 +523,7 @@ exports.updateUser = async (req, res) => {
         message: error.details[0].message,
       });
     }
-    const {
-      isAdvocate,
-      location,
-      isProfileVisible,
-      bar_council_license_number,
-      headLine,
-    } = req.body;
+    const { location, isProfileVisible, headLine } = req.body;
     const name = capitalizeFirstLetter(
       req.body.name.replace(/\s+/g, " ").trim()
     );
@@ -524,11 +533,9 @@ exports.updateUser = async (req, res) => {
         _id: req.user._id,
       },
       {
-        isAdvocate,
         location,
         isProfileVisible,
         headLine,
-        bar_council_license_number,
         name,
       }
     );
@@ -621,11 +628,78 @@ exports.deleteLicensePic = async (req, res) => {
     };
     await isLicensePic.updateOne({
       licensePic: licensePic,
+      isLicenseVerified: false,
+      bar_council_license_number: null,
     });
     // Final response
     res.status(200).send({
       success: true,
       message: "License pic deleted successfully!",
+    });
+  } catch (err) {
+    res.status(500).send({
+      success: false,
+      message: err.message,
+    });
+  }
+};
+
+exports.rolePage = async (req, res) => {
+  try {
+    // Body Validation
+    const { error } = validateRolePage(req.body);
+    if (error) {
+      return res.status(400).json({
+        success: false,
+        message: error.details[0].message,
+      });
+    }
+    const { role } = req.body;
+
+    let codePreFix = "LWUN",
+      message = "user";
+    if (role === "Advocate") {
+      message = "advocate";
+      codePreFix = "LWUA";
+    } else if (role === "Student") {
+      message = "student";
+      codePreFix = "LWUS";
+    } else {
+      return res.status(400).json({
+        success: false,
+        message: "Please select required fields!",
+      });
+    }
+
+    // generate User code
+    const today = new Date();
+    today.setMinutes(today.getMinutes() + 330);
+    const day = today.toISOString().slice(8, 10);
+    const year = today.toISOString().slice(2, 4);
+    const month = today.toISOString().slice(5, 7);
+    let userCode,
+      lastDigits,
+      startWith = `${codePreFix}${day}${month}${year}`;
+    const query = new RegExp("^" + startWith);
+    const isUserCode = await User.findOne({ userCode: query }).sort({
+      createdAt: -1,
+    });
+    if (!isUserCode) {
+      lastDigits = 1;
+    } else {
+      lastDigits = parseInt(isUserCode.userCode.substring(10)) + 1;
+    }
+    userCode = `${startWith}${lastDigits}`;
+    while (await User.findOne({ userCode })) {
+      userCode = `${startWith}${lastDigits++}`;
+    }
+
+    // Update user
+    await User.findOneAndUpdate({ _id: req.user._id }, { role, userCode });
+    // Final response
+    res.status(200).send({
+      success: true,
+      message: `Welcome ${message}!`,
     });
   } catch (err) {
     res.status(500).send({
