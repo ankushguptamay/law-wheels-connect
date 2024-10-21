@@ -335,6 +335,13 @@ exports.addUpdateCoverPic = async (req, res) => {
 
 exports.addUpdateLicensePic = async (req, res) => {
   try {
+    const bar_council_license_number = req.body.bar_council_license_number;
+    if (!bar_council_license_number) {
+      return res.status(400).send({
+        success: false,
+        message: "Add your bar council enrolement number!",
+      });
+    }
     // File should be exist
     if (!req.file) {
       return res.status(400).send({
@@ -343,39 +350,29 @@ exports.addUpdateLicensePic = async (req, res) => {
       });
     }
 
-    const bar_council_license_number = req.body.bar_council_license_number;
-    if (!bar_council_license_number) {
-      return res.status(400).send({
-        success: false,
-        message: "Add your bar council enrolement number!",
-      });
-    }
-
-    const isLicensePic = await User.findOne({
-      _id: req.user._id,
-      bar_council_license_number,
-    });
+    const isLicensePic = await User.findOne({ _id: req.user._id });
 
     //Upload file to bunny
     const fileStream = fs.createReadStream(req.file.path);
     await uploadFileToBunny(bunnyFolderName, fileStream, req.file.filename);
-    deleteSingleFile(file.path);
+    deleteSingleFile(req.file.path);
     const licensePic = {
       fileName: req.file.filename,
       url: `${process.env.SHOW_BUNNY_FILE_HOSTNAME}/${bunnyFolderName}/${req.file.filename}`,
     };
-
-    if (isLicensePic.licensePic.fileName) {
-      await deleteFileToBunny(
-        bunnyFolderName,
-        isLicensePic.licensePic.fileName
-      );
+    if (isLicensePic.licensePic) {
+      if (isLicensePic.licensePic.fileName) {
+        await deleteFileToBunny(
+          bunnyFolderName,
+          isLicensePic.licensePic.fileName
+        );
+      }
     }
 
     await isLicensePic.updateOne({
-      licensePic: licensePic,
       bar_council_license_number,
       isLicenseVerified: false,
+      licensePic: licensePic,
     });
     // Final response
     res.status(200).send({
@@ -696,7 +693,7 @@ exports.rolePage = async (req, res) => {
     res.status(200).send({
       success: true,
       message: `Welcome ${message}!`,
-      data: { ...req.user, role },
+      data: { ...req.user._doc, role },
     });
   } catch (err) {
     res.status(500).send({

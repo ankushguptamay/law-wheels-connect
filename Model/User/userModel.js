@@ -31,7 +31,7 @@ const schema = new Schema(
       type: String,
     },
     bar_council_license_number: {
-      type: Number,
+      type: String,
     },
     userCode: {
       type: String,

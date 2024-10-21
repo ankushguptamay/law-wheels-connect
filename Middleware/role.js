@@ -34,7 +34,7 @@ exports.isStudentUser = async (req, res, next) => {
 
 exports.isAdvocateUser = async (req, res, next) => {
   try {
-    console.log(req.user);
+    // console.log(req.user);
     if (req.user.role === "Advocate") {
       return next();
     }
