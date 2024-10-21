@@ -696,7 +696,7 @@ exports.rolePage = async (req, res) => {
     res.status(200).send({
       success: true,
       message: `Welcome ${message}!`,
-      data: req.user,
+      data: { ...req.user, role },
     });
   } catch (err) {
     res.status(500).send({
