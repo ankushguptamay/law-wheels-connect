@@ -50,29 +50,60 @@ exports.getUser = async (req, res) => {
       {
         $lookup: {
           from: "educations",
-          localField: "_id",
-          foreignField: "user",
+          let: { userId: "$_id" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ["$user", "$$userId"] },
+                    { $eq: ["$isDelete", false] },
+                  ],
+                },
+              },
+            },
+          ],
           as: "educations",
         },
       },
       {
         $lookup: {
           from: "experiences",
-          localField: "_id",
-          foreignField: "user",
+          let: { userId: "$_id" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ["$user", "$$userId"] },
+                    { $eq: ["$isDelete", false] },
+                  ],
+                },
+              },
+            },
+          ],
           as: "experiences",
         },
       },
-      //   },
-      // },
-      // {
-      //   $project: {
-      //     experiences: 1,
-      //     experiences: {
-      //       $project: { _id: 1 },
-      //     },
-      //   },
-      // },
+      {
+        $lookup: {
+          from: "userpracticeareas",
+          let: { userId: "$_id" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ["$user", "$$userId"] }, // Match the user
+                    { $eq: ["$isDelete", false] }, // Exclude deleted practice areas
+                  ],
+                },
+              },
+            },
+          ],
+          as: "userPracticeAreas",
+        },
+      },
     ]);
 
     res.status(200).json({

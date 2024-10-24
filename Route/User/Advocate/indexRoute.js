@@ -43,11 +43,6 @@ router.put(
   addUpdateProfilePic
 );
 router.put("/coverPic", uploadImage.single("CoverPic"), addUpdateCoverPic);
-router.put(
-  "/licensePic",
-  uploadImage.single("LicensePic"),
-  addUpdateLicensePic
-);
 router.put("/update", updateUser);
 
 router.delete("/profilePic", deleteProfilePic);

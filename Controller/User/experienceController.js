@@ -38,6 +38,18 @@ exports.addExperience = async (req, res) => {
       { updatedAt: new Date() },
       { upsert: true, new: true, setDefaultsOnInsert: true }
     );
+    // Change according to isOngoing and isRecent
+    if (isOngoing) {
+      await Experience.updateMany(
+        { isOngoing: false, isRecent: false },
+        { isDelete: false, user: req.user._id }
+      );
+    } else if (isRecent) {
+      await Experience.updateMany(
+        { isOngoing: false, isRecent: false },
+        { isDelete: false, user: req.user._id }
+      );
+    }
     // Store experience
     await Experience.create({
       jobTitle,
@@ -138,23 +150,33 @@ exports.updateExperience = async (req, res) => {
         message: "This experience is not present!",
       });
     }
-    // Create this firm if not exist
-    await FirmCompany.findOneAndUpdate(
-      { name: firmName },
-      { updatedAt: new Date() },
-      { upsert: true, new: true, setDefaultsOnInsert: true }
-    );
+
+    // Change according to isOngoing and isRecent
+    if (isOngoing) {
+      await Experience.updateMany(
+        { isOngoing: false, isRecent: false },
+        { isDelete: false, user: req.user._id }
+      );
+    } else if (isRecent) {
+      await Experience.updateMany(
+        { isOngoing: false, isRecent: false },
+        { isDelete: false, user: req.user._id }
+      );
+    }
+
     // Store History
-    await ExperienceUpdationHistory.create({
-      jobTitle: experience.jobTitle,
-      firmName: experience.firmName,
-      startDate: experience.startDate,
-      endDate: experience.endDate,
-      user: req.user._id,
-      experience: experience._id,
-      isRecent: experience.isRecent,
-      isOngoing: experience.isOngoing,
-    });
+    if (req.user.role === "Advocate" && req.user.isLicenseVerified) {
+      await ExperienceUpdationHistory.create({
+        jobTitle: experience.jobTitle,
+        firmName: experience.firmName,
+        startDate: experience.startDate,
+        endDate: experience.endDate,
+        user: req.user._id,
+        experience: experience._id,
+        isRecent: experience.isRecent,
+        isOngoing: experience.isOngoing,
+      });
+    }
 
     // Update Collection
     await experience.updateOne({
@@ -192,11 +214,20 @@ exports.softDeleteExperience = async (req, res) => {
         message: "This experience is not present!",
       });
     }
+
     // Update is
-    await experience.updateOne({
-      isDelete: true,
-      deleted_at: new Date(),
-    });
+    if (req.user.role === "Advocate" && req.user.isLicenseVerified) {
+      await experience.updateOne({
+        isDelete: true,
+        deleted_at: new Date(),
+      });
+    } else {
+      await ExperienceUpdationHistory.deleteMany({
+        user: req.user._id,
+        experience: experience._id,
+      });
+      await experience.deleteOne();
+    }
     res.status(200).json({
       success: true,
       message: "Experience deleted successfully!",
