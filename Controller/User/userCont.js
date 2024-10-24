@@ -366,18 +366,20 @@ exports.addUpdateCoverPic = async (req, res) => {
 
 exports.addUpdateLicensePic = async (req, res) => {
   try {
-    const bar_council_license_number = req.body.bar_council_license_number;
-    if (!bar_council_license_number) {
-      return res.status(400).send({
-        success: false,
-        message: "Add your bar council enrolement number!",
-      });
-    }
     // File should be exist
     if (!req.file) {
       return res.status(400).send({
         success: false,
         message: "Upload your bar council id image!",
+      });
+    }
+
+    const bar_council_license_number = req.body.bar_council_license_number;
+    if (!bar_council_license_number) {
+      deleteSingleFile(req.file.path);
+      return res.status(400).send({
+        success: false,
+        message: "Add your bar council enrolement number!",
       });
     }
 
