@@ -17,6 +17,9 @@ const schema = new Schema(
       month: { type: String },
       year: { type: String },
     },
+    description: {
+      type: String,
+    },
     user: {
       type: Types.ObjectId,
       ref: "User",

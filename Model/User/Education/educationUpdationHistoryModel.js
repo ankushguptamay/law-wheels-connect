@@ -34,6 +34,9 @@ const schema = new Schema(
       type: Boolean,
       default: false,
     },
+    description: {
+      type: String,
+    },
     education: {
       type: Types.ObjectId,
       ref: "Education",

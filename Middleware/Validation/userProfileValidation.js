@@ -33,6 +33,7 @@ exports.validateExperience = (data) => {
     endDate: joi.object().optional(),
     isRecent: joi.boolean().optional(),
     isOngoing: joi.boolean().optional(),
+    description: joi.string().min(20).max(1000).optional(),
   });
   return schema.validate(data);
 };
@@ -73,6 +74,7 @@ exports.validateEducation = (data) => {
     degreeType: joi.string().min(3).max(30).optional(),
     isRecent: joi.boolean().optional(),
     isOngoing: joi.boolean().optional(),
+    description: joi.string().min(20).max(1000).optional(),
   });
   return schema.validate(data);
 };

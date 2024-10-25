@@ -29,6 +29,7 @@ exports.addEducation = async (req, res) => {
       activities,
       isRecent,
       isOngoing,
+      description,
     } = req.body;
     const school_university = capitalizeFirstLetter(
       req.body.school_university.replace(/\s+/g, " ").trim()
@@ -39,6 +40,20 @@ exports.addEducation = async (req, res) => {
       { updatedAt: new Date() },
       { upsert: true, new: true, setDefaultsOnInsert: true }
     );
+
+    // Change according to isOngoing and isRecent
+    if (isOngoing) {
+      await Education.updateMany(
+        { isDelete: false, user: req.user._id },
+        { $set: { isOngoing: false, isRecent: false } }
+      );
+    } else if (isRecent) {
+      await Education.updateMany(
+        { isDelete: false, user: req.user._id },
+        { $set: { isOngoing: false, isRecent: false } }
+      );
+    }
+
     // Store education
     await Education.create({
       school_university,
@@ -50,6 +65,7 @@ exports.addEducation = async (req, res) => {
       activities,
       isRecent,
       isOngoing,
+      description,
       user: req.user._id,
     });
     res.status(200).json({
@@ -120,6 +136,7 @@ exports.updateEducation = async (req, res) => {
       endDate,
       activities,
       isRecent,
+      description,
       isOngoing,
     } = req.body;
     const school_university = capitalizeFirstLetter(
@@ -137,6 +154,20 @@ exports.updateEducation = async (req, res) => {
         message: "This education is not present!",
       });
     }
+
+    // Change according to isOngoing and isRecent
+    if (isOngoing) {
+      await Education.updateMany(
+        { isDelete: false, user: req.user._id },
+        { $set: { isOngoing: false, isRecent: false } }
+      );
+    } else if (isRecent) {
+      await Education.updateMany(
+        { isDelete: false, user: req.user._id },
+        { $set: { isOngoing: false, isRecent: false } }
+      );
+    }
+
     // Create this firm if not exist
     await SchoolUniversity.findOneAndUpdate(
       { name: school_university },
@@ -144,19 +175,22 @@ exports.updateEducation = async (req, res) => {
       { upsert: true, new: true, setDefaultsOnInsert: true }
     );
     // Store History
-    await EducationUpdationHistory.create({
-      school_university: education.school_university,
-      degreeType: education.degreeType,
-      fieldOfStudy: education.fieldOfStudy,
-      grade: education.grade,
-      startDate: education.startDate,
-      endDate: education.endDate,
-      activities: education.activities,
-      user: req.user._id,
-      education: education._id,
-      isRecent: education.isRecent,
-      isOngoing: education.isOngoing,
-    });
+    if (req.user.role === "Advocate" && req.user.isLicenseVerified) {
+      await EducationUpdationHistory.create({
+        school_university: education.school_university,
+        degreeType: education.degreeType,
+        fieldOfStudy: education.fieldOfStudy,
+        grade: education.grade,
+        startDate: education.startDate,
+        endDate: education.endDate,
+        activities: education.activities,
+        user: req.user._id,
+        education: education._id,
+        isRecent: education.isRecent,
+        isOngoing: education.isOngoing,
+        description: education.description,
+      });
+    }
 
     // Update Collection
     await education.updateOne({
@@ -169,6 +203,7 @@ exports.updateEducation = async (req, res) => {
       activities,
       isRecent,
       isOngoing,
+      description,
     });
     res.status(200).json({
       success: true,
@@ -198,10 +233,18 @@ exports.softDeleteEducation = async (req, res) => {
       });
     }
     // Update is
-    await education.updateOne({
-      isDelete: true,
-      deleted_at: new Date(),
-    });
+    if (req.user.role === "Advocate" && req.user.isLicenseVerified) {
+      await education.updateOne({
+        isDelete: true,
+        deleted_at: new Date(),
+      });
+    } else {
+      await EducationUpdationHistory.deleteMany({
+        user: req.user._id,
+        education: experience._id,
+      });
+      await education.deleteOne();
+    }
     res.status(200).json({
       success: true,
       message: "Education deleted successfully!",

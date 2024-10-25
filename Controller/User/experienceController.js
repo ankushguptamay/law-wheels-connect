@@ -19,7 +19,7 @@ exports.addExperience = async (req, res) => {
         message: error.details[0].message,
       });
     }
-    const { startDate, endDate, isRecent, isOngoing } = req.body;
+    const { startDate, endDate, isRecent, isOngoing, description } = req.body;
     const firmName = capitalizeFirstLetter(
       req.body.firmName.replace(/\s+/g, " ").trim()
     );
@@ -41,13 +41,13 @@ exports.addExperience = async (req, res) => {
     // Change according to isOngoing and isRecent
     if (isOngoing) {
       await Experience.updateMany(
-        { isOngoing: false, isRecent: false },
-        { isDelete: false, user: req.user._id }
+        { isDelete: false, user: req.user._id },
+        { $set: { isOngoing: false, isRecent: false } }
       );
     } else if (isRecent) {
       await Experience.updateMany(
-        { isOngoing: false, isRecent: false },
-        { isDelete: false, user: req.user._id }
+        { isDelete: false, user: req.user._id },
+        { $set: { isOngoing: false, isRecent: false } }
       );
     }
     // Store experience
@@ -58,6 +58,7 @@ exports.addExperience = async (req, res) => {
       endDate,
       isRecent,
       isOngoing,
+      description,
       user: req.user._id,
     });
     res.status(200).json({
@@ -120,7 +121,7 @@ exports.updateExperience = async (req, res) => {
       });
     }
 
-    const { startDate, endDate, isRecent, isOngoing } = req.body;
+    const { startDate, endDate, isRecent, isOngoing, description } = req.body;
     const firmName = capitalizeFirstLetter(
       req.body.firmName.replace(/\s+/g, " ").trim()
     );
@@ -154,13 +155,13 @@ exports.updateExperience = async (req, res) => {
     // Change according to isOngoing and isRecent
     if (isOngoing) {
       await Experience.updateMany(
-        { isOngoing: false, isRecent: false },
-        { isDelete: false, user: req.user._id }
+        { isDelete: false, user: req.user._id },
+        { $set: { isOngoing: false, isRecent: false } }
       );
     } else if (isRecent) {
       await Experience.updateMany(
-        { isOngoing: false, isRecent: false },
-        { isDelete: false, user: req.user._id }
+        { isDelete: false, user: req.user._id },
+        { $set: { isOngoing: false, isRecent: false } }
       );
     }
 
@@ -175,6 +176,7 @@ exports.updateExperience = async (req, res) => {
         experience: experience._id,
         isRecent: experience.isRecent,
         isOngoing: experience.isOngoing,
+        description: experience.description,
       });
     }
 
@@ -186,6 +188,7 @@ exports.updateExperience = async (req, res) => {
       endDate,
       isRecent,
       isOngoing,
+      description,
     });
     res.status(200).json({
       success: true,
