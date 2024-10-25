@@ -293,7 +293,7 @@ exports.addUpdateProfilePic = async (req, res) => {
     //Upload file to bunny
     const fileStream = fs.createReadStream(req.file.path);
     await uploadFileToBunny(bunnyFolderName, fileStream, req.file.filename);
-    deleteSingleFile(file.path);
+    deleteSingleFile(req.file.path);
     const profilePic = {
       fileName: req.file.filename,
       url: `${process.env.SHOW_BUNNY_FILE_HOSTNAME}/${bunnyFolderName}/${req.file.filename}`,
@@ -338,7 +338,7 @@ exports.addUpdateCoverPic = async (req, res) => {
     //Upload file to bunny
     const fileStream = fs.createReadStream(req.file.path);
     await uploadFileToBunny(bunnyFolderName, fileStream, req.file.filename);
-    deleteSingleFile(file.path);
+    deleteSingleFile(req.file.path);
     const coverPic = {
       fileName: req.file.filename,
       url: `${process.env.SHOW_BUNNY_FILE_HOSTNAME}/${bunnyFolderName}/${req.file.filename}`,
