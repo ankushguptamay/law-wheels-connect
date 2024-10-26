@@ -81,6 +81,15 @@ exports.validateIsAdvocatePage = (data) => {
   return schema.validate(data);
 };
 
+exports.validateLicensePic = (data) => {
+  const schema = joi.object().keys({
+    bar_council_license_number: joi.string().required(),
+    month: joi.string().required(),
+    year: joi.string().required(),
+  });
+  return schema.validate(data);
+};
+
 exports.validateUpdateUser = (data) => {
   const schema = joi.object().keys({
     location: joi

@@ -23,6 +23,10 @@ const schema = new Schema(
       type: Boolean,
       default: false,
     },
+    licenseIssueYear: {
+      month: { type: String },
+      year: { type: String },
+    },
     isLicenseVerified: {
       type: Boolean,
       default: false,

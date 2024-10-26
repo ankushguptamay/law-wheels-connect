@@ -14,6 +14,7 @@ const {
   validateUserLogin,
   verifyMobileOTP,
   validateIsAdvocatePage,
+  validateLicensePic,
   validateUpdateUser,
   validateRolePage,
 } = require("../../Middleware/Validation/userValidation");
@@ -382,15 +383,16 @@ exports.addUpdateLicensePic = async (req, res) => {
       });
     }
 
-    const bar_council_license_number = req.body.bar_council_license_number;
-    if (!bar_council_license_number) {
+    const { bar_council_license_number, month, year } = req.body;
+    const { error } = validateLicensePic(req.body);
+    if (error) {
       deleteSingleFile(req.file.path);
-      return res.status(400).send({
+      return res.status(400).json({
         success: false,
-        message: "Add your bar council enrolement number!",
+        message: error.details[0].message,
       });
     }
-
+    const licenseIssueYear = { month, year };
     const isLicensePic = await User.findOne({ _id: req.user._id });
 
     //Upload file to bunny
@@ -412,6 +414,7 @@ exports.addUpdateLicensePic = async (req, res) => {
 
     await isLicensePic.updateOne({
       bar_council_license_number,
+      licenseIssueYear,
       isLicenseVerified: false,
       licensePic: licensePic,
     });
