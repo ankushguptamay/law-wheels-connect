@@ -619,7 +619,7 @@ exports.deleteCoverPic = async (req, res) => {
       _id: req.user._id,
     });
     if (isCoverPic.coverPic.fileName) {
-      await deleteFileToBunny(isCoverPic.coverPic.fileName);
+      await deleteFileToBunny(bunnyFolderName, isCoverPic.coverPic.fileName);
     }
     const coverPic = {
       fileName: null,
