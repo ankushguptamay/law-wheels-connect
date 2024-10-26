@@ -26,6 +26,12 @@ const {
   deletePracticeArea,
 } = require("../../Controller/Master/practiceAreaCont");
 const {
+  addSpecialization,
+  getSpecialization,
+  updateSpecialization,
+  deleteSpecialization,
+} = require("../../Controller/Master/specializationCont");
+const {
   addSkill,
   getSkill,
   updateSkill,
@@ -43,6 +49,12 @@ router.post("/practiceArea", addPracticeArea);
 router.get("/practiceArea", getPracticeArea);
 router.put("/practiceArea/:id", updatePracticeArea);
 router.delete("/practiceArea/:id", deletePracticeArea);
+
+// specialization
+router.post("/specialization", addSpecialization);
+router.get("/specialization", getSpecialization);
+router.put("/specialization/:id", updateSpecialization);
+router.delete("/specialization/:id", deleteSpecialization);
 
 // Firm
 router.post("/firm", uploadImage.single("FirmImage"), addFirm);

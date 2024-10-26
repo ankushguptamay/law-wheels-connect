@@ -104,6 +104,14 @@ exports.getUser = async (req, res) => {
           as: "userPracticeAreas",
         },
       },
+      {
+        $lookup: {
+          from: "specializations",
+          localField: "specialization",
+          foreignField: "_id",
+          as: "specialization",
+        },
+      },
     ]);
 
     res.status(200).json({
@@ -553,7 +561,15 @@ exports.updateUser = async (req, res) => {
         message: error.details[0].message,
       });
     }
-    const { location, isProfileVisible, headLine } = req.body;
+    const {
+      location,
+      isProfileVisible,
+      headLine,
+      language,
+      experience_year,
+      total_cases,
+      specialization,
+    } = req.body;
     const name = capitalizeFirstLetter(
       req.body.name.replace(/\s+/g, " ").trim()
     );
@@ -567,6 +583,10 @@ exports.updateUser = async (req, res) => {
         isProfileVisible,
         headLine,
         name,
+        language,
+        experience_year,
+        total_cases,
+        specialization,
       }
     );
     // Final response

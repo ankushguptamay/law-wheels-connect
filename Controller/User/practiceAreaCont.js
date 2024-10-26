@@ -18,17 +18,29 @@ exports.addPracticeArea = async (req, res) => {
     const practiceArea = capitalizeFirstLetter(
       req.body.practiceArea.replace(/\s+/g, " ").trim()
     );
-    // Create this practice Area if not exist
-    await PracticeArea.findOneAndUpdate(
-      { name: practiceArea },
-      { updatedAt: new Date() },
-      { upsert: true, new: true, setDefaultsOnInsert: true }
-    );
-    // Store user practice Area
-    await UserPracticeArea.create({
+    // Find
+    const area = await UserPracticeArea.findOne({
       practiceArea,
       user: req.user._id,
     });
+    if (area) {
+      await practice.updateOne({
+        isDelete: false,
+        deleted_at: null,
+      });
+    } else {
+      // Create this practice Area if not exist
+      await PracticeArea.findOneAndUpdate(
+        { name: practiceArea },
+        { updatedAt: new Date() },
+        { upsert: true, new: true, setDefaultsOnInsert: true }
+      );
+      // Store user practice Area
+      await UserPracticeArea.create({
+        practiceArea,
+        user: req.user._id,
+      });
+    }
     res.status(200).json({
       success: true,
       message: "Practice area added successfully!",

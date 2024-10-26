@@ -95,6 +95,10 @@ exports.validateUpdateUser = (data) => {
     isProfileVisible: joi.boolean().required(),
     headLine: joi.string().optional(),
     name: joi.string().min(3).required(),
+    language: joi.array().optional(),
+    experience_year: joi.number().optional(),
+    total_cases: joi.number().optional(),
+    specialization: joi.array().optional(),
   });
   return schema.validate(data);
 };

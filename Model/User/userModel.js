@@ -1,4 +1,4 @@
-const { Schema, model, models } = require("mongoose");
+const { Schema, model, models, Types } = require("mongoose");
 
 const schema = new Schema(
   {
@@ -60,6 +60,10 @@ const schema = new Schema(
         message: "{VALUE} is not supported",
       },
     },
+    specialization: [{ type: Types.ObjectId, ref: "Specialization" }],
+    language: [],
+    experience_year: { type: Number },
+    total_cases: { type: Number },
     isProfileVisible: {
       type: Boolean,
       default: false,

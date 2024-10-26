@@ -28,6 +28,13 @@ exports.validatePracticeArea = (data) => {
   return schema.validate(data);
 };
 
+exports.validateSpecialization = (data) => {
+  const schema = joi.object().keys({
+    name: joi.string().min(3).required(),
+  });
+  return schema.validate(data);
+};
+
 exports.validateJobTitle = (data) => {
     const schema = joi.object().keys({
       jobTitle: joi.string().min(3).required(),
