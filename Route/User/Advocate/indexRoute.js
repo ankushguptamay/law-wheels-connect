@@ -7,6 +7,7 @@ const post = require("../userPost");
 const chat = require("../chatRoute");
 const advocateSlot = require("./slotRouteForAdvocate");
 const allUserSlot = require("../sloteForAllUser");
+const master = require("../master");
 
 const {
   getUser,
@@ -55,5 +56,6 @@ router.use("/post", post);
 router.use("/chat", chat);
 router.use("/slot", allUserSlot);
 router.use("/aSlot", advocateSlot);
+router.use("/master", master);
 
 module.exports = router;
