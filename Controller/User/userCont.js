@@ -383,7 +383,7 @@ exports.addUpdateLicensePic = async (req, res) => {
       });
     }
 
-    const { bar_council_license_number, month, year } = req.body;
+    const { bar_council_license_number, licenseIssueYear } = req.body;
     const { error } = validateLicensePic(req.body);
     if (error) {
       deleteSingleFile(req.file.path);
@@ -392,7 +392,7 @@ exports.addUpdateLicensePic = async (req, res) => {
         message: error.details[0].message,
       });
     }
-    const licenseIssueYear = { month, year };
+
     const isLicensePic = await User.findOne({ _id: req.user._id });
 
     //Upload file to bunny
@@ -414,7 +414,7 @@ exports.addUpdateLicensePic = async (req, res) => {
 
     await isLicensePic.updateOne({
       bar_council_license_number,
-      licenseIssueYear,
+      licenseIssueYear: new Date(licenseIssueYear),
       isLicenseVerified: false,
       licensePic: licensePic,
     });
@@ -431,128 +431,128 @@ exports.addUpdateLicensePic = async (req, res) => {
   }
 };
 
-exports.isAdvocatePage = async (req, res) => {
-  try {
-    // Body Validation
-    const { error } = validateIsAdvocatePage(req.body);
-    if (error) {
-      return res.status(400).json({
-        success: false,
-        message: error.details[0].message,
-      });
-    }
-    const {
-      isAdvocate,
-      school_university,
-      startDate,
-      jobTitle,
-      firmName,
-      location,
-    } = req.body;
+// exports.isAdvocatePage = async (req, res) => {
+//   try {
+//     // Body Validation
+//     const { error } = validateIsAdvocatePage(req.body);
+//     if (error) {
+//       return res.status(400).json({
+//         success: false,
+//         message: error.details[0].message,
+//       });
+//     }
+//     const {
+//       isAdvocate,
+//       school_university,
+//       startDate,
+//       jobTitle,
+//       firmName,
+//       location,
+//     } = req.body;
 
-    // Validate body
-    let newJobTitle = null,
-      newFirmName = null,
-      newSchool_university = null,
-      codePreFix = "LWUN",
-      message = "user";
-    if (isAdvocate) {
-      if (jobTitle && firmName) {
-        newJobTitle = capitalizeFirstLetter(
-          jobTitle.replace(/\s+/g, " ").trim()
-        );
-        newFirmName = capitalizeFirstLetter(
-          firmName.replace(/\s+/g, " ").trim()
-        );
-        message = "advocate";
-        codePreFix = "LWUA";
-        // Create this firm if not exist
-        await FirmCompany.findOneAndUpdate(
-          { name: newFirmName }, // Query
-          { updatedAt: new Date() }, // update
-          { upsert: true, new: true, setDefaultsOnInsert: true } // Options
-        );
-        // Create this job title if not exist
-        await JobTitle.findOneAndUpdate(
-          { name: newJobTitle }, // Query
-          { updatedAt: new Date() }, // update
-          { upsert: true, new: true, setDefaultsOnInsert: true } // Options
-        );
-        // Create Advocate Experience
-        await Experience.create({
-          isRecent: true,
-          firmName: newFirmName,
-          jobTitle: newJobTitle,
-          user: req.user._id,
-        });
-      } else {
-        return res.status(400).json({
-          success: false,
-          message: "Please select required fields!",
-        });
-      }
-    } else if (isAdvocate == false) {
-      if (school_university && startDate) {
-        newSchool_university = capitalizeFirstLetter(
-          school_university.replace(/\s+/g, " ").trim()
-        );
-        message = "student";
-        codePreFix = "LWUS";
-        // Create this university if not exist
-        await SchoolUniversity.findOneAndUpdate(
-          { name: newSchool_university },
-          { updatedAt: new Date() },
-          { upsert: true, new: true, setDefaultsOnInsert: true }
-        );
-        // Create Student Education
-        await Education.create({
-          isRecent: true,
-          user: req.user._id,
-          school_university: newSchool_university,
-          startDate,
-        });
-      } else {
-        return res.status(400).json({
-          success: false,
-          message: "Please select required fields!",
-        });
-      }
-    }
+//     // Validate body
+//     let newJobTitle = null,
+//       newFirmName = null,
+//       newSchool_university = null,
+//       codePreFix = "LWUN",
+//       message = "user";
+//     if (isAdvocate) {
+//       if (jobTitle && firmName) {
+//         newJobTitle = capitalizeFirstLetter(
+//           jobTitle.replace(/\s+/g, " ").trim()
+//         );
+//         newFirmName = capitalizeFirstLetter(
+//           firmName.replace(/\s+/g, " ").trim()
+//         );
+//         message = "advocate";
+//         codePreFix = "LWUA";
+//         // Create this firm if not exist
+//         await FirmCompany.findOneAndUpdate(
+//           { name: newFirmName }, // Query
+//           { updatedAt: new Date() }, // update
+//           { upsert: true, new: true, setDefaultsOnInsert: true } // Options
+//         );
+//         // Create this job title if not exist
+//         await JobTitle.findOneAndUpdate(
+//           { name: newJobTitle }, // Query
+//           { updatedAt: new Date() }, // update
+//           { upsert: true, new: true, setDefaultsOnInsert: true } // Options
+//         );
+//         // Create Advocate Experience
+//         await Experience.create({
+//           isRecent: true,
+//           firmName: newFirmName,
+//           jobTitle: newJobTitle,
+//           user: req.user._id,
+//         });
+//       } else {
+//         return res.status(400).json({
+//           success: false,
+//           message: "Please select required fields!",
+//         });
+//       }
+//     } else if (isAdvocate == false) {
+//       if (school_university && startDate) {
+//         newSchool_university = capitalizeFirstLetter(
+//           school_university.replace(/\s+/g, " ").trim()
+//         );
+//         message = "student";
+//         codePreFix = "LWUS";
+//         // Create this university if not exist
+//         await SchoolUniversity.findOneAndUpdate(
+//           { name: newSchool_university },
+//           { updatedAt: new Date() },
+//           { upsert: true, new: true, setDefaultsOnInsert: true }
+//         );
+//         // Create Student Education
+//         await Education.create({
+//           isRecent: true,
+//           user: req.user._id,
+//           school_university: newSchool_university,
+//           startDate,
+//         });
+//       } else {
+//         return res.status(400).json({
+//           success: false,
+//           message: "Please select required fields!",
+//         });
+//       }
+//     }
 
-    // generate User code
-    let code;
-    const query = new RegExp("^" + codePreFix);
-    const isUserCode = await User.find({ userCode: query }).sort({
-      createdAt: 1,
-    });
-    console.log(isUserCode);
-    if (isUserCode.length == 0) {
-      code = codePreFix + 1000;
-    } else {
-      let lastCode = isUserCode[isUserCode.length - 1];
-      let lastDigits = lastCode.userCode.substring(4);
-      let incrementedDigits = parseInt(lastDigits, 10) + 1;
-      code = codePreFix + incrementedDigits;
-    }
-    // Update user
-    await User.findOneAndUpdate(
-      {
-        _id: req.user._id,
-      },
-      { isAdvocate: isAdvocate, location: location, userCode: code }
-    );
-    // Final response
-    res.status(200).send({
-      success: true,
-      message: `Welcome ${message}!`,
-    });
-  } catch (err) {
-    res.status(500).send({
-      success: false,
-      message: err.message,
-    });
-  }
-};
+//     // generate User code
+//     let code;
+//     const query = new RegExp("^" + codePreFix);
+//     const isUserCode = await User.find({ userCode: query }).sort({
+//       createdAt: 1,
+//     });
+//     console.log(isUserCode);
+//     if (isUserCode.length == 0) {
+//       code = codePreFix + 1000;
+//     } else {
+//       let lastCode = isUserCode[isUserCode.length - 1];
+//       let lastDigits = lastCode.userCode.substring(4);
+//       let incrementedDigits = parseInt(lastDigits, 10) + 1;
+//       code = codePreFix + incrementedDigits;
+//     }
+//     // Update user
+//     await User.findOneAndUpdate(
+//       {
+//         _id: req.user._id,
+//       },
+//       { isAdvocate: isAdvocate, location: location, userCode: code }
+//     );
+//     // Final response
+//     res.status(200).send({
+//       success: true,
+//       message: `Welcome ${message}!`,
+//     });
+//   } catch (err) {
+//     res.status(500).send({
+//       success: false,
+//       message: err.message,
+//     });
+//   }
+// };
 
 exports.updateUser = async (req, res) => {
   try {

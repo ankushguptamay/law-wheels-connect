@@ -9,14 +9,8 @@ const schema = new Schema(
       type: String,
       required: true,
     },
-    startDate: {
-      month: { type: String },
-      year: { type: String },
-    },
-    endDate: {
-      month: { type: String },
-      year: { type: String },
-    },
+    startDate: { type: Date },
+    endDate: { type: Date },
     description: {
       type: String,
     },

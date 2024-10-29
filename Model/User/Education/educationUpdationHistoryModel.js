@@ -18,14 +18,8 @@ const schema = new Schema(
     activities: {
       type: String,
     },
-    startDate: {
-      month: { type: String },
-      year: { type: String },
-    },
-    endDate: {
-      month: { type: String },
-      year: { type: String },
-    },
+    startDate: { type: Date },
+    endDate: { type: Date },
     isRecent: {
       type: Boolean,
       default: false,

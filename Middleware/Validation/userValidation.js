@@ -36,56 +36,55 @@ exports.verifyMobileOTP = (data) => {
   return schema.validate(data);
 };
 
-exports.validateIsAdvocatePage = (data) => {
-  const schema = joi.object().keys({
-    isAdvocate: joi.boolean().required(),
-    school_university: joi.string().min(3).max(30).optional(),
-    startDate: joi
-      .object({
-        arg: joi.string().valid("month", "year"),
-        value: joi.string(),
-      })
-      .pattern(
-        /month/,
-        joi
-          .string()
-          .valid(
-            "January",
-            "February",
-            "March",
-            "April",
-            "May",
-            "June",
-            "July",
-            "August",
-            "September",
-            "October",
-            "November",
-            "December"
-          )
-      )
-      .pattern(/year/, joi.string().length(4))
-      .optional(),
-    location: joi
-      .object({
-        arg: joi.string().valid("country", "state", "city"),
-        value: joi.string(),
-      })
-      .pattern(/country/, joi.string())
-      .pattern(/state/, joi.string())
-      .pattern(/city/, joi.string())
-      .required(),
-    jobTitle: joi.string().min(3).optional(),
-    firmName: joi.string().min(3).optional(),
-  });
-  return schema.validate(data);
-};
+// exports.validateIsAdvocatePage = (data) => {
+//   const schema = joi.object().keys({
+//     isAdvocate: joi.boolean().required(),
+//     school_university: joi.string().min(3).max(30).optional(),
+//     startDate: joi
+//       .object({
+//         arg: joi.string().valid("month", "year"),
+//         value: joi.string(),
+//       })
+//       .pattern(
+//         /month/,
+//         joi
+//           .string()
+//           .valid(
+//             "January",
+//             "February",
+//             "March",
+//             "April",
+//             "May",
+//             "June",
+//             "July",
+//             "August",
+//             "September",
+//             "October",
+//             "November",
+//             "December"
+//           )
+//       )
+//       .pattern(/year/, joi.string().length(4))
+//       .optional(),
+//     location: joi
+//       .object({
+//         arg: joi.string().valid("country", "state", "city"),
+//         value: joi.string(),
+//       })
+//       .pattern(/country/, joi.string())
+//       .pattern(/state/, joi.string())
+//       .pattern(/city/, joi.string())
+//       .required(),
+//     jobTitle: joi.string().min(3).optional(),
+//     firmName: joi.string().min(3).optional(),
+//   });
+//   return schema.validate(data);
+// };
 
 exports.validateLicensePic = (data) => {
   const schema = joi.object().keys({
     bar_council_license_number: joi.string().required(),
-    month: joi.string().required(),
-    year: joi.string().required(),
+    licenseIssueYear: joi.string().required()
   });
   return schema.validate(data);
 };
