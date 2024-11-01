@@ -1,7 +1,8 @@
 const express = require("express");
 const router = express.Router();
 
-const {sloteForUser,
+const {
+  sloteForUser,
   bookASlote,
   mySloteForUser,
   sloteByIdForUser,

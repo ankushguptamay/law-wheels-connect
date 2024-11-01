@@ -37,11 +37,11 @@ router.put("/update", updateUser);
 router.delete("/profilePic", deleteProfilePic);
 router.delete("/coverPic", deleteCoverPic);
 
-router.use("/profile", userProfile);
+// router.use("/profile", userProfile);
 router.use("/conn", connection);
-router.use("/post", post);
+// router.use("/post", post);
 router.use("/chat", chat);
 router.use("/slot", allUserSlot);
-router.use("/master", master);
+// router.use("/master", master);
 
 module.exports = router;

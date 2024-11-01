@@ -16,34 +16,46 @@ exports.createSlote = async (req, res) => {
       });
     }
 
-    const { timeInMin, date, times } = req.body;
-    const yesterday = new Date(new Date().getTime() - 1 * 24 * 60 * 60 * 1000);
-    const dateInMiliSecond = new Date(date).getTime();
-
-    if (dateInMiliSecond <= yesterday) {
-      return res.status(400).send({
-        success: false,
-        message: `${date[i]} date is not acceptable!`,
-      });
+    const { timeInMin, startDate, endDate, times, serviceType } = req.body;
+    // Date validation
+    const todayIST = new Date();
+    todayIST.setMinutes(todayIST.getMinutes() + 330);
+    for (let i = 0; i < times.length; i++) {
+      if (
+        new Date(`${startDate}T${times[i]}:00.000Z`).getTime() <
+        todayIST.getTime()
+      ) {
+        return res.status(400).send({
+          success: false,
+          message: "Please select appropriate date!",
+        });
+      }
     }
 
-    for (let i = 0; i < times.length; i++) {
-      const slote = await Slot.findOne({
-        advocate: req.user._id,
-        time: times[i],
-        date: date,
-      });
-      if (!slote) {
+    // Create array of dates
+    function getDifferenceInDays(date1, date2) {
+      const timeDiff = Math.abs(new Date(date2) - new Date(date1));
+      const diffInDays = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
+      return diffInDays;
+    }
+    const noOfDate = getDifferenceInDays(startDate, endDate) + 1;
+    const dates = [];
+    for (i = 0; i < noOfDate; i++) {
+      const today = new Date(startDate);
+      today.setDate(today.getDate() + i);
+      dates.push(today.toISOString().slice(0, 10));
+    }
+    // Create
+    for (let i = 0; i < dates.length; i++) {
+      for (let j = 0; j < times.length; j++) {
         const otp = generateFixedLengthRandomNumber(
           process.env.OTP_DIGITS_LENGTH
         );
-        await Slot.create({
-          advocate: req.user._id,
-          time: times[i],
-          date: new Date(date),
-          password: otp,
-          timeInMin,
-        });
+        await Slot.findOneAndUpdate(
+          { advocate: req.user._id, time: times[j], date: new Date(dates[i]) },
+          { updatedAt: new Date(), password: otp, timeInMin, serviceType },
+          { upsert: true, new: true, setDefaultsOnInsert: true }
+        );
       }
     }
 
@@ -59,8 +71,9 @@ exports.createSlote = async (req, res) => {
   }
 };
 
-exports.deleteSlote = async (req, res) => {
+exports.deactivateSlote = async (req, res) => {
   try {
+    const { password } = req.body;
     const _id = req.params.id;
     const slote = await Slot.findById(_id);
     if (!slote) {
@@ -70,11 +83,30 @@ exports.deleteSlote = async (req, res) => {
       });
     }
     if (slote.isBooked) {
-      slote.isDelete = true;
-      slote.deleted_at = new Date();
-      await slote.save();
+      if (slote.status === "Upcoming" || slote.status === "Missed") {
+        if (!password) {
+          return res.status(400).json({
+            success: false,
+            message: "Please enter OTP!",
+          });
+        } else {
+          if (parseInt(slote.password) !== parseInt(password)) {
+            return res.status(400).json({
+              success: false,
+              message: "Wrong password!",
+            });
+          } else {
+            slote.status = "Deactivated";
+            await slote.save();
+          }
+        }
+      } else {
+        slote.status = "Deactivated";
+        await slote.save();
+      }
     } else {
-      await slote.deleteOne();
+      slote.status = "Deactivated";
+      await slote.save();
     }
 
     res.status(200).json({
@@ -89,48 +121,9 @@ exports.deleteSlote = async (req, res) => {
   }
 };
 
-// This API only work when user , advocate call happened
-exports.deactivateSlote = async (req, res) => {
-  try {
-    const { password } = req.body;
-    if (!password) {
-      return res.status(400).json({
-        success: false,
-        message: "Please enter OTP!",
-      });
-    }
-    const _id = req.params.id;
-    const slote = await Slot.findById(_id);
-    if (!slote) {
-      return res.status(400).json({
-        success: false,
-        message: "This slote is not present!",
-      });
-    }
-
-    if (parseInt(slote.password) !== parseInt(password)) {
-      return res.status(400).json({
-        success: false,
-        message: "Wrong password!",
-      });
-    }
-    slote.isActive = false;
-    await slote.save();
-    res.status(200).json({
-      success: true,
-      message: "Deactivated successfully!",
-    });
-  } catch (err) {
-    res.status(500).json({
-      success: false,
-      message: err.message,
-    });
-  }
-};
-
 exports.mySloteForAdvocate = async (req, res) => {
   try {
-    const { date, start_date, end_date, isBooked, notBooked } = req.query;
+    const { date, start_date, end_date, status, serviceType } = req.query;
     const _id = req.user._id;
     const yesterday = new Date(new Date().getTime() - 1 * 24 * 60 * 60 * 1000);
     const query = { $and: [{ advocate: _id }, { isDelete: false }] };
@@ -146,10 +139,11 @@ exports.mySloteForAdvocate = async (req, res) => {
       query.$and.push({ date: { $gt: new Date(yesterday) } });
     }
 
-    if (isBooked) {
-      query.$and.push({ isBooked: isBooked });
-    } else if (notBooked) {
-      query.$and.push({ isBooked: false });
+    if (status) {
+      query.$and.push({ status });
+    }
+    if (serviceType) {
+      query.$and.push({ serviceType });
     }
 
     const slot = await Slot.find(query).populate("client", "name profilePic");
@@ -163,7 +157,8 @@ exports.mySloteForAdvocate = async (req, res) => {
           _id: current._id,
           time: current.time,
           timeInMin: current.timeInMin,
-          isActive: current.isActive,
+          status: current.status,
+          serviceType: current.serviceType,
           createdAt: current.createdAt,
           client: current.client
             ? {
@@ -184,8 +179,9 @@ exports.mySloteForAdvocate = async (req, res) => {
               _id: current._id,
               time: current.time,
               timeInMin: current.timeInMin,
-              isActive: current.isActive,
+              status: current.status,
               createdAt: current.createdAt,
+              serviceType: current.serviceType,
               client: current.client
                 ? {
                     _id: current.client._id,
@@ -228,45 +224,33 @@ exports.bookASlote = async (req, res) => {
       });
     }
     // Check is date have been passed
-    const yesterday = new Date(new Date().getTime() - 1 * 24 * 60 * 60 * 1000);
-    const dateInMiliSecond = new Date(slot.date).getTime();
-    if (dateInMiliSecond <= yesterday) {
-      return res.status(400).send({
-        success: false,
-        message: `You can not book this slote!`,
-      });
-    }
-    // Check Slot time
     const today = new Date();
     today.setMinutes(today.getMinutes() + 330);
-    const isToday = today.toDateString() === new Date(slot.date).toDateString();
-    if (isToday) {
-      const date = `${slot.date.toISOString().slice(0, 10)}T${
-        slot.time
-      }:00.000Z`;
-      const inMiliSecond = new Date(date).getTime();
-      if (inMiliSecond <= today.getTime()) {
-        return res.status(400).send({
-          success: false,
-          message: `You can not book a past slot!`,
-        });
-      }
+    const date = `${slot.date.toISOString().slice(0, 10)}T${slot.time}:00.000Z`;
+    const inMiliSecond = new Date(date).getTime();
+    if (inMiliSecond <= today.getTime()) {
+      return res.status(400).send({
+        success: false,
+        message: `You can not book a past slot!`,
+      });
     }
+
     // Check is this slot available
-    if (slot.isActive && !slot.isBooked) {
+    if (slot.status === "Vacant" && !slot.isBooked) {
       slot.client = req.user._id;
       slot.isBooked = true;
+      slot.status = "Upcoming";
       await slot.save();
+      return res.status(200).json({
+        success: true,
+        message: "Booked!",
+      });
     } else {
       return res.status(400).send({
         success: false,
         message: `This slote have been booked!`,
       });
     }
-    res.status(200).json({
-      success: true,
-      message: "Booked!",
-    });
   } catch (err) {
     res.status(500).json({
       success: false,
@@ -307,7 +291,8 @@ exports.mySloteForUser = async (req, res) => {
           _id: current._id,
           time: current.time,
           timeInMin: current.timeInMin,
-          isActive: current.isActive,
+          status: current.status,
+          serviceType: current.serviceType,
           createdAt: current.createdAt,
           advocate: current.advocate
             ? {
@@ -329,7 +314,8 @@ exports.mySloteForUser = async (req, res) => {
               _id: current._id,
               time: current.time,
               timeInMin: current.timeInMin,
-              isActive: current.isActive,
+              status: current.status,
+              serviceType: current.serviceType,
               createdAt: current.createdAt,
               advocate: {
                 _id: current.advocate._id,
@@ -377,7 +363,8 @@ exports.sloteByIdForUser = async (req, res) => {
       time: slot.time,
       password: slot.password,
       timeInMin: slot.timeInMin,
-      isActive: slot.isActive,
+      status: slot.status,
+      serviceType: slot.serviceType,
       createdAt: slot.createdAt,
       advocate: {
         _id: slot.advocate._id,
@@ -444,7 +431,8 @@ exports.sloteForUser = async (req, res) => {
           _id: current._id,
           time: current.time,
           timeInMin: current.timeInMin,
-          isActive: current.isActive,
+          status: current.status,
+          serviceType: current.serviceType,
           createdAt: current.createdAt,
         });
       } else {
@@ -456,7 +444,8 @@ exports.sloteForUser = async (req, res) => {
               _id: current._id,
               time: current.time,
               timeInMin: current.timeInMin,
-              isActive: current.isActive,
+              status: current.status,
+              serviceType: current.serviceType,
               createdAt: current.createdAt,
             },
           ],

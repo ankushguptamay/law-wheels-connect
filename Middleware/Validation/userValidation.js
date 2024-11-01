@@ -84,7 +84,7 @@ exports.verifyMobileOTP = (data) => {
 exports.validateLicensePic = (data) => {
   const schema = joi.object().keys({
     bar_council_license_number: joi.string().required(),
-    licenseIssueYear: joi.string().required()
+    licenseIssueYear: joi.string().required(),
   });
   return schema.validate(data);
 };
@@ -143,8 +143,10 @@ exports.profileViewer = (data) => {
 exports.sloteValidation = (data) => {
   const schema = joi.object().keys({
     timeInMin: joi.number().required(),
-    date: joi.string().required(),
+    startDate: joi.string().required(),
+    endDate: joi.string().required(),
     times: joi.array().required(),
+    serviceType: joi.array().required(),
   });
   return schema.validate(data);
 };

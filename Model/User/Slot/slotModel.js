@@ -7,7 +7,15 @@ const schema = new Schema(
     password: { type: Number, required: true },
     timeInMin: { type: String },
     isBooked: { type: Boolean, default: false },
-    isActive: { type: Boolean, default: true },
+    serviceType: [],
+    status: {
+      type: String,
+      enum: {
+        values: ["Upcoming", "Vacant", "Completed", "Missed", "Deactivated"],
+        message: "{VALUE} is not supported",
+      },
+      default: "Vacant",
+    },
     isDelete: { type: Boolean, default: false },
     deleted_at: { type: Date },
     client: { type: Types.ObjectId, ref: "User" },
@@ -21,3 +29,5 @@ const schema = new Schema(
 );
 
 exports.Slot = models.Slot || model("Slot", schema);
+
+"Vacant", "Upcoming", "Completed";
