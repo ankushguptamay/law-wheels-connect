@@ -107,7 +107,7 @@ exports.validateUpdateUser = (data) => {
     experience_year: joi.number().optional(),
     total_cases: joi.number().optional(),
     specialization: joi.array().optional(),
-    profession_nun_user: joi.array().optional(),
+    profession_nun_user: joi.string().optional(),
   });
   return schema.validate(data);
 };
