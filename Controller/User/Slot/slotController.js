@@ -151,7 +151,9 @@ exports.mySloteForAdvocate = async (req, res) => {
     const transformData = slot.reduce((acc, current) => {
       // Find if the date already exists in the accumulator
       const existingDate = acc.find(
-        (item) => item.date.toDateString() === current.date.toDateString()
+        (item) =>
+          new Date(item.date).toDateString() ===
+          new Date(current.date).toDateString()
       );
       if (existingDate) {
         existingDate.slotes.push({
