@@ -150,7 +150,9 @@ exports.mySloteForAdvocate = async (req, res) => {
 
     const transformData = slot.reduce((acc, current) => {
       // Find if the date already exists in the accumulator
-      const existingDate = acc.find((item) => item.date === current.date);
+      const existingDate = acc.find(
+        (item) => item.date.toDateString() === current.date.toDateString()
+      );
       if (existingDate) {
         existingDate.slotes.push({
           isBooked: current.isBooked,
