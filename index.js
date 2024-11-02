@@ -6,7 +6,7 @@ const authAdmin = require("./Route/Admin/authAdmin");
 const authUser = require("./Route/User/authUser");
 const advocate = require("./Route/User/Advocate/indexRoute");
 const student = require("./Route/User/Student/indexRoute");
-const adviser = require("./Route/User/Adviser/indexRoute");
+const advise_seeker = require("./Route/User/Advise_Seeker/indexRoute");
 const blogger = require("./Route/Blogger/authBlogger");
 const { connectDB } = require("./Util/features");
 
@@ -26,7 +26,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use("/authUser", authUser);
 app.use("/advocate", advocate);
 app.use("/student", student);
-app.use("/user", adviser);
+app.use("/user", advise_seeker);
 app.use("/admin", authAdmin);
 app.use("/blogger", blogger);
 

@@ -3,17 +3,9 @@ const mongoose = require("mongoose");
 const { User } = require("../../Model/User/userModel");
 const { OTP } = require("../../Model/otpModel");
 const {
-  SchoolUniversity,
-} = require("../../Model/Master/school_universityModel");
-const { Experience } = require("../../Model/User/Experience/experienceModel");
-const { FirmCompany } = require("../../Model/Master/firmModel");
-const { Education } = require("../../Model/User/Education/educationModel");
-
-const {
   validateUserRegistration,
   validateUserLogin,
   verifyMobileOTP,
-  validateIsAdvocatePage,
   validateLicensePic,
   validateUpdateUser,
   validateRolePage,
@@ -28,7 +20,6 @@ const {
   generateFixedLengthRandomNumber,
   sendOTPToMoblie,
 } = require("../../Util/otp");
-const { JobTitle } = require("../../Model/Master/jobTitleModel");
 
 const { OTP_DIGITS_LENGTH, OTP_VALIDITY_IN_MILLISECONDS } = process.env;
 
@@ -36,7 +27,7 @@ const { uploadFileToBunny, deleteFileToBunny } = require("../../Util/bunny");
 const bunnyFolderName = "profile";
 const fs = require("fs");
 
-exports.getUser = async (req, res) => {
+exports.getDetailsOfStudentAndAdvocate = async (req, res) => {
   try {
     // const user = await User.findOne({ email: req.user.email });
     var id = new mongoose.Types.ObjectId(req.user._id);
@@ -114,6 +105,25 @@ exports.getUser = async (req, res) => {
         },
       },
     ]);
+
+    res.status(200).json({
+      success: true,
+      message: "User fetched successfully!",
+      data: user,
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};
+
+exports.getDetailsOfNunUser = async (req, res) => {
+  try {
+    const user = await User.findOne({ _id: req.user._id }).select(
+      "_id name email mobileNumber profession_nun_user location profilePic coverPic role language createdAt updatedAt"
+    );
 
     res.status(200).json({
       success: true,
@@ -572,6 +582,7 @@ exports.updateUser = async (req, res) => {
       experience_year,
       total_cases,
       specialization,
+      profession_nun_user,
     } = req.body;
     const name = capitalizeFirstLetter(
       req.body.name.replace(/\s+/g, " ").trim()
@@ -590,6 +601,7 @@ exports.updateUser = async (req, res) => {
         experience_year,
         total_cases,
         specialization,
+        profession_nun_user,
       }
     );
     // Final response
@@ -753,6 +765,166 @@ exports.rolePage = async (req, res) => {
     });
   } catch (err) {
     res.status(500).send({
+      success: false,
+      message: err.message,
+    });
+  }
+};
+
+exports.getAllUser = async (req, res) => {
+  try {
+    const { role, search } = req.query;
+
+    const resultPerPage = req.query.resultPerPage
+      ? parseInt(req.query.resultPerPage)
+      : 20;
+    const page = req.query.page ? parseInt(req.query.page) : 1;
+    const skip = (page - 1) * resultPerPage;
+
+    //Search
+    let query = { $and: [] };
+    if (search) {
+      const startWith = new RegExp("^" + search.toLowerCase(), "i");
+      query.$and.push({ name: startWith });
+    }
+    if (role) {
+      query.$and.push({ role });
+    }
+    const [user, totalUser] = await Promise.all([
+      User.find(query)
+        .sort({ name: -1 })
+        .skip(skip)
+        .limit(resultPerPage)
+        .lean(),
+      User.countDocuments(query),
+    ]);
+
+    const totalPages = Math.ceil(totalUser / resultPerPage) || 0;
+
+    res.status(200).json({
+      success: true,
+      data: user,
+      totalPages: totalPages,
+      currentPage: page,
+    });
+  } catch (err) {
+    res.status(500).send({
+      success: false,
+      message: err.message,
+    });
+  }
+};
+
+exports.getUserById = async (req, res) => {
+  try {
+    const id = new mongoose.Types.ObjectId(req.params.id);
+    const user = await User.aggregate([
+      {
+        $match: {
+          _id: {
+            $eq: id,
+          },
+        },
+      },
+      {
+        $lookup: {
+          from: "educations",
+          let: { userId: "$_id" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ["$user", "$$userId"] },
+                    { $eq: ["$isDelete", false] },
+                  ],
+                },
+              },
+            },
+          ],
+          as: "educations",
+        },
+      },
+      {
+        $lookup: {
+          from: "experiences",
+          let: { userId: "$_id" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ["$user", "$$userId"] },
+                    { $eq: ["$isDelete", false] },
+                  ],
+                },
+              },
+            },
+          ],
+          as: "experiences",
+        },
+      },
+      {
+        $lookup: {
+          from: "userpracticeareas",
+          let: { userId: "$_id" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ["$user", "$$userId"] }, // Match the user
+                    { $eq: ["$isDelete", false] }, // Exclude deleted practice areas
+                  ],
+                },
+              },
+            },
+          ],
+          as: "userPracticeAreas",
+        },
+      },
+      {
+        $lookup: {
+          from: "specializations",
+          localField: "specialization",
+          foreignField: "_id",
+          as: "specialization",
+        },
+      },
+    ]);
+
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: "This user in not present!",
+      });
+    }
+    let transformData = user;
+
+    if (user.role === "Nun") {
+      transformData = {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        mobileNumber: user.mobileNumber,
+        profession_nun_user: user.profession_nun_user,
+        location: user.location,
+        profilePic: user.profilePic,
+        coverPic: user.coverPic,
+        role: user.role,
+        language: user.language,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+      };
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "User fetched successfully!",
+      data: transformData,
+    });
+  } catch (err) {
+    res.status(500).json({
       success: false,
       message: err.message,
     });

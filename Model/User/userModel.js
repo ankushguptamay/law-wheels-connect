@@ -28,8 +28,11 @@ const schema = new Schema(
       type: Boolean,
       default: false,
     },
-    headLine: {
+    profession_nun_user: {
       type: String,
+    },
+    headLine: {
+      type: String, // Using as Bio
     },
     bar_council_license_number: {
       type: String,

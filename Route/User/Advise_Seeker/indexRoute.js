@@ -9,12 +9,14 @@ const allUserSlot = require("../sloteForAllUser");
 const master = require("../master");
 
 const {
-  getUser,
+  getDetailsOfNunUser,
   addUpdateProfilePic,
   addUpdateCoverPic,
   deleteCoverPic,
   deleteProfilePic,
   updateUser,
+  getAllUser,
+  getUserById,
 } = require("../../../Controller/User/userCont");
 
 //middleware
@@ -25,7 +27,9 @@ const uploadImage = require("../../../Middleware/UploadFile/image");
 router.use(verifyUserJWT);
 router.use(isNunUser);
 
-router.get("/", getUser);
+router.get("/", getDetailsOfNunUser);
+router.get("/users", getAllUser);
+router.get("/users/:id", getUserById);
 
 router.put(
   "/profilePic",

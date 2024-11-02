@@ -10,7 +10,7 @@ const allUserSlot = require("../sloteForAllUser");
 const master = require("../master");
 
 const {
-  getUser,
+  getDetailsOfStudentAndAdvocate,
   addUpdateProfilePic,
   addUpdateLicensePic,
   addUpdateCoverPic,
@@ -18,6 +18,8 @@ const {
   deleteCoverPic,
   deleteProfilePic,
   updateUser,
+  getAllUser,
+  getUserById,
 } = require("../../../Controller/User/userCont");
 
 //middleware
@@ -36,7 +38,9 @@ router.put(
   uploadImage.single("LicensePic"),
   addUpdateLicensePic
 );
-router.get("/", getUser);
+router.get("/", getDetailsOfStudentAndAdvocate);
+router.get("/users", getAllUser);
+router.get("/users/:id", getUserById);
 
 router.put(
   "/profilePic",
