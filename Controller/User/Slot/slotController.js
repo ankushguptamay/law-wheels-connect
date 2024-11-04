@@ -1,6 +1,7 @@
 const {
   sloteValidation,
   sloteForUserValidation,
+  bookSloteValidation,
 } = require("../../../Middleware/Validation/userValidation");
 const { Slot } = require("../../../Model/User/Slot/slotModel");
 const { generateFixedLengthRandomNumber } = require("../../../Util/otp");
@@ -217,7 +218,15 @@ exports.mySloteForAdvocate = async (req, res) => {
 
 exports.bookASlote = async (req, res) => {
   try {
-    const sloteId = req.params.id;
+    // Body Validation
+    const { error } = bookSloteValidation(req.body);
+    if (error) {
+      return res.status(400).json({
+        success: false,
+        message: error.details[0].message,
+      });
+    }
+    const { sloteId, client_legal_issue } = req.body;
 
     // Check is this slot present
     const slot = await Slot.findOne({ _id: sloteId, isDelete: false });
@@ -243,6 +252,7 @@ exports.bookASlote = async (req, res) => {
     if (slot.status === "Vacant" && !slot.isBooked) {
       slot.client = req.user._id;
       slot.isBooked = true;
+      slot.client_legal_issue = client_legal_issue;
       slot.status = "Upcoming";
       await slot.save();
       return res.status(200).json({
@@ -287,7 +297,11 @@ exports.mySloteForUser = async (req, res) => {
 
     const transformData = slot.reduce((acc, current) => {
       // Find if the date already exists in the accumulator
-      const existingDate = acc.find((item) => item.date === current.date);
+      const existingDate = acc.find(
+        (item) =>
+          new Date(item.date).toDateString() ===
+          new Date(current.date).toDateString()
+      );
       if (existingDate) {
         existingDate.slotes.push({
           isBooked: current.isBooked,
@@ -401,7 +415,8 @@ exports.sloteForUser = async (req, res) => {
         message: error.details[0].message,
       });
     }
-    const { advocate, date } = req.body;
+    const { date } = req.query;
+    const advocate = req.params.advocate;
 
     const query = {
       $and: [{ advocate: advocate }, { isDelete: false }],
@@ -409,11 +424,14 @@ exports.sloteForUser = async (req, res) => {
 
     // Filter
 
-    const yesterday = new Date(new Date().getTime() - 1 * 24 * 60 * 60 * 1000);
+    const yesterday = new Date();
+    yesterday.setMinutes(yesterday.getMinutes() - 1110);
+    const day = String(yesterday.getUTCDate()).padStart(2, "0");
+    const month = String(yesterday.getUTCMonth() + 1).padStart(2, "0");
+    const year = yesterday.getUTCFullYear();
+    const defaultDate = new Date(`${year}-${month}-${day}`);
     if (date) {
-      // Check is date have been passed
-      const dateInMiliSecond = new Date(date).getTime();
-      if (dateInMiliSecond <= yesterday) {
+      if (new Date(date).getTime() <= yesterday.getTime()) {
         return res.status(400).send({
           success: false,
           message: `This date is not allowed!`,
@@ -421,14 +439,18 @@ exports.sloteForUser = async (req, res) => {
       }
       query.$and.push({ date: new Date(date) });
     } else {
-      query.$and.push({ date: { $gt: yesterday } });
+      query.$and.push({ date: { $gt: new Date(defaultDate) } });
     }
 
     const slot = await Slot.find(query);
 
     const transformData = slot.reduce((acc, current) => {
       // Find if the date already exists in the accumulator
-      const existingDate = acc.find((item) => item.date === current.date);
+      const existingDate = acc.find(
+        (item) =>
+          new Date(item.date).toDateString() ===
+          new Date(current.date).toDateString()
+      );
       if (existingDate) {
         existingDate.slotes.push({
           isBooked: current.isBooked,

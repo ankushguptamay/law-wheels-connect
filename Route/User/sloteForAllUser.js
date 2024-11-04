@@ -8,8 +8,8 @@ const {
   sloteByIdForUser,
 } = require("../../Controller/User/Slot/slotController.js");
 
-router.get("/slotForUser", sloteForUser);
-router.post("/bookSlot/:id", bookASlote);
+router.get("/slotForUser/:advocate", sloteForUser);
+router.post("/bookSlot", bookASlote);
 router.get("/myBookSlot", mySloteForUser);
 router.get("/bookSlot/:id", sloteByIdForUser);
 

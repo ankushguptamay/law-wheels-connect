@@ -16,6 +16,7 @@ const schema = new Schema(
       },
       default: "Vacant",
     },
+    client_legal_issue: { type: String },
     isDelete: { type: Boolean, default: false },
     deleted_at: { type: Date },
     client: { type: Types.ObjectId, ref: "User" },
