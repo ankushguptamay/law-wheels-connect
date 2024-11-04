@@ -407,14 +407,6 @@ exports.sloteByIdForUser = async (req, res) => {
 
 exports.sloteForUser = async (req, res) => {
   try {
-    // Body Validation
-    const { error } = sloteForUserValidation(req.body);
-    if (error) {
-      return res.status(400).json({
-        success: false,
-        message: error.details[0].message,
-      });
-    }
     const { date } = req.query;
     const advocate = req.params.advocate;
 
