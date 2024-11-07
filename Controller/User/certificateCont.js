@@ -127,14 +127,17 @@ exports.updateCertificate = async (req, res) => {
       { upsert: true, new: true, setDefaultsOnInsert: true }
     );
     // Store History
-    await CertificateUpdationHistory.create({
-      certificate_name: certificate.certificate_name,
-      certificate_number: certificate.certificate_number,
-      firmName: certificate.firmName,
-      issueDate: certificate.issueDate,
-      user: req.user._id,
-      certificate: certificate._id,
-    });
+    // Store History
+    if (req.user.role === "Advocate" && req.user.isProfileVisible) {
+      await CertificateUpdationHistory.create({
+        certificate_name: certificate.certificate_name,
+        certificate_number: certificate.certificate_number,
+        firmName: certificate.firmName,
+        issueDate: certificate.issueDate,
+        user: req.user._id,
+        certificate: certificate._id,
+      });
+    }
 
     // Update Collection
     await certificate.updateOne({
@@ -171,10 +174,18 @@ exports.softDeleteCertificate = async (req, res) => {
       });
     }
     // Update is
-    await certificate.updateOne({
-      isDelete: true,
-      deleted_at: new Date(),
-    });
+    if (req.user.role === "Advocate" && req.user.isProfileVisible) {
+      await certificate.updateOne({
+        isDelete: true,
+        deleted_at: new Date(),
+      });
+    } else {
+      await CertificateUpdationHistory.deleteMany({
+        user: req.user._id,
+        certificate: certificate._id,
+      });
+      await certificate.deleteOne();
+    }
     res.status(200).json({
       success: true,
       message: "Certificate deleted successfully!",

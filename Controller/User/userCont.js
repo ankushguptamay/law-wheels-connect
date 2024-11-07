@@ -9,6 +9,7 @@ const {
   validateLicensePic,
   validateUpdateUser,
   validateRolePage,
+  validateProfileVisible,
 } = require("../../Middleware/Validation/userValidation");
 
 const { sendToken } = require("../../Util/features");
@@ -26,6 +27,11 @@ const { OTP_DIGITS_LENGTH, OTP_VALIDITY_IN_MILLISECONDS } = process.env;
 const { uploadFileToBunny, deleteFileToBunny } = require("../../Util/bunny");
 const bunnyFolderName = "profile";
 const fs = require("fs");
+const { Experience } = require("../../Model/User/Experience/experienceModel");
+const { Education } = require("../../Model/User/Education/educationModel");
+const {
+  UserUpdationHistory,
+} = require("../../Model/User/userUpdationHistoryModel");
 
 exports.getDetailsOfStudentAndAdvocate = async (req, res) => {
   try {
@@ -422,6 +428,17 @@ exports.addUpdateLicensePic = async (req, res) => {
       }
     }
 
+    // Storing History
+    if (isLicensePic.isLicenseVerified || isLicensePic.isProfileVisible) {
+      await UserUpdationHistory.create({
+        bar_council_license_number: isLicensePic.bar_council_license_number,
+        licenseIssueYear: isLicensePic.licenseIssueYear,
+        isLicenseVerified: isLicensePic.isLicenseVerified,
+        licensePic: isLicensePic.licensePic,
+        user: req.user._id,
+      });
+    }
+
     await isLicensePic.updateOne({
       bar_council_license_number,
       licenseIssueYear: new Date(licenseIssueYear),
@@ -576,7 +593,6 @@ exports.updateUser = async (req, res) => {
     }
     const {
       location,
-      isProfileVisible,
       headLine,
       language,
       experience_year,
@@ -594,7 +610,6 @@ exports.updateUser = async (req, res) => {
       },
       {
         location,
-        isProfileVisible,
         headLine,
         name,
         language,
@@ -691,6 +706,18 @@ exports.deleteLicensePic = async (req, res) => {
       fileName: null,
       url: null,
     };
+
+    // Storing History
+    if (isLicensePic.isLicenseVerified || isLicensePic.isProfileVisible) {
+      await UserUpdationHistory.create({
+        bar_council_license_number: isLicensePic.bar_council_license_number,
+        licenseIssueYear: isLicensePic.licenseIssueYear,
+        isLicenseVerified: isLicensePic.isLicenseVerified,
+        licensePic: isLicensePic.licensePic,
+        user: req.user._id,
+      });
+    }
+
     await isLicensePic.updateOne({
       licensePic: licensePic,
       isLicenseVerified: false,
@@ -925,6 +952,78 @@ exports.getUserById = async (req, res) => {
     });
   } catch (err) {
     res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};
+
+exports.isProfileVisible = async (req, res) => {
+  try {
+    // Body Validation
+    const { error } = validateProfileVisible(req.body);
+    if (error) {
+      return res.status(400).json({
+        success: false,
+        message: error.details[0].message,
+      });
+    }
+    const { isProfileVisible } = req.body;
+    const user = await User.findOne({ _id: req.user._id });
+    if (isProfileVisible) {
+      // Experience
+      const isRecentExperience = await Experience.findOne({
+        user: req.user._id,
+        isRecent: true,
+      });
+      if (!isRecentExperience) {
+        return res.status(400).send({
+          success: false,
+          message: "NOEXPERIENCE!",
+        });
+      }
+
+      // Education
+      const isRecentEducation = await Education.findOne({
+        user: req.user._id,
+        isRecent: true,
+      });
+      if (!isRecentEducation) {
+        return res.status(400).send({
+          success: false,
+          message: "NOEDUCATION!",
+        });
+      }
+
+      // License, here we r not checking isLicense verified
+      if (user.licensePic) {
+        if (!user.licensePic.path) {
+          return res.status(400).send({
+            success: false,
+            message: "NOLICENSE!",
+          });
+        }
+      } else {
+        return res.status(400).send({
+          success: false,
+          message: "NOLICENSE!",
+        });
+      }
+    }
+    // Storing When user changed their profile visibility
+    await UserUpdationHistory.create({
+      user: req.user._id,
+      isProfileVisible: user.isProfileVisible,
+    });
+    // Update user
+    await User.findOneAndUpdate({ _id: req.user._id }, { isProfileVisible });
+    // Final response
+    res.status(200).send({
+      success: true,
+      message: "Successfully!",
+    });
+  } catch (err) {
+    res.status(500).send({
       success: false,
       message: err.message,
     });

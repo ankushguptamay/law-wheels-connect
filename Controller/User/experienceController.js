@@ -166,7 +166,7 @@ exports.updateExperience = async (req, res) => {
     }
 
     // Store History
-    if (req.user.role === "Advocate" && req.user.isLicenseVerified) {
+    if (req.user.role === "Advocate" && req.user.isProfileVisible) {
       await ExperienceUpdationHistory.create({
         jobTitle: experience.jobTitle,
         firmName: experience.firmName,
@@ -219,7 +219,7 @@ exports.softDeleteExperience = async (req, res) => {
     }
 
     // Update is
-    if (req.user.role === "Advocate" && req.user.isLicenseVerified) {
+    if (req.user.role === "Advocate" && req.user.isProfileVisible) {
       await experience.updateOne({
         isDelete: true,
         deleted_at: new Date(),

@@ -175,7 +175,7 @@ exports.updateEducation = async (req, res) => {
       { upsert: true, new: true, setDefaultsOnInsert: true }
     );
     // Store History
-    if (req.user.role === "Advocate" && req.user.isLicenseVerified) {
+    if (req.user.role === "Advocate" && req.user.isProfileVisible) {
       await EducationUpdationHistory.create({
         school_university: education.school_university,
         degreeType: education.degreeType,
@@ -233,7 +233,7 @@ exports.softDeleteEducation = async (req, res) => {
       });
     }
     // Update is
-    if (req.user.role === "Advocate" && req.user.isLicenseVerified) {
+    if (req.user.role === "Advocate" && req.user.isProfileVisible) {
       await education.updateOne({
         isDelete: true,
         deleted_at: new Date(),

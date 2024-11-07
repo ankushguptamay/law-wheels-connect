@@ -100,7 +100,6 @@ exports.validateUpdateUser = (data) => {
       .pattern(/state/, joi.string())
       .pattern(/city/, joi.string())
       .required(),
-    isProfileVisible: joi.boolean().required(),
     headLine: joi.string().optional(),
     name: joi.string().min(3).required(),
     language: joi.array().optional(),
@@ -171,6 +170,13 @@ exports.bookSloteValidation = (data) => {
   const schema = joi.object().keys({
     client_legal_issue: joi.string().min(20).max(1000).required(),
     sloteId: joi.string().required(),
+  });
+  return schema.validate(data);
+};
+
+exports.validateProfileVisible = (data) => {
+  const schema = joi.object().keys({
+    isProfileVisible: joi.boolean().required(),
   });
   return schema.validate(data);
 };

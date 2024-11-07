@@ -20,6 +20,7 @@ const {
   updateUser,
   getAllUser,
   getUserById,
+  isProfileVisible,
 } = require("../../../Controller/User/userCont");
 
 //middleware
@@ -49,6 +50,7 @@ router.put(
 );
 router.put("/coverPic", uploadImage.single("CoverPic"), addUpdateCoverPic);
 router.put("/update", updateUser);
+router.put("/profileVisibility", isProfileVisible);
 
 router.delete("/profilePic", deleteProfilePic);
 router.delete("/coverPic", deleteCoverPic);
