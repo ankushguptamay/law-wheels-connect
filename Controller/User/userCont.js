@@ -825,7 +825,7 @@ exports.getAllUser = async (req, res) => {
     const [user, totalUser] = await Promise.all([
       User.find(query)
         .select(
-          "name location profilePic headLine specialization language experience_year isProfileVisible createAt"
+          "name location profilePic headLine specialization language experience_year isProfileVisible createdAt"
         )
         .sort({ name: -1 })
         .skip(skip)
@@ -855,7 +855,7 @@ exports.getAllUser = async (req, res) => {
         language: user[i].language,
         experiences,
         experience_year: user[i].experience_year,
-        createAt: user[i].createAt,
+        createdAt: user[i].createdAt,
       });
     }
 
