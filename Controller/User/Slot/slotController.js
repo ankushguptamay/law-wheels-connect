@@ -165,6 +165,7 @@ exports.mySloteForAdvocate = async (req, res) => {
           status: current.status,
           serviceType: current.serviceType,
           createdAt: current.createdAt,
+          client_legal_issue: current.client_legal_issue,
           client: current.client
             ? {
                 _id: current.client._id,
@@ -187,6 +188,7 @@ exports.mySloteForAdvocate = async (req, res) => {
               status: current.status,
               createdAt: current.createdAt,
               serviceType: current.serviceType,
+              client_legal_issue: current.client_legal_issue,
               client: current.client
                 ? {
                     _id: current.client._id,
@@ -293,7 +295,10 @@ exports.mySloteForUser = async (req, res) => {
       query.$and.push({ date: { $gt: new Date(yesterday) } });
     }
 
-    const slot = await Slot.find(query).populate("advocate", "name profilePic");
+    const slot = await Slot.find(query).populate(
+      "advocate",
+      "name profilePic headLine"
+    );
 
     const transformData = slot.reduce((acc, current) => {
       // Find if the date already exists in the accumulator
@@ -311,11 +316,13 @@ exports.mySloteForUser = async (req, res) => {
           timeInMin: current.timeInMin,
           status: current.status,
           serviceType: current.serviceType,
+          client_legal_issue: current.client_legal_issue,
           createdAt: current.createdAt,
           advocate: current.advocate
             ? {
                 _id: current.advocate._id,
                 name: current.advocate.name,
+                headLine: current.advocate.headLine,
                 avatar: current.advocate.profilePic
                   ? current.advocate.profilePic.url
                   : null,
@@ -335,9 +342,11 @@ exports.mySloteForUser = async (req, res) => {
               status: current.status,
               serviceType: current.serviceType,
               createdAt: current.createdAt,
+              client_legal_issue: current.client_legal_issue,
               advocate: {
                 _id: current.advocate._id,
                 name: current.advocate.name,
+                headLine: current.advocate.headLine,
                 avatar: current.advocate.profilePic.url
                   ? current.advocate.profilePic.url
                   : null,
@@ -367,7 +376,7 @@ exports.sloteByIdForUser = async (req, res) => {
     const _id = req.params.id;
     const slot = await Slot.findOne({ _id, isDelete: false }).populate(
       "advocate",
-      "name profilePic"
+      "name profilePic headLine"
     );
     if (!slot) {
       return res.status(400).send({
@@ -383,10 +392,12 @@ exports.sloteByIdForUser = async (req, res) => {
       timeInMin: slot.timeInMin,
       status: slot.status,
       serviceType: slot.serviceType,
+      client_legal_issue: slot.client_legal_issue,
       createdAt: slot.createdAt,
       advocate: {
         _id: slot.advocate._id,
         name: slot.advocate.name,
+        headLine: slot.advocate.headLine,
         avatar: slot.advocate.profilePic.url
           ? slot.advocate.profilePic.url
           : null,

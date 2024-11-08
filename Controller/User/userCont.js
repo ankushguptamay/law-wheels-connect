@@ -32,6 +32,7 @@ const { Education } = require("../../Model/User/Education/educationModel");
 const {
   UserUpdationHistory,
 } = require("../../Model/User/userUpdationHistoryModel");
+const { Specialization } = require("../../Model/Master/specializationModel");
 
 exports.getDetailsOfStudentAndAdvocate = async (req, res) => {
   try {
@@ -800,7 +801,8 @@ exports.rolePage = async (req, res) => {
 
 exports.getAllUser = async (req, res) => {
   try {
-    const { role, search } = req.query;
+    const { search } = req.query;
+    const role = req.query.role ? req.query.role : "Advocate";
 
     const resultPerPage = req.query.resultPerPage
       ? parseInt(req.query.resultPerPage)
@@ -809,16 +811,22 @@ exports.getAllUser = async (req, res) => {
     const skip = (page - 1) * resultPerPage;
 
     //Search
-    let query = { $and: [] };
+    let query = { $and: [{ _id: { $nin: [req.user._id] } }] };
     if (search) {
       const startWith = new RegExp("^" + search.toLowerCase(), "i");
       query.$and.push({ name: startWith });
     }
-    if (role) {
-      query.$and.push({ role });
+
+    query.$and.push({ role });
+
+    if (role === "Advocate") {
+      // query.$and.push({ isProfileVisible: true });
     }
     const [user, totalUser] = await Promise.all([
       User.find(query)
+        .select(
+          "name location profilePic headLine specialization language experience_year isProfileVisible createAt"
+        )
         .sort({ name: -1 })
         .skip(skip)
         .limit(resultPerPage)
@@ -826,11 +834,36 @@ exports.getAllUser = async (req, res) => {
       User.countDocuments(query),
     ]);
 
+    // Transform Data
+    const transformData = [];
+    for (let i = 0; i < user.length; i++) {
+      const [specialization, experiences] = await Promise.all([
+        Specialization.find({ _id: { $in: user[i].specialization } })
+          .sort({ createAt: -1 })
+          .limit(1),
+        Experience.find({ user: user[i]._id, isRecent: true }).limit(1),
+      ]);
+
+      transformData.push({
+        _id: user[i]._id,
+        name: user[i].name,
+        location: user[i].location,
+        profilePic: user[i].profilePic,
+        headLine: user[i].headLine,
+        specialization,
+        isProfileVisible: user[i].isProfileVisible,
+        language: user[i].language,
+        experiences,
+        experience_year: user[i].experience_year,
+        createAt: user[i].createAt,
+      });
+    }
+
     const totalPages = Math.ceil(totalUser / resultPerPage) || 0;
 
     res.status(200).json({
       success: true,
-      data: user,
+      data: transformData,
       totalPages: totalPages,
       currentPage: page,
     });
@@ -997,7 +1030,7 @@ exports.isProfileVisible = async (req, res) => {
 
       // License, here we r not checking isLicense verified
       if (user.licensePic) {
-        if (!user.licensePic.path) {
+        if (!user.licensePic.url) {
           return res.status(400).send({
             success: false,
             message: "NOLICENSE!",
