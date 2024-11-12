@@ -126,7 +126,8 @@ exports.mySloteForAdvocate = async (req, res) => {
   try {
     const { date, start_date, end_date, status, serviceType } = req.query;
     const _id = req.user._id;
-    const yesterday = new Date(new Date().getTime() - 1 * 24 * 60 * 60 * 1000);
+    const yesterday = new Date();
+    yesterday.setMinutes(yesterday.getMinutes() - 1110);
     const query = { $and: [{ advocate: _id }, { isDelete: false }] };
 
     // Filter
@@ -279,7 +280,8 @@ exports.mySloteForUser = async (req, res) => {
   try {
     const { date, start_date, end_date } = req.query;
     const _id = req.user._id;
-    const yesterday = new Date(new Date().getTime() - 1 * 24 * 60 * 60 * 1000);
+    const yesterday = new Date();
+    yesterday.setMinutes(yesterday.getMinutes() - 1110);
     const query = {
       $and: [{ client: _id }, { isDelete: false }, { isBooked: true }],
     };

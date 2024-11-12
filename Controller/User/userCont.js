@@ -102,6 +102,24 @@ exports.getDetailsOfStudentAndAdvocate = async (req, res) => {
           ],
           as: "userPracticeAreas",
         },
+      },{
+        $lookup: {
+          from: "userskills",
+          let: { userId: "$_id" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ["$user", "$$userId"] }, // Match the user
+                    { $eq: ["$isDelete", false] }, // Exclude deleted skills
+                  ],
+                },
+              },
+            },
+          ],
+          as: "userSkills",
+        },
       },
       {
         $lookup: {
