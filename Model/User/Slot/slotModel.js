@@ -19,6 +19,8 @@ const schema = new Schema(
     client_legal_issue: { type: String },
     isDelete: { type: Boolean, default: false },
     deleted_at: { type: Date },
+    isCancel: { type: Boolean, default: false },
+    lastcancelClient: { type: Types.ObjectId, ref: "User" },
     client: { type: Types.ObjectId, ref: "User" },
     advocate: {
       type: Types.ObjectId,

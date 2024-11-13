@@ -2,6 +2,8 @@ const {
   sloteValidation,
   sloteForUserValidation,
   bookSloteValidation,
+  cancelSloteValidation,
+  rescheduleSloteValidation,
 } = require("../../../Middleware/Validation/userValidation");
 const { Slot } = require("../../../Model/User/Slot/slotModel");
 const { generateFixedLengthRandomNumber } = require("../../../Util/otp");
@@ -241,13 +243,13 @@ exports.bookASlote = async (req, res) => {
     }
     // Check is date have been passed
     const today = new Date();
-    today.setMinutes(today.getMinutes() + 330);
+    today.setMinutes(today.getMinutes() + 390); // 5.5 hours and 1 hours, user should book a slot 1 hour ahead of slot time
     const date = `${slot.date.toISOString().slice(0, 10)}T${slot.time}:00.000Z`;
     const inMiliSecond = new Date(date).getTime();
     if (inMiliSecond <= today.getTime()) {
       return res.status(400).send({
         success: false,
-        message: `You can not book a past slot!`,
+        message: `Booking Unavailable, Bookings need to be made at least 1 hour in advance!`,
       });
     }
 
@@ -533,6 +535,155 @@ exports.sloteForUser = async (req, res) => {
       message: `Slot fetched successfully!`,
       data: transformData,
     });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};
+
+exports.cancelSloteForUser = async (req, res) => {
+  try {
+    // Body Validation
+    const { error } = cancelSloteValidation(req.body);
+    if (error) {
+      return res.status(400).json({
+        success: false,
+        message: error.details[0].message,
+      });
+    }
+    const { sloteId } = req.body;
+
+    // Check is this slot present
+    const slot = await Slot.findOne({
+      _id: sloteId,
+      isDelete: false,
+      status: "Upcoming",
+      client: req.user._id,
+    });
+    if (!slot) {
+      return res.status(400).send({
+        success: false,
+        message: `This slot is not booked by you!`,
+      });
+    }
+    // Check is date have been passed
+    const current = new Date();
+    current.setMinutes(current.getMinutes() + 390); // 5.5 hours and 1 hours, user should cancel a slot 1 hour ahead of slot time
+    const date = `${slot.date.toISOString().slice(0, 10)}T${slot.time}:00.000Z`;
+    const inMiliSecond = new Date(date).getTime();
+    if (inMiliSecond <= current.getTime()) {
+      return res.status(400).send({
+        success: false,
+        message: `Can not cancel, Cancellation need to be made at least 1 hour in advance!`,
+      });
+    }
+
+    slot.lastcancelClient = req.user._id;
+    slot.isCancel = true;
+    slot.isBooked = false;
+    slot.client_legal_issue = null;
+    slot.client = null;
+    slot.status = "Vacant";
+    await slot.save();
+    return res.status(200).json({
+      success: true,
+      message: "Cancelled successfully!",
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};
+
+exports.rescheduleSloteForUser = async (req, res) => {
+  try {
+    // Body Validation
+    const { error } = rescheduleSloteValidation(req.body);
+    if (error) {
+      return res.status(400).json({
+        success: false,
+        message: error.details[0].message,
+      });
+    }
+    const { oldSloteId, newSloteId } = req.body;
+
+    // Check is this slot present
+    const oldSlot = await Slot.findOne({
+      _id: oldSloteId,
+      isDelete: false,
+      status: "Upcoming",
+      client: req.user._id,
+    });
+    if (!oldSlot) {
+      return res.status(400).send({
+        success: false,
+        message: `This slot is not booked by you!`,
+      });
+    }
+    // Check is Time validation
+    const current = new Date();
+    current.setMinutes(current.getMinutes() + 390); // 5.5 hours and 1 hours, user should reschedule a slot 1 hour ahead of slot time
+    const oldDate = `${oldSlot.date.toISOString().slice(0, 10)}T${
+      oldSlot.time
+    }:00.000Z`;
+    const inMiliSecondOld = new Date(oldDate).getTime();
+    if (inMiliSecondOld <= current.getTime()) {
+      return res.status(400).send({
+        success: false,
+        message: `Can not reschedule, Reschedule need to be made at least 1 hour in advance!`,
+      });
+    }
+
+    // Check is this slot present
+    const newSlot = await Slot.findOne({ _id: newSloteId, isDelete: false });
+    if (!newSlot) {
+      return res.status(400).send({
+        success: false,
+        message: `This slot is not present!`,
+      });
+    }
+    // Check is Time validation
+    const newDate = `${newSlot.date.toISOString().slice(0, 10)}T${
+      newSlot.time
+    }:00.000Z`;
+    const inMiliSecondNew = new Date(newDate).getTime();
+    if (inMiliSecondNew <= current.getTime()) {
+      return res.status(400).send({
+        success: false,
+        message: `Booking Unavailable, Bookings need to be made at least 1 hour in advance!`,
+      });
+    }
+
+    // Check is this slot available
+    if (newSlot.status === "Vacant" && !newSlot.isBooked) {
+      newSlot.client = req.user._id;
+      newSlot.isBooked = true;
+      newSlot.client_legal_issue = oldSlot.client_legal_issue;
+      newSlot.status = "Upcoming";
+
+      oldSlot.client = null;
+      oldSlot.isBooked = false;
+      oldSlot.client_legal_issue = null;
+      oldSlot.status = "Vacant";
+      oldSlot.lastcancelClient = req.user._id;
+      oldSlot.isCancel = true;
+
+      await newSlot.save();
+      await oldSlot.save();
+      return res.status(200).json({
+        success: true,
+        message: "Reschedule successfully!",
+      });
+    } else {
+      return res.status(400).send({
+        success: false,
+        message: `This slote have been booked!`,
+      });
+    }
   } catch (err) {
     res.status(500).json({
       success: false,

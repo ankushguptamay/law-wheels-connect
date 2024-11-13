@@ -181,3 +181,18 @@ exports.validateProfileVisible = (data) => {
   });
   return schema.validate(data);
 };
+
+exports.cancelSloteValidation = (data) => {
+  const schema = joi.object().keys({
+    sloteId: joi.string().required(),
+  });
+  return schema.validate(data);
+};
+
+exports.rescheduleSloteValidation = (data) => {
+  const schema = joi.object().keys({
+    oldSloteId: joi.string().required(),
+    newSloteId: joi.string().required(),
+  });
+  return schema.validate(data);
+};
