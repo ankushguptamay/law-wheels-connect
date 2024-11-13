@@ -389,6 +389,7 @@ exports.sloteByIdForUser = async (req, res) => {
     const transformData = {
       isBooked: slot.isBooked,
       _id: slot._id,
+      date: slot.date,
       time: slot.time,
       password: slot.password,
       timeInMin: slot.timeInMin,
@@ -432,10 +433,10 @@ exports.sloteByIdForAdvocate = async (req, res) => {
       });
     }
     const transformData = {
+      date: slot.date,
       isBooked: slot.isBooked,
       _id: slot._id,
       time: slot.time,
-      password: slot.password,
       timeInMin: slot.timeInMin,
       status: slot.status,
       serviceType: slot.serviceType,
