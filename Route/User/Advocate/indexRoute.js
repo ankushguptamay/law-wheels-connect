@@ -60,7 +60,7 @@ router.use("/profile", userProfile);
 router.use("/conn", connection);
 router.use("/post", post);
 router.use("/chat", chat);
-router.use("/slot", allUserSlot);
+router.use("/slot", allUserSlot); // When advocate want to book other advocate slot
 router.use("/aSlot", advocateSlot);
 router.use("/master", master);
 

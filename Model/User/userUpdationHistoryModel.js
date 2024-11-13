@@ -35,6 +35,7 @@ const schema = new Schema({
     url: { type: String },
   },
   specialization: [{ type: Types.ObjectId, ref: "Specialization" }],
+  practiceArea: [{ type: Types.ObjectId, ref: "PracticeArea" }],
   language: [],
   experience_year: { type: Number },
   total_cases: { type: Number },

@@ -86,24 +86,6 @@ exports.getDetailsOfStudentAndAdvocate = async (req, res) => {
       },
       {
         $lookup: {
-          from: "userpracticeareas",
-          let: { userId: "$_id" },
-          pipeline: [
-            {
-              $match: {
-                $expr: {
-                  $and: [
-                    { $eq: ["$user", "$$userId"] }, // Match the user
-                    { $eq: ["$isDelete", false] }, // Exclude deleted practice areas
-                  ],
-                },
-              },
-            },
-          ],
-          as: "userPracticeAreas",
-        },
-      },{
-        $lookup: {
           from: "userskills",
           let: { userId: "$_id" },
           pipeline: [
@@ -127,6 +109,14 @@ exports.getDetailsOfStudentAndAdvocate = async (req, res) => {
           localField: "specialization",
           foreignField: "_id",
           as: "specialization",
+        },
+      },
+      {
+        $lookup: {
+          from: "practicesreas",
+          localField: "practiceArea",
+          foreignField: "_id",
+          as: "userPracticeAreas",
         },
       },
     ]);
@@ -618,11 +608,27 @@ exports.updateUser = async (req, res) => {
       total_cases,
       specialization,
       profession_nun_user,
+      practiceArea,
     } = req.body;
     const name = capitalizeFirstLetter(
       req.body.name.replace(/\s+/g, " ").trim()
     );
+
     // Update user
+    if (req.user.role === "Advocate" && req.user.isProfileVisible) {
+      await UserUpdationHistory.create({
+        location,
+        headLine,
+        language,
+        experience_year,
+        total_cases,
+        specialization,
+        profession_nun_user,
+        practiceArea,
+        user: req.user._id,
+      });
+    }
+
     await User.findOneAndUpdate(
       {
         _id: req.user._id,
@@ -636,6 +642,7 @@ exports.updateUser = async (req, res) => {
         total_cases,
         specialization,
         profession_nun_user,
+        practiceArea,
       }
     );
     // Final response
@@ -838,7 +845,7 @@ exports.getAllUser = async (req, res) => {
     query.$and.push({ role });
 
     if (role === "Advocate") {
-      // query.$and.push({ isProfileVisible: true });
+      query.$and.push({ isProfileVisible: true });
     }
     const [user, totalUser] = await Promise.all([
       User.find(query)
@@ -944,7 +951,7 @@ exports.getUserById = async (req, res) => {
       },
       {
         $lookup: {
-          from: "userpracticeareas",
+          from: "userskills",
           let: { userId: "$_id" },
           pipeline: [
             {
@@ -952,13 +959,13 @@ exports.getUserById = async (req, res) => {
                 $expr: {
                   $and: [
                     { $eq: ["$user", "$$userId"] }, // Match the user
-                    { $eq: ["$isDelete", false] }, // Exclude deleted practice areas
+                    { $eq: ["$isDelete", false] }, // Exclude deleted skills
                   ],
                 },
               },
             },
           ],
-          as: "userPracticeAreas",
+          as: "userSkills",
         },
       },
       {
@@ -967,6 +974,14 @@ exports.getUserById = async (req, res) => {
           localField: "specialization",
           foreignField: "_id",
           as: "specialization",
+        },
+      },
+      {
+        $lookup: {
+          from: "practicesreas",
+          localField: "practiceArea",
+          foreignField: "_id",
+          as: "userPracticeAreas",
         },
       },
     ]);

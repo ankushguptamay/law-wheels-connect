@@ -29,12 +29,6 @@ const {
   softDeleteSkill,
 } = require("../../Controller/User/skillCont");
 const {
-  addPracticeArea,
-  getMyPracticeArea,
-  getPracticeAreaById,
-  softDeletePracticeArea,
-} = require("../../Controller/User/practiceAreaCont");
-const {
   addMedia,
   getMyMedia,
   getMediaById,
@@ -79,12 +73,6 @@ router.post("/skill", addSkill);
 router.get("/skill/:id", getSkillById);
 router.get("/skill", getMySkill);
 router.delete("/skill/:id", softDeleteSkill); // soft delete
-
-// practice area
-router.post("/practiceArea", addPracticeArea);
-router.get("/practiceArea/:id", getPracticeAreaById);
-router.get("/practiceArea", getMyPracticeArea);
-router.delete("/practiceArea/:id", softDeletePracticeArea); // soft delete
 
 // media
 router.post("/media", uploadImage.single("MediaPic"), addMedia);

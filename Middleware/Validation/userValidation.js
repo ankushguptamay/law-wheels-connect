@@ -107,6 +107,7 @@ exports.validateUpdateUser = (data) => {
     total_cases: joi.number().optional(),
     specialization: joi.array().optional(),
     profession_nun_user: joi.string().optional(),
+    practiceArea: joi.array().optional(),
   });
   return schema.validate(data);
 };

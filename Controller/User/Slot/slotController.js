@@ -418,6 +418,48 @@ exports.sloteByIdForUser = async (req, res) => {
   }
 };
 
+exports.sloteByIdForAdvocate = async (req, res) => {
+  try {
+    const _id = req.params.id;
+    const slot = await Slot.findOne({ _id, isDelete: false }).populate(
+      "client",
+      "name profilePic"
+    );
+    if (!slot) {
+      return res.status(400).send({
+        success: false,
+        message: `This slote is not present!`,
+      });
+    }
+    const transformData = {
+      isBooked: slot.isBooked,
+      _id: slot._id,
+      time: slot.time,
+      password: slot.password,
+      timeInMin: slot.timeInMin,
+      status: slot.status,
+      serviceType: slot.serviceType,
+      client_legal_issue: slot.client_legal_issue,
+      createdAt: slot.createdAt,
+      client: {
+        _id: slot.client._id,
+        name: slot.client.name,
+        avatar: slot.client.profilePic.url ? slot.client.profilePic.url : null,
+      },
+    };
+    res.status(200).json({
+      success: true,
+      message: `Slot details fetched successfully!`,
+      data: transformData,
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};
+
 exports.sloteForUser = async (req, res) => {
   try {
     const { date } = req.query;

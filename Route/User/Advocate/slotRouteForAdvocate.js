@@ -5,6 +5,7 @@ const {
   createSlote,
   mySloteForAdvocate,
   deactivateSlote,
+  sloteByIdForAdvocate,
 } = require("../../../Controller/User/Slot/slotController.js");
 
 //middleware
@@ -23,6 +24,7 @@ router.use(verifyUserJWT, (req, res, next) => {
 
 router.post("/slot", createSlote);
 router.get("/slot", mySloteForAdvocate);
+router.get("/slot/:id", sloteByIdForAdvocate);
 router.put("/slot/:id", deactivateSlote);
 
 module.exports = router;
