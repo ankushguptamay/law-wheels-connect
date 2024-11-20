@@ -113,7 +113,7 @@ exports.getDetailsOfStudentAndAdvocate = async (req, res) => {
       },
       {
         $lookup: {
-          from: "practicesreas",
+          from: "practiceareas",
           localField: "practiceArea",
           foreignField: "_id",
           as: "userPracticeAreas",
@@ -290,13 +290,13 @@ exports.verifyMobileOTP = async (req, res) => {
     // is email otp expired?
     const isOtpExpired = new Date().getTime() > parseInt(isOtp.validTill);
     if (isOtpExpired) {
-      await OTP.deleteOne({ receiverId: isOtp.receiverId });
+      await OTP.deleteMany({ receiverId: isOtp.receiverId });
       return res.status(400).send({
         success: false,
         message: `OTP expired!`,
       });
     }
-    await OTP.deleteOne({ receiverId: isOtp.receiverId });
+    await OTP.deleteMany({ receiverId: isOtp.receiverId });
     // Update user
     if (!user.isMobileNumberVerified) {
       await user.updateOne({ isMobileNumberVerified: true });
@@ -978,7 +978,7 @@ exports.getUserById = async (req, res) => {
       },
       {
         $lookup: {
-          from: "practicesreas",
+          from: "practiceareas",
           localField: "practiceArea",
           foreignField: "_id",
           as: "userPracticeAreas",

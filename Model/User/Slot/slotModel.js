@@ -17,6 +17,7 @@ const schema = new Schema(
       default: "Vacant",
     },
     client_legal_issue: { type: String },
+    reviewGiven: { type: Boolean },
     isDelete: { type: Boolean, default: false },
     deleted_at: { type: Date },
     isCancel: { type: Boolean, default: false },
@@ -32,5 +33,3 @@ const schema = new Schema(
 );
 
 exports.Slot = models.Slot || model("Slot", schema);
-
-"Vacant", "Upcoming", "Completed";

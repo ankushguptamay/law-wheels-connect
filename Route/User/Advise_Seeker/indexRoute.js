@@ -7,6 +7,13 @@ const post = require("../userPost");
 const chat = require("../chatRoute");
 const allUserSlot = require("../sloteForAllUser");
 const master = require("../master");
+const {
+  giveAdvocateReviews,
+  notGiveAdvocateReviews,
+  updateAdvocateReviewsByUser,
+  deleteAdvocateReviewByUser,
+  deleteAdvocateReviewMessageByUser,
+} = require("../../../Controller/User/Review/advocateReviewCont");
 
 const {
   getDetailsOfNunUser,
@@ -47,5 +54,15 @@ router.use("/conn", connection);
 router.use("/chat", chat);
 router.use("/slot", allUserSlot);
 // router.use("/master", master);
+
+// Review
+router.post("/giveAdvocateReviews", giveAdvocateReviews);
+router.post("/notGiveAdvocateReviews", notGiveAdvocateReviews);
+router.put("/updateAdvocateReviews", updateAdvocateReviewsByUser);
+router.delete("/deleteAdvocateReview", deleteAdvocateReviewByUser);
+router.delete(
+  "/deleteAdvocateReviewMessage",
+  deleteAdvocateReviewMessageByUser
+);
 
 module.exports = router;

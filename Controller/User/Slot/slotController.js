@@ -241,6 +241,13 @@ exports.bookASlote = async (req, res) => {
         message: `This slot is not present!`,
       });
     }
+    // Advocate cant book own slot
+    if (slot.advocate.toString() == req.user._id.toString()) {
+      return res.status(400).send({
+        success: false,
+        message: `You can not book your own slot!`,
+      });
+    }
     // Check is date have been passed
     const today = new Date();
     today.setMinutes(today.getMinutes() + 390); // 5.5 hours and 1 hours, user should book a slot 1 hour ahead of slot time
@@ -434,6 +441,7 @@ exports.sloteByIdForAdvocate = async (req, res) => {
         message: `This slote is not present!`,
       });
     }
+    console.log(slot);
     const transformData = {
       date: slot.date,
       isBooked: slot.isBooked,
@@ -444,11 +452,15 @@ exports.sloteByIdForAdvocate = async (req, res) => {
       serviceType: slot.serviceType,
       client_legal_issue: slot.client_legal_issue,
       createdAt: slot.createdAt,
-      client: {
-        _id: slot.client._id,
-        name: slot.client.name,
-        avatar: slot.client.profilePic.url ? slot.client.profilePic.url : null,
-      },
+      client: slot.client
+        ? {
+            _id: slot.client._id,
+            name: slot.client.name,
+            avatar: slot.client.profilePic.url
+              ? slot.client.profilePic.url
+              : null,
+          }
+        : {},
     };
     res.status(200).json({
       success: true,
