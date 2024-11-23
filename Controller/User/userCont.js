@@ -408,7 +408,6 @@ exports.addUpdateLicensePic = async (req, res) => {
       });
     }
 
-    const { bar_council_license_number, licenseIssueYear } = req.body;
     const { error } = validateLicensePic(req.body);
     if (error) {
       deleteSingleFile(req.file.path);
@@ -417,7 +416,7 @@ exports.addUpdateLicensePic = async (req, res) => {
         message: error.details[0].message,
       });
     }
-
+    const { bar_council_license_number, licenseIssueYear } = req.body;
     const isLicensePic = await User.findOne({ _id: req.user._id });
 
     //Upload file to bunny

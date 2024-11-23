@@ -54,8 +54,8 @@ exports.addExperience = async (req, res) => {
     await Experience.create({
       jobTitle,
       firmName,
-      startDate: new Date(startDate),
-      endDate: new Date(endDate),
+      startDate: startDate ? new Date(startDate) : null,
+      endDate: endDate ? new Date(endDate) : null,
       isRecent,
       isOngoing,
       description,
@@ -184,8 +184,8 @@ exports.updateExperience = async (req, res) => {
     await experience.updateOne({
       jobTitle,
       firmName,
-      startDate: new Date(startDate),
-      endDate: new Date(endDate),
+      startDate: startDate ? new Date(startDate) : null,
+      endDate: endDate ? new Date(endDate) : null,
       isRecent,
       isOngoing,
       description,
