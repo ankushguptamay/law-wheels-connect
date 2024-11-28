@@ -9,6 +9,10 @@ const student = require("./Route/User/Student/indexRoute");
 const advise_seeker = require("./Route/User/Advise_Seeker/indexRoute");
 const blogger = require("./Route/Blogger/authBlogger");
 const { connectDB } = require("./Util/features");
+const {
+  addAadharCard,
+  verifyAadharOTP,
+} = require("./Controller/User/userCont");
 
 const app = express();
 
@@ -29,6 +33,9 @@ app.use("/student", student);
 app.use("/user", advise_seeker);
 app.use("/admin", authAdmin);
 app.use("/blogger", blogger);
+
+// app.post("/addAadharCard", addAadharCard);
+// app.post("/verifyAadharOTP", verifyAadharOTP);
 
 app.get("/", (req, res) => {
   res.send("Hello World!!");

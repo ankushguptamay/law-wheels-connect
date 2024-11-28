@@ -33,7 +33,7 @@ exports.giveAdvocateReviews = async (req, res) => {
     });
     if (!anySlot) {
       return res.status(400).json({
-        success: true,
+        success: false,
         message: "You can not give review to this advocate!",
       });
     }
