@@ -40,6 +40,9 @@ const {
   UserUpdationHistory,
 } = require("../../Model/User/userUpdationHistoryModel");
 const { Specialization } = require("../../Model/Master/specializationModel");
+const {
+  AdvocateReview,
+} = require("../../Model/User/Review/advocateReviewModel");
 
 exports.getDetailsOfStudentAndAdvocate = async (req, res) => {
   try {
@@ -128,15 +131,15 @@ exports.getDetailsOfStudentAndAdvocate = async (req, res) => {
       },
       {
         $lookup: {
-          from: "advocatereviews", // AdvocateReview collection name
+          from: "advocatereviews",
           let: { advocate: "$_id" },
           pipeline: [
             {
               $match: {
                 $expr: {
                   $and: [
-                    { $eq: ["$advocate", "$$advocate"] }, // Match the user
-                    { $eq: ["$isDelete", false] }, // Exclude deleted skills
+                    { $eq: ["$advocate", "$$advocate"] },
+                    { $eq: ["$isDelete", false] },
                   ],
                 },
               },
@@ -147,7 +150,7 @@ exports.getDetailsOfStudentAndAdvocate = async (req, res) => {
       },
       {
         $addFields: {
-          totalReviews: { $size: "$reviews" }, // Count the total reviews
+          totalReviews: { $size: "$reviews" },
           averageRating: {
             $cond: {
               if: { $gt: [{ $size: "$reviews" }, 0] },
@@ -307,6 +310,7 @@ exports.verifyMobileOTP = async (req, res) => {
       return res.status(400).send(error.details[0].message);
     }
     const { mobileNumber, otp } = req.body;
+    // Only for testing
     if (mobileNumber === "1133557799") {
       // Send Cookies
       sendToken(
@@ -921,11 +925,24 @@ exports.getAllUser = async (req, res) => {
     // Transform Data
     const transformData = [];
     for (let i = 0; i < user.length; i++) {
-      const [specialization, experiences] = await Promise.all([
+      const [specialization, experiences, rating] = await Promise.all([
         Specialization.find({ _id: { $in: user[i].specialization } })
           .sort({ createAt: -1 })
           .limit(1),
         Experience.find({ user: user[i]._id, isRecent: true }).limit(1),
+        AdvocateReview.aggregate([
+          { $match: { isDelete: false, advocate: user[i]._id } },
+          {
+            $group: {
+              _id: "$advocate", // Group by advocate ID
+              averageRating: { $avg: "$rating" }, // Calculate the average rating
+              totalReviews: { $sum: 1 }, // Optional: Count total reviews
+            },
+          },
+          {
+            $project: { _id: 0, averageRating: 1, totalReviews: 1 },
+          },
+        ]),
       ]);
 
       transformData.push({
@@ -940,6 +957,7 @@ exports.getAllUser = async (req, res) => {
         experiences,
         experience_year: user[i].experience_year,
         createdAt: user[i].createdAt,
+        rating: rating[0],
       });
     }
 
@@ -1041,6 +1059,42 @@ exports.getUserById = async (req, res) => {
           localField: "practiceArea",
           foreignField: "_id",
           as: "userPracticeAreas",
+        },
+      },
+      {
+        $lookup: {
+          from: "advocatereviews",
+          let: { advocate: "$_id" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ["$advocate", "$$advocate"] },
+                    { $eq: ["$isDelete", false] },
+                  ],
+                },
+              },
+            },
+          ],
+          as: "reviews",
+        },
+      },
+      {
+        $addFields: {
+          totalReviews: { $size: "$reviews" },
+          averageRating: {
+            $cond: {
+              if: { $gt: [{ $size: "$reviews" }, 0] },
+              then: { $avg: "$reviews.rating" },
+              else: 0,
+            },
+          },
+        },
+      },
+      {
+        $project: {
+          reviews: 0, // Exclude the reviews array if you don't need it
         },
       },
     ]);

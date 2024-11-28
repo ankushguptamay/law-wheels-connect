@@ -30,6 +30,10 @@ const {
 } = require("../../../Middleware/role");
 const { verifyUserJWT } = require("../../../Middleware/verifyJWTToken");
 const uploadImage = require("../../../Middleware/UploadFile/image");
+const {
+  getAdvocateReviewForAdvocate,
+  getAdvocateReviewForUser,
+} = require("../../../Controller/User/Review/advocateReviewCont");
 
 router.use(verifyUserJWT);
 router.use(isAdvocateUser);
@@ -55,6 +59,10 @@ router.put("/profileVisibility", isProfileVisible);
 router.delete("/profilePic", deleteProfilePic);
 router.delete("/coverPic", deleteCoverPic);
 router.delete("/licensePic", deleteLicensePic);
+
+// review
+router.get("/myReviews", getAdvocateReviewForAdvocate);
+router.get("/reviews/:id", getAdvocateReviewForUser);
 
 router.use("/profile", userProfile);
 router.use("/conn", connection);

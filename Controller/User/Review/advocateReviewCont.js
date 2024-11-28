@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const {
   validateAdvocateReview,
   validateNotGiveReview,
@@ -391,11 +392,156 @@ exports.deleteAdvocateReviewByUser = async (req, res) => {
 
 exports.getAdvocateReviewForAdvocate = async (req, res) => {
   try {
-    const review = await AdvocateReview.find({ advocate, isDelete: false });
+    const resultPerPage = req.query.resultPerPage
+      ? parseInt(req.query.resultPerPage)
+      : 20;
+    const page = req.query.page ? parseInt(req.query.page) : 1;
+    const skip = (page - 1) * resultPerPage;
+
+    const advocate = await AdvocateReview.aggregate([
+      { $match: { isDelete: false, advocate: req.user._id } },
+      {
+        $group: {
+          _id: "$advocate", // Group by advocate ID
+          averageRating: { $avg: "$rating" }, // Calculate the average rating
+          totalReviews: { $sum: 1 }, // Optional: Count total reviews
+        },
+      },
+      { $project: { _id: 1, averageRating: 1, totalReviews: 1 } },
+    ]);
+
+    let query = { $and: [{ isDelete: false }, { advocate: req.user._id }] };
+
+    const [reviews, totalReview] = await Promise.all([
+      AdvocateReview.find(query)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(resultPerPage)
+        .populate("client", "_id name profilePic")
+        .populate("messages.givenBy", "_id name profilePic")
+        .lean(),
+      AdvocateReview.countDocuments(query),
+    ]);
+
+    const transformData = reviews.map(
+      ({ _id, messages, rating, isDelete, client, createdAt, updatedAt }) => {
+        const newMessage = messages.map(
+          ({ givenBy, _id, message, createAt }) => {
+            const profilePic = givenBy.profilePic
+              ? givenBy.profilePic.url
+              : null;
+            return {
+              givenBy: { ...givenBy, profilePic },
+              _id,
+              message,
+              createAt,
+            };
+          }
+        );
+        return {
+          _id,
+          rating,
+          messages: newMessage,
+          client: {
+            _id: client._id,
+            name: client.name,
+            profilePic: client.profilePic ? client.profilePic.url : null,
+          },
+          isDelete,
+          createdAt,
+          updatedAt,
+        };
+      }
+    );
+
     res.status(200).json({
       success: true,
-      message: "Successfully!",
-      data: review,
+      totalPages: Math.ceil(totalReview / resultPerPage) || 0,
+      currentPage: page,
+      data: { ...advocate[0], feedBack: transformData },
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};
+
+exports.getAdvocateReviewForUser = async (req, res) => {
+  try {
+    const resultPerPage = req.query.resultPerPage
+      ? parseInt(req.query.resultPerPage)
+      : 20;
+    const page = req.query.page ? parseInt(req.query.page) : 1;
+    const skip = (page - 1) * resultPerPage;
+
+    const advocate = await AdvocateReview.aggregate([
+      {
+        $match: {
+          isDelete: false,
+          advocate: new mongoose.Types.ObjectId(req.params.id),
+        },
+      },
+      {
+        $group: {
+          _id: "$advocate", // Group by advocate ID
+          averageRating: { $avg: "$rating" }, // Calculate the average rating
+          totalReviews: { $sum: 1 }, // Optional: Count total reviews
+        },
+      },
+      { $project: { _id: 1, averageRating: 1, totalReviews: 1 } },
+    ]);
+    console.log(advocate);
+    let query = { $and: [{ isDelete: false }, { advocate: req.params.id }] };
+
+    const [reviews, totalReview] = await Promise.all([
+      AdvocateReview.find(query)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(resultPerPage)
+        .populate("client", "_id name profilePic")
+        .populate("messages.givenBy", "_id name profilePic")
+        .lean(),
+      AdvocateReview.countDocuments(query),
+    ]);
+
+    const transformData = reviews.map(
+      ({ _id, messages, rating, isDelete, client, createdAt, updatedAt }) => {
+        const newMessage = messages.map(
+          ({ givenBy, _id, message, createAt }) => {
+            const profilePic = givenBy.profilePic
+              ? givenBy.profilePic.url
+              : null;
+            return {
+              givenBy: { ...givenBy, profilePic },
+              _id,
+              message,
+              createAt,
+            };
+          }
+        );
+        return {
+          _id,
+          rating,
+          messages: newMessage,
+          client: {
+            _id: client._id,
+            name: client.name,
+            profilePic: client.profilePic ? client.profilePic.url : null,
+          },
+          isDelete,
+          createdAt,
+          updatedAt,
+        };
+      }
+    );
+
+    res.status(200).json({
+      success: true,
+      totalPages: Math.ceil(totalReview / resultPerPage) || 0,
+      currentPage: page,
+      data: { ...advocate[0], feedBack: transformData },
     });
   } catch (err) {
     res.status(500).json({

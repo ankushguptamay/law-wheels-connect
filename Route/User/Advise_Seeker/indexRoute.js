@@ -13,6 +13,7 @@ const {
   updateAdvocateReviewsByUser,
   deleteAdvocateReviewByUser,
   deleteAdvocateReviewMessageByUser,
+  getAdvocateReviewForUser,
 } = require("../../../Controller/User/Review/advocateReviewCont");
 
 const {
@@ -64,5 +65,6 @@ router.delete(
   "/deleteAdvocateReviewMessage",
   deleteAdvocateReviewMessageByUser
 );
+router.get("/reviews/:id", getAdvocateReviewForUser);
 
 module.exports = router;

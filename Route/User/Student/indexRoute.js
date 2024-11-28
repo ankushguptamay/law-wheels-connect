@@ -18,6 +18,9 @@ const {
   getAllUser,
   getUserById,
 } = require("../../../Controller/User/userCont");
+const {
+  getAdvocateReviewForUser,
+} = require("../../../Controller/User/Review/advocateReviewCont");
 
 //middleware
 const { isStudentUser } = require("../../../Middleware/role");
@@ -49,5 +52,8 @@ router.use("/post", post);
 router.use("/chat", chat);
 router.use("/slot", allUserSlot);
 router.use("/master", master);
+
+// review
+router.get("/reviews/:id", getAdvocateReviewForUser);
 
 module.exports = router;
