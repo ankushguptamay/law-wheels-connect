@@ -9,17 +9,22 @@ const student = require("./Route/User/Student/indexRoute");
 const advise_seeker = require("./Route/User/Advise_Seeker/indexRoute");
 const blogger = require("./Route/Blogger/authBlogger");
 const { connectDB } = require("./Util/features");
+const { socketIO } = require("./Socket/io");
+const { createServer } = require("node:http");
 const {
   addAadharCard,
   verifyAadharOTP,
 } = require("./Controller/User/userCont");
 
 const app = express();
+const server = createServer(app);
 
 connectDB(process.env.MONGO_URI);
 
-var corsOptions = {
+const corsOptions = {
   origin: "*",
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  credentials: true,
 };
 
 app.use(cors(corsOptions));
@@ -34,6 +39,10 @@ app.use("/user", advise_seeker);
 app.use("/admin", authAdmin);
 app.use("/blogger", blogger);
 
+// Initialize Socket.io and attach to app
+const io = socketIO(server);
+app.set("io", io);
+
 // app.post("/addAadharCard", addAadharCard);
 // app.post("/verifyAadharOTP", verifyAadharOTP);
 
@@ -42,6 +51,6 @@ app.get("/", (req, res) => {
 });
 
 const PORT = process.env.PORT || 8080;
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}.`);
 });

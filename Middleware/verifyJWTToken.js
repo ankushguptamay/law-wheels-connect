@@ -99,15 +99,16 @@ exports.verifyBloggerJWT = async (req, res, next) => {
   }
 };
 
-exports.socketAuthenticator = async (err, socket, next) => {
+exports.socketAuthenticator = async (socket, next) => {
   try {
+    // console.log(socket);
     const token =
       socket.handshake.auth.token || socket.handshake.headers["authorization"];
 
     if (!token)
       return next(new ErrorHandler("Please login to access this route", 401));
 
-    const decodedData = jwt.verify(authToken, process.env.USER_JWT_SECRET_KEY);
+    const decodedData = jwt.verify(token, JWT_SECRET_KEY_USER);
 
     const user = await User.findOne(
       { _id: decodedData._id },
