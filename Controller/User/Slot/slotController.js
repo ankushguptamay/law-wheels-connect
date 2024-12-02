@@ -404,6 +404,7 @@ exports.sloteByIdForUser = async (req, res) => {
       { $match: { isDelete: false, advocate: slot.advocate._id } },
       {
         $group: {
+          _id: "$advocate",
           averageRating: { $avg: "$rating" }, // Calculate the average rating
           totalReviews: { $sum: 1 }, // Optional: Count total reviews
         },
