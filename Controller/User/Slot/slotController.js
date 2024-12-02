@@ -5,6 +5,9 @@ const {
   cancelSloteValidation,
   rescheduleSloteValidation,
 } = require("../../../Middleware/Validation/userValidation");
+const {
+  AdvocateReview,
+} = require("../../../Model/User/Review/advocateReviewModel");
 const { Slot } = require("../../../Model/User/Slot/slotModel");
 const { generateFixedLengthRandomNumber } = require("../../../Util/otp");
 
@@ -395,6 +398,21 @@ exports.sloteByIdForUser = async (req, res) => {
         message: `This slote is not present!`,
       });
     }
+
+    // Review
+    const rating = await AdvocateReview.aggregate([
+      { $match: { isDelete: false, advocate: slot.advocate._id } },
+      {
+        $group: {
+          averageRating: { $avg: "$rating" }, // Calculate the average rating
+          totalReviews: { $sum: 1 }, // Optional: Count total reviews
+        },
+      },
+      {
+        $project: { averageRating: 1, totalReviews: 1 },
+      },
+    ]);
+
     const transformData = {
       isBooked: slot.isBooked,
       _id: slot._id,
@@ -413,6 +431,8 @@ exports.sloteByIdForUser = async (req, res) => {
         avatar: slot.advocate.profilePic.url
           ? slot.advocate.profilePic.url
           : null,
+        totalReviews: rating[0].totalReviews,
+        averageRating: rating[0].averageRating,
       },
     };
     res.status(200).json({

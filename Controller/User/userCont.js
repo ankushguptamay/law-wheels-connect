@@ -47,7 +47,7 @@ const {
 exports.getDetailsOfStudentAndAdvocate = async (req, res) => {
   try {
     // const user = await User.findOne({ email: req.user.email });
-    var id = new mongoose.Types.ObjectId(req.user._id);
+    const id = new mongoose.Types.ObjectId(req.user._id);
     const user = await User.aggregate([
       {
         $match: {
