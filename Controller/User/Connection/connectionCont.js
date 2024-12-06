@@ -11,8 +11,8 @@ const { Follow } = require("../../../Model/User/Connection/followerModel");
 const {
   NEW_CONNECTION,
   INVITATION_ACCEPTED,
-  emitEvent,
 } = require("../../../Socket/event");
+const { emitEvent } = require("../../../Socket/io");
 
 exports.sendConnectionRequest = async (req, res) => {
   try {

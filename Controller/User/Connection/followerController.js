@@ -1,6 +1,7 @@
 // const {} = require("../../Middleware/Validation/connectionValidation");
 const { Follow } = require("../../../Model/User/Connection/followerModel");
-const { NEW_FOLLOWER, emitEvent } = require("../../../Socket/event");
+const { NEW_FOLLOWER } = require("../../../Socket/event");
+const { emitEvent } = require("../../../Socket/io");
 const { capitalizeFirstLetter } = require("../../../Util/utility");
 
 exports.follow = async (req, res) => {
