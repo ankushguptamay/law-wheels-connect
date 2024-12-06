@@ -112,7 +112,7 @@ exports.socketAuthenticator = async (socket, next) => {
 
     const user = await User.findOne(
       { _id: decodedData._id },
-      "_id name email mobileNumber isLicenseVerified role"
+      "_id name email mobileNumber isLicenseVerified role profilePic"
     );
 
     if (!user)

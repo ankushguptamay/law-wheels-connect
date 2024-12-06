@@ -12,7 +12,7 @@ const {
   emitEvent,
   TAG_USER,
   NEW_LIKE,
-} = require("../../../Util/event");
+} = require("../../../Socket/event");
 
 exports.addComment = async (req, res) => {
   try {

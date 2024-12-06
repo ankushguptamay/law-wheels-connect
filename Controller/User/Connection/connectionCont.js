@@ -11,7 +11,7 @@ const {
   NEW_CONNECTION,
   INVITATION_ACCEPTED,
   emitEvent,
-} = require("../../../Util/event");
+} = require("../../../Socket/event");
 
 exports.sendConnectionRequest = async (req, res) => {
   try {

@@ -13,7 +13,7 @@ const {
   NEW_COMMENT_REPLY,
   TAG_USER,
   NEW_LIKE,
-} = require("../../../Util/event");
+} = require("../../../Socket/event");
 
 exports.replyOnComment = async (req, res) => {
   try {

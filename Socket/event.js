@@ -1,5 +1,3 @@
-// const { getSockets } = require("../Utils/helper");
-
 exports.ALERT = "ALERT";
 exports.REFETCH_CHATS = "REFETCH_CHATS";
 
@@ -23,10 +21,3 @@ exports.CHAT_JOINED = "CHAT_JOINED";
 exports.CHAT_LEAVED = "CHAT_LEAVED";
 
 exports.ONLINE_USERS = "ONLINE_USERS";
-
-exports.emitEvent = (req, event, users, data) => {
-  // const io = req.app.get("io");
-  // const usersSocket = getSockets(users);
-  // io.to(usersSocket).emit(event, data);
-  console.log(event + " Fired!");
-};
