@@ -7,6 +7,7 @@ const { Chat } = require("../../../Model/Chat/chatModel");
 const {
   Connection,
 } = require("../../../Model/User/Connection/connectionModel");
+const { Follow } = require("../../../Model/User/Connection/followerModel");
 const {
   NEW_CONNECTION,
   INVITATION_ACCEPTED,
