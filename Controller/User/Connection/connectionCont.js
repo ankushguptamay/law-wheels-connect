@@ -64,7 +64,7 @@ exports.sendConnectionRequest = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: "Followed successfully!",
+      message: "Connection request sent successfully!",
     });
   } catch (err) {
     res.status(500).json({
@@ -112,7 +112,7 @@ exports.getMyConnection = async (req, res) => {
         .skip(skip)
         .limit(resultPerPage)
         .lean()
-        .populate("sender", "name profilePic"),
+        .populate("sender", "name profilePic profession_nun_user"),
       Connection.countDocuments(query),
     ]);
 
@@ -122,6 +122,9 @@ exports.getMyConnection = async (req, res) => {
         _id: sender._id,
         name: sender.name,
         profilePic: sender.profilePic ? sender.profilePic.url : null,
+        profession_nun_user: sender.profession_nun_user
+          ? sender.profession_nun_user
+          : null,
       },
     }));
 
