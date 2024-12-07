@@ -1244,7 +1244,7 @@ exports.getAllUserForAdmin = async (req, res) => {
     const [user, totalUser] = await Promise.all([
       User.find(query)
         .select(
-          "name email role mobileNumber profilePic headLine language experience_year isProfileVisible createdAt"
+          "name email role mobileNumber profilePic headLine language experience_year isProfileVisible userCode createdAt"
         )
         .sort({ name: -1 })
         .skip(skip)
@@ -1277,6 +1277,7 @@ exports.getAllUserForAdmin = async (req, res) => {
         name: user[i].name,
         email: user[i].email,
         mobileNumber: user[i].mobileNumber,
+        userCode: user[i].userCode,
         role: user[i].role,
         profilePic: user[i].profilePic,
         headLine: user[i].headLine,
