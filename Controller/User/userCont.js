@@ -1209,6 +1209,101 @@ exports.isProfileVisible = async (req, res) => {
   }
 };
 
+exports.getAllUserForAdmin = async (req, res) => {
+  try {
+    const { search, role } = req.query;
+
+    const resultPerPage = req.query.resultPerPage
+      ? parseInt(req.query.resultPerPage)
+      : 20;
+    const page = req.query.page ? parseInt(req.query.page) : 1;
+    const skip = (page - 1) * resultPerPage;
+
+    //Search
+    let query = { $and: [] };
+    if (search) {
+      const startWith = new RegExp("^" + search.toLowerCase(), "i");
+      const mobileMatch = new RegExp("^" + search);
+      query.$and.push({
+        $or: [
+          { name: startWith },
+          { mobileNumber: mobileMatch },
+          { email: startWith },
+        ],
+      });
+    }
+
+    if (role) {
+      query.$and.push({ role });
+    } else {
+      query.$and.push({
+        $or: [{ role: { $exists: false } }, { role: null }],
+      });
+    }
+
+    const [user, totalUser] = await Promise.all([
+      User.find(query)
+        .select(
+          "name email role mobileNumber profilePic headLine language experience_year isProfileVisible createdAt"
+        )
+        .sort({ name: -1 })
+        .skip(skip)
+        .limit(resultPerPage)
+        .lean(),
+      User.countDocuments(query),
+    ]);
+
+    // Transform Data
+    const transformData = [];
+    for (let i = 0; i < user.length; i++) {
+      const [rating] = await Promise.all([
+        AdvocateReview.aggregate([
+          { $match: { isDelete: false, advocate: user[i]._id } },
+          {
+            $group: {
+              _id: "$advocate", // Group by advocate ID
+              averageRating: { $avg: "$rating" }, // Calculate the average rating
+              totalReviews: { $sum: 1 }, // Optional: Count total reviews
+            },
+          },
+          {
+            $project: { _id: 0, averageRating: 1, totalReviews: 1 },
+          },
+        ]),
+      ]);
+
+      transformData.push({
+        _id: user[i]._id,
+        name: user[i].name,
+        email: user[i].email,
+        mobileNumber: user[i].mobileNumber,
+        role: user[i].role,
+        profilePic: user[i].profilePic,
+        headLine: user[i].headLine,
+        isProfileVisible: user[i].isProfileVisible,
+        language: user[i].language,
+        experience_year: user[i].experience_year,
+        createdAt: user[i].createdAt,
+        rating: rating[0],
+      });
+    }
+
+    const totalPages = Math.ceil(totalUser / resultPerPage) || 0;
+
+    res.status(200).json({
+      success: true,
+      data: transformData,
+      totalPages: totalPages,
+      currentPage: page,
+    });
+  } catch (err) {
+    res.status(500).send({
+      success: false,
+      message: err.message,
+    });
+  }
+};
+
 exports.addAadharCard = async (req, res) => {
   try {
     const url =

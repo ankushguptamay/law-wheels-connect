@@ -38,11 +38,7 @@ const {
   deleteSkill,
 } = require("../../Controller/Master/skillController");
 
-//middleware
-const { verifyAdminJWT } = require("../../Middleware/verifyJWTToken");
 const uploadImage = require("../../Middleware/UploadFile/image");
-
-router.use(verifyAdminJWT);
 
 // practice area
 router.post("/practiceArea", addPracticeArea);
