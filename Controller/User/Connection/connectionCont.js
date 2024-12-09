@@ -112,7 +112,7 @@ exports.getMyConnection = async (req, res) => {
         .skip(skip)
         .limit(resultPerPage)
         .lean()
-        .populate("sender", "name profilePic profession_nun_user"),
+        .populate("sender", "name profilePic profession_nun_user createdAt"),
       Connection.countDocuments(query),
     ]);
 

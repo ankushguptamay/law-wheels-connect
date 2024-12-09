@@ -43,6 +43,8 @@ const { Specialization } = require("../../Model/Master/specializationModel");
 const {
   AdvocateReview,
 } = require("../../Model/User/Review/advocateReviewModel");
+const { Connection } = require("../../Model/User/Connection/connectionModel");
+const { Follow } = require("../../Model/User/Connection/followerModel");
 
 exports.getDetailsOfStudentAndAdvocate = async (req, res) => {
   try {
@@ -890,7 +892,7 @@ exports.rolePage = async (req, res) => {
 exports.getAllUser = async (req, res) => {
   try {
     const { search } = req.query;
-    const role = req.query.role ? req.query.role : "Advocate";
+    const role = req.query.role;
 
     const resultPerPage = req.query.resultPerPage
       ? parseInt(req.query.resultPerPage)
@@ -905,15 +907,20 @@ exports.getAllUser = async (req, res) => {
       query.$and.push({ name: startWith });
     }
 
-    query.$and.push({ role });
-
-    if (role === "Advocate") {
+    // Role condition
+    if (role && role === "Advocate") {
+      query.$and.push({ role });
       query.$and.push({ isProfileVisible: true });
+    } else if (role) {
+      query.$and.push({ role });
+    } else {
+      query.$and.push({ role: { $exists: true, $ne: null } });
     }
+
     const [user, totalUser] = await Promise.all([
       User.find(query)
         .select(
-          "name location profilePic headLine specialization language experience_year isProfileVisible createdAt"
+          "name role location profilePic headLine specialization language experience_year isProfileVisible createdAt"
         )
         .sort({ name: -1 })
         .skip(skip)
@@ -925,29 +932,49 @@ exports.getAllUser = async (req, res) => {
     // Transform Data
     const transformData = [];
     for (let i = 0; i < user.length; i++) {
-      const [specialization, experiences, rating] = await Promise.all([
-        Specialization.find({ _id: { $in: user[i].specialization } })
-          .sort({ createAt: -1 })
-          .limit(1),
-        Experience.find({ user: user[i]._id, isRecent: true }).limit(1),
-        AdvocateReview.aggregate([
-          { $match: { isDelete: false, advocate: user[i]._id } },
-          {
-            $group: {
-              _id: "$advocate", // Group by advocate ID
-              averageRating: { $avg: "$rating" }, // Calculate the average rating
-              totalReviews: { $sum: 1 }, // Optional: Count total reviews
+      let specialization, experiences, rating;
+      if (user[i].role === "Advocate") {
+        const [aSpecialization, aExperiences, aRating] = await Promise.all([
+          Specialization.find({ _id: { $in: user[i].specialization } })
+            .sort({ createAt: -1 })
+            .limit(1),
+          Experience.find({ user: user[i]._id, isRecent: true }).limit(1),
+          AdvocateReview.aggregate([
+            { $match: { isDelete: false, advocate: user[i]._id } },
+            {
+              $group: {
+                _id: "$advocate", // Group by advocate ID
+                averageRating: { $avg: "$rating" }, // Calculate the average rating
+                totalReviews: { $sum: 1 }, // Optional: Count total reviews
+              },
             },
-          },
-          {
-            $project: { _id: 0, averageRating: 1, totalReviews: 1 },
-          },
-        ]),
+            {
+              $project: { _id: 0, averageRating: 1, totalReviews: 1 },
+            },
+          ]),
+        ]);
+        specialization = aSpecialization;
+        experiences = aExperiences;
+        rating = aRating;
+      }
+
+      const [connection, follow] = await Promise.all([
+        Connection.findOne({
+          $or: [
+            { sender: req.user._id, receiver: user[i]._id },
+            { sender: user[i]._id, receiver: req.user._id },
+          ],
+        }),
+        Follow.findOne({
+          follower: req.user._id,
+          followee: user[i]._id,
+        }),
       ]);
 
       transformData.push({
         _id: user[i]._id,
         name: user[i].name,
+        role: user[i].role,
         location: user[i].location,
         profilePic: user[i].profilePic,
         headLine: user[i].headLine,
@@ -957,7 +984,9 @@ exports.getAllUser = async (req, res) => {
         experiences,
         experience_year: user[i].experience_year,
         createdAt: user[i].createdAt,
-        rating: rating[0],
+        rating: rating ? rating[0] : null,
+        connection,
+        follow,
       });
     }
 
@@ -1105,7 +1134,21 @@ exports.getUserById = async (req, res) => {
         message: "This user in not present!",
       });
     }
-    let transformData = user;
+
+    const [connection, follow] = await Promise.all([
+      Connection.findOne({
+        $or: [
+          { sender: req.user._id, receiver: user._id },
+          { sender: user._id, receiver: req.user._id },
+        ],
+      }),
+      Follow.findOne({
+        follower: req.user._id,
+        followee: user._id,
+      }),
+    ]);
+
+    let transformData = { ...user, connection, follow };
 
     if (user.role === "Nun") {
       transformData = {
@@ -1121,6 +1164,8 @@ exports.getUserById = async (req, res) => {
         language: user.language,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
+        connection,
+        follow,
       };
     }
 
