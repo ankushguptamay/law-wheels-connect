@@ -399,7 +399,7 @@ exports.addUpdateProfilePic = async (req, res) => {
       url: `${process.env.SHOW_BUNNY_FILE_HOSTNAME}/${bunnyFolderName}/${req.file.filename}`,
     };
 
-    if (isProfilePic.profilePic.fileName) {
+    if (isProfilePic?.profilePic?.fileName) {
       await deleteFileToBunny(
         bunnyFolderName,
         isProfilePic.profilePic.fileName
@@ -444,7 +444,7 @@ exports.addUpdateCoverPic = async (req, res) => {
       url: `${process.env.SHOW_BUNNY_FILE_HOSTNAME}/${bunnyFolderName}/${req.file.filename}`,
     };
 
-    if (isCoverPic.coverPic.fileName) {
+    if (isCoverPic?.coverPic?.fileName) {
       await deleteFileToBunny(bunnyFolderName, isCoverPic.coverPic.fileName);
     }
 
@@ -493,14 +493,6 @@ exports.addUpdateLicensePic = async (req, res) => {
       fileName: req.file.filename,
       url: `${process.env.SHOW_BUNNY_FILE_HOSTNAME}/${bunnyFolderName}/${req.file.filename}`,
     };
-    if (isLicensePic.licensePic) {
-      if (isLicensePic.licensePic.fileName) {
-        await deleteFileToBunny(
-          bunnyFolderName,
-          isLicensePic.licensePic.fileName
-        );
-      }
-    }
 
     // Storing History
     if (isLicensePic.isLicenseVerified || isLicensePic.isProfileVisible) {
@@ -511,6 +503,13 @@ exports.addUpdateLicensePic = async (req, res) => {
         licensePic: isLicensePic.licensePic,
         user: req.user._id,
       });
+    } else {
+      if (isLicensePic?.licensePic?.fileName) {
+        await deleteFileToBunny(
+          bunnyFolderName,
+          isLicensePic.licensePic.fileName
+        );
+      }
     }
 
     await isLicensePic.updateOne({
@@ -728,19 +727,14 @@ exports.deleteProfilePic = async (req, res) => {
     const isProfilePic = await User.findOne({
       _id: req.user._id,
     });
-    if (isProfilePic.profilePic.fileName) {
+    if (isProfilePic?.profilePic?.fileName) {
       await deleteFileToBunny(
         bunnyFolderName,
         isProfilePic.profilePic.fileName
       );
     }
-    const profilePic = {
-      fileName: null,
-      url: null,
-    };
-    await isProfilePic.updateOne({
-      profilePic: profilePic,
-    });
+    const profilePic = { fileName: undefined, url: undefined };
+    await isProfilePic.updateOne({ profilePic });
     // Final response
     res.status(200).send({
       success: true,
@@ -759,16 +753,11 @@ exports.deleteCoverPic = async (req, res) => {
     const isCoverPic = await User.findOne({
       _id: req.user._id,
     });
-    if (isCoverPic.coverPic.fileName) {
+    if (isCoverPic?.coverPic?.fileName) {
       await deleteFileToBunny(bunnyFolderName, isCoverPic.coverPic.fileName);
     }
-    const coverPic = {
-      fileName: null,
-      url: null,
-    };
-    await isCoverPic.updateOne({
-      coverPic: coverPic,
-    });
+    const coverPic = { fileName: undefined, url: undefined };
+    await isCoverPic.updateOne({ coverPic });
     // Final response
     res.status(200).send({
       success: true,
@@ -787,16 +776,13 @@ exports.deleteLicensePic = async (req, res) => {
     const isLicensePic = await User.findOne({
       _id: req.user._id,
     });
-    if (isLicensePic.licensePic.fileName) {
+    if (isLicensePic?.licensePic?.fileName) {
       await deleteFileToBunny(
         bunnyFolderName,
         isLicensePic.licensePic.fileName
       );
     }
-    const licensePic = {
-      fileName: null,
-      url: null,
-    };
+    const licensePic = { fileName: undefined, url: undefined };
 
     // Storing History
     if (isLicensePic.isLicenseVerified || isLicensePic.isProfileVisible) {
@@ -1155,13 +1141,14 @@ exports.getUserById = async (req, res) => {
         _id: user._id,
         name: user.name,
         email: user.email,
+        location: user.location || null,
         mobileNumber: user.mobileNumber,
-        profession_nun_user: user.profession_nun_user,
+        profession_nun_user: user.profession_nun_user || null,
         location: user.location,
-        profilePic: user.profilePic,
-        coverPic: user.coverPic,
+        profilePic: user.profilePic || null,
+        coverPic: user.coverPic || null,
         role: user.role,
-        language: user.language,
+        language: user.language || null,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
         connection,
