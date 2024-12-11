@@ -1373,7 +1373,7 @@ exports.deleteMyRecordFromPlayStore = async (req, res) => {
         message: "These credentials are not present on our application!",
       });
     } else {
-      if (data?.user) {
+      if (!data?.user) {
         await UserDeleteRequestPlayStore.updateOne(
           { _id: data._id },
           { user: user._id }

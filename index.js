@@ -40,7 +40,7 @@ app.use("/blogger", blogger);
 const io = socketIO(server);
 app.set("io", io);
 
-app.post("deleteMyRecord", deleteMyRecordFromPlayStore); // Delete request from play store
+app.post("/deleteMyRecord", deleteMyRecordFromPlayStore); // Delete request from play store
 app.get("/", (req, res) => {
   res.send("Hello World!!");
 });
