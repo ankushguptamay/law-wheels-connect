@@ -1352,40 +1352,54 @@ exports.deleteMyRecordFromPlayStore = async (req, res) => {
       });
     }
     const { email, mobileNumber, name } = req.body;
-    // First Store coming data in our database
-
     // Create this firm if not exist
-    const data = await UserDeleteRequestPlayStore.findOneAndUpdate(
-      { $or: [{ email }, { mobileNumber }] },
-      {
-        $setOnInsert: { email, mobileNumber }, // Set these values only on insert
-        updatedAt: new Date(),
-        name,
-      },
-      { upsert: true, new: true, setDefaultsOnInsert: true }
-    );
+    const data = await UserDeleteRequestPlayStore.findOne({
+      $or: [{ email }, { mobileNumber }],
+    });
 
     const user = await User.findOne({ $or: [{ email }, { mobileNumber }] });
 
     if (!user) {
+      // Create this if not exist
+      await UserDeleteRequestPlayStore.findOneAndUpdate(
+        { $or: [{ email }, { mobileNumber }] },
+        {
+          $setOnInsert: { email, mobileNumber }, // Set these values only on insert
+          updatedAt: new Date(),
+          name,
+        },
+        { upsert: true, new: true, setDefaultsOnInsert: true }
+      );
       return res.status(400).json({
         success: false,
         message: "These credentials are not present on our application!",
       });
     } else {
-      if (!data?.user) {
-        await UserDeleteRequestPlayStore.updateOne(
-          { _id: data._id },
-          { user: user._id }
-        );
+      if (data) {
+        if (!data?.user) {
+          await UserDeleteRequestPlayStore.updateOne(
+            { _id: data._id },
+            { user: user._id, updatedAt: new Date() }
+          );
+        }
+        return res.status(400).json({
+          success: false,
+          message: "These credentials are not present on our application!",
+        });
+      } else {
+        await UserDeleteRequestPlayStore.create({
+          name,
+          email,
+          mobileNumber,
+          user: user._id,
+        });
+        // Send final success response
+        res.status(200).send({
+          success: true,
+          message: `Your records deleted Successfully`,
+        });
       }
     }
-
-    // Send final success response
-    res.status(200).send({
-      success: true,
-      message: `Deleted Successfully`,
-    });
   } catch (err) {
     res.status(500).json({
       success: false,
