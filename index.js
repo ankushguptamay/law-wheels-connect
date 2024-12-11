@@ -11,10 +11,7 @@ const blogger = require("./Route/Blogger/authBlogger");
 const { connectDB } = require("./Util/features");
 const { socketIO } = require("./Socket/io");
 const { createServer } = require("node:http");
-const {
-  addAadharCard,
-  verifyAadharOTP,
-} = require("./Controller/User/userCont");
+const { deleteMyRecordFromPlayStore } = require("./Controller/User/userCont");
 
 const app = express();
 const server = createServer(app);
@@ -43,9 +40,7 @@ app.use("/blogger", blogger);
 const io = socketIO(server);
 app.set("io", io);
 
-// app.post("/addAadharCard", addAadharCard);
-// app.post("/verifyAadharOTP", verifyAadharOTP);
-
+app.post("deleteMyRecord", deleteMyRecordFromPlayStore); // Delete request from play store
 app.get("/", (req, res) => {
   res.send("Hello World!!");
 });

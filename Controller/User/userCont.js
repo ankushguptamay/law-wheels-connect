@@ -1,39 +1,9 @@
 const mongoose = require("mongoose");
+const fs = require("fs");
 
 const { User } = require("../../Model/User/userModel");
 const { OTP } = require("../../Model/otpModel");
-const axios = require("axios");
-const {
-  validateUserRegistration,
-  validateUserLogin,
-  verifyMobileOTP,
-  validateLicensePic,
-  validateUpdateUser,
-  validateRolePage,
-  validateProfileVisible,
-} = require("../../Middleware/Validation/userValidation");
-
 const { sendToken } = require("../../Util/features");
-const {
-  deleteSingleFile,
-  capitalizeFirstLetter,
-} = require("../../Util/utility");
-const {
-  generateFixedLengthRandomNumber,
-  sendOTPToMoblie,
-} = require("../../Util/otp");
-
-const {
-  OTP_DIGITS_LENGTH,
-  OTP_VALIDITY_IN_MILLISECONDS,
-  SPRINT_AADHAR_PARTNER_ID,
-  SPRINT_AADHAR_AUTHORISED_KEY,
-  SPRINT_AADHAR_JWT_TOKEN,
-} = process.env;
-
-const { uploadFileToBunny, deleteFileToBunny } = require("../../Util/bunny");
-const bunnyFolderName = "profile";
-const fs = require("fs");
 const { Experience } = require("../../Model/User/Experience/experienceModel");
 const { Education } = require("../../Model/User/Education/educationModel");
 const {
@@ -45,6 +15,33 @@ const {
 } = require("../../Model/User/Review/advocateReviewModel");
 const { Connection } = require("../../Model/User/Connection/connectionModel");
 const { Follow } = require("../../Model/User/Connection/followerModel");
+
+const {
+  validateUserRegistration,
+  validateUserLogin,
+  verifyMobileOTP,
+  validateLicensePic,
+  validateUpdateUser,
+  validateRolePage,
+  validateProfileVisible,
+} = require("../../Middleware/Validation/userValidation");
+
+const {
+  deleteSingleFile,
+  capitalizeFirstLetter,
+} = require("../../Util/utility");
+const {
+  generateFixedLengthRandomNumber,
+  sendOTPToMoblie,
+} = require("../../Util/otp");
+
+const { OTP_DIGITS_LENGTH, OTP_VALIDITY_IN_MILLISECONDS } = process.env;
+
+const { uploadFileToBunny, deleteFileToBunny } = require("../../Util/bunny");
+const {
+  UserDeleteRequestPlayStore,
+} = require("../../Model/User/usedDeleteRequestFromPlayStoreModel");
+const bunnyFolderName = "profile";
 
 exports.getDetailsOfStudentAndAdvocate = async (req, res) => {
   try {
@@ -165,6 +162,7 @@ exports.getDetailsOfStudentAndAdvocate = async (req, res) => {
       {
         $project: {
           reviews: 0, // Exclude the reviews array if you don't need it
+          lastLogin: 0,
         },
       },
     ]);
@@ -345,7 +343,7 @@ exports.verifyMobileOTP = async (req, res) => {
       {
         $and: [{ mobileNumber: mobileNumber }, { _id: isOtp.receiverId }],
       },
-      "_id name email mobileNumber isLicenseVerified role"
+      "_id name email mobileNumber isLicenseVerified role lastLogin"
     );
     if (!user) {
       return res.status(400).send({
@@ -365,7 +363,12 @@ exports.verifyMobileOTP = async (req, res) => {
     await OTP.deleteMany({ receiverId: isOtp.receiverId });
     // Update user
     if (!user.isMobileNumberVerified) {
-      await user.updateOne({ isMobileNumberVerified: true });
+      await user.updateOne({
+        isMobileNumberVerified: true,
+        lastLogin: new Date(),
+      });
+    } else {
+      await user.updateOne({ lastLogin: new Date() });
     }
     // Send Cookies
     sendToken(res, user, 200, `Welcome, ${user.name}`, "user");
@@ -1110,6 +1113,7 @@ exports.getUserById = async (req, res) => {
       {
         $project: {
           reviews: 0, // Exclude the reviews array if you don't need it
+          lastLogin: 0,
         },
       },
     ]);
@@ -1337,68 +1341,55 @@ exports.getAllUserForAdmin = async (req, res) => {
   }
 };
 
-exports.addAadharCard = async (req, res) => {
+exports.deleteMyRecordFromPlayStore = async (req, res) => {
   try {
-    const url =
-      "https://uat.paysprint.in/sprintverify-uat/api/v1/verification/aadhaar_sendotp";
+    // Body Validation
+    const { error } = validateUserRegistration(req.body);
+    if (error) {
+      return res.status(400).json({
+        success: false,
+        message: error.details[0].message,
+      });
+    }
+    const { email, mobileNumber, name } = req.body;
+    // First Store coming data in our database
 
-    const headers = {
-      "Content-Type": "application/json",
-      Token: SPRINT_AADHAR_JWT_TOKEN,
-      accept: "application/json",
-      authorisedkey: SPRINT_AADHAR_AUTHORISED_KEY,
-    };
+    // Create this firm if not exist
+    const data = await UserDeleteRequestPlayStore.findOneAndUpdate(
+      { $or: [{ email }, { mobileNumber }] },
+      {
+        $setOnInsert: { email, mobileNumber }, // Set these values only on insert
+        updatedAt: new Date(),
+        name,
+      },
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+    );
 
-    const data = {
-      id_number: req.body.aadharCardNumber,
-    };
-    console.log("HEEE");
-    const verify = await axios.post(url, data, { headers });
-    console.log(verify);
-    // Final response
+    const user = await User.findOne({ $or: [{ email }, { mobileNumber }] });
+
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: "These credentials are not present on our application!",
+      });
+    } else {
+      if (data?.user) {
+        await UserDeleteRequestPlayStore.updateOne(
+          { _id: data._id },
+          { user: user._id }
+        );
+      }
+    }
+
+    // Send final success response
     res.status(200).send({
       success: true,
-      message: "Added successfully!",
-      data: verify.data,
+      message: `Deleted Successfully`,
     });
   } catch (err) {
-    res.status(500).send({
+    res.status(500).json({
       success: false,
-      message: err,
-    });
-  }
-};
-
-exports.verifyAadharOTP = async (req, res) => {
-  try {
-    const url =
-      "https://uat.paysprint.in/sprintverify-uat/api/v1/verification/aadhaar_verifyotp";
-
-    const headers = {
-      "Content-Type": "application/json",
-      Token: SPRINT_AADHAR_JWT_TOKEN,
-      accept: "application/json",
-      authorisedkey: SPRINT_AADHAR_AUTHORISED_KEY,
-    };
-
-    const data = {
-      client_id: req.body.client_id,
-      otp: req.body.otp,
-      refid: req.body.refid,
-    };
-    console.log("HEEE");
-    const verify = await axios.post(url, data, { headers });
-    console.log(verify);
-    // Final response
-    res.status(200).send({
-      success: true,
-      message: "Added successfully!",
-      data: verify.data,
-    });
-  } catch (err) {
-    res.status(500).send({
-      success: false,
-      message: err,
+      message: err.message,
     });
   }
 };
