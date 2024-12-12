@@ -93,17 +93,24 @@ exports.getMyConnection = async (req, res) => {
     const page = req.query.page ? parseInt(req.query.page) : 1;
     const skip = (page - 1) * resultPerPage;
 
-    let query = {
-      receiver: req.user._id,
-      status: status,
-    };
+    let query = {};
+    // Status
+    if (status === "pending") {
+      query = { receiver: req.user._id, status };
+    } else {
+      query = {
+        $or: [{ sender: req.user._id }, { receiver: req.user._id }],
+        status,
+      };
+    }
+    // Search
     if (search) {
       const containInString = new RegExp(req.query.search, "i");
-      query = {
-        receiver: req.user._id,
-        status: status,
-        "sender.name": containInString,
-      };
+      query.$and = [
+        { "sender.name": containInString },
+        { receiver: req.user._id },
+        { status },
+      ];
     }
 
     const [connections, totalConnections] = await Promise.all([

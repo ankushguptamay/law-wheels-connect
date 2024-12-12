@@ -1352,10 +1352,6 @@ exports.deleteMyRecordFromPlayStore = async (req, res) => {
       });
     }
     const { email, mobileNumber, name } = req.body;
-    // Create this firm if not exist
-    const data = await UserDeleteRequestPlayStore.findOne({
-      $or: [{ email }, { mobileNumber }],
-    });
 
     const user = await User.findOne({ $or: [{ email }, { mobileNumber }] });
 
@@ -1375,6 +1371,9 @@ exports.deleteMyRecordFromPlayStore = async (req, res) => {
         message: "These credentials are not present on our application!",
       });
     } else {
+      const data = await UserDeleteRequestPlayStore.findOne({
+        $or: [{ email }, { mobileNumber }],
+      });
       if (data) {
         if (!data?.user) {
           await UserDeleteRequestPlayStore.updateOne(
