@@ -7,6 +7,7 @@ const post = require("../userPost");
 const chat = require("../chatRoute");
 const allUserSlot = require("../sloteForAllUser");
 const master = require("../master");
+const lawStudy = require("../law_study");
 
 const {
   getDetailsOfStudentAndAdvocate,
@@ -52,6 +53,7 @@ router.use("/post", post);
 router.use("/chat", chat);
 router.use("/slot", allUserSlot);
 router.use("/master", master);
+router.use("/law-study", lawStudy);
 
 // review
 router.get("/reviews/:id", getAdvocateReviewForUser);

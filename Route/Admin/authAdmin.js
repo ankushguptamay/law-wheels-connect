@@ -3,6 +3,7 @@ const router = express.Router();
 
 const master = require("./master");
 const user = require("./user");
+const lawStudy = require("./law_study");
 
 const {
   getAdmin,
@@ -21,5 +22,6 @@ router.get("/", getAdmin);
 
 router.use("/mst", master);
 router.use("/users", user);
+router.use("/law-study", lawStudy);
 
 module.exports = router;
