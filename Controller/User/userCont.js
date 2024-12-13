@@ -1,9 +1,13 @@
 const mongoose = require("mongoose");
+const jwt = require("jsonwebtoken");
 const fs = require("fs");
 
 const { User } = require("../../Model/User/userModel");
 const { OTP } = require("../../Model/otpModel");
-const { sendToken } = require("../../Util/features");
+const {
+  createAccessToken,
+  createRefreshToken,
+} = require("../../Util/jwtToken");
 const { Experience } = require("../../Model/User/Experience/experienceModel");
 const { Education } = require("../../Model/User/Education/educationModel");
 const {
@@ -312,10 +316,20 @@ exports.verifyMobileOTP = async (req, res) => {
     const { mobileNumber, otp } = req.body;
     // Only for testing
     if (mobileNumber === "1133557799") {
-      // Send Cookies
-      sendToken(
-        res,
-        {
+      const token = createAccessToken(
+        "user",
+        "playstoretester@gmail.com",
+        "67165fa7b1474b741db09d0a"
+      );
+      const refreshToken = createRefreshToken(
+        "user",
+        "67165fa7b1474b741db09d0a"
+      );
+      return res.status(200).json({
+        success: true,
+        AccessToken: token,
+        refreshToken,
+        user: {
           _id: "67165fa7b1474b741db09d0a",
           name: "Tester For Play Store",
           email: "playstoretester@gmail.com",
@@ -323,10 +337,8 @@ exports.verifyMobileOTP = async (req, res) => {
           mobileNumber: "1133557799",
           role: undefined,
         },
-        200,
-        `Welcome, Tester For Play Store`,
-        "user"
-      );
+        message: `Welcome, Tester For Play Store`,
+      });
     }
     // Is Email Otp exist
     const isOtp = await OTP.findOne({
@@ -361,17 +373,27 @@ exports.verifyMobileOTP = async (req, res) => {
       });
     }
     await OTP.deleteMany({ receiverId: isOtp.receiverId });
+
+    const refreshToken = createRefreshToken("user", user._id);
     // Update user
     if (!user.isMobileNumberVerified) {
       await user.updateOne({
         isMobileNumberVerified: true,
         lastLogin: new Date(),
+        refreshToken,
       });
     } else {
-      await user.updateOne({ lastLogin: new Date() });
+      await user.updateOne({ lastLogin: new Date(), refreshToken });
     }
-    // Send Cookies
-    sendToken(res, user, 200, `Welcome, ${user.name}`, "user");
+
+    const token = createAccessToken("user", user.email, user._id);
+    res.status(200).json({
+      success: true,
+      AccessToken: token,
+      refreshToken,
+      user,
+      message: `Welcome, ${user.name}`,
+    });
   } catch (err) {
     res.status(500).send({
       success: false,
@@ -1404,5 +1426,40 @@ exports.deleteMyRecordFromPlayStore = async (req, res) => {
       success: false,
       message: err.message,
     });
+  }
+};
+
+exports.refreshAccessToken = async (req, res) => {
+  const { refreshToken } = req.body;
+  if (!refreshToken)
+    return res
+      .status(401)
+      .send({ success: false, message: "Refresh token required!" });
+
+  try {
+    const decoded = jwt.verify(
+      refreshToken,
+      process.env.JWT_SECRET_REFRESH_KEY_USER
+    );
+    const user = await User.findById(decoded._id);
+
+    if (!user || user?.refreshToken !== refreshToken) {
+      return res.status(403).send({ success: false, message: "Unauthorized!" });
+    }
+
+    const token = createAccessToken("user", user.email, user._id);
+
+    res.status(200).json({ success: true, AccessToken: token, refreshToken });
+  } catch (err) {
+    res.status(403).send({ success: false, message: err.message });
+  }
+};
+
+exports.logout = async (req, res) => {
+  try {
+    await User.updateOne({ _id: req.user._id }, { refreshToken: undefined });
+    res.status(200).json({ success: true, message: "Loged out successfully" });
+  } catch (err) {
+    res.status(403).send({ success: false, message: err.message });
   }
 };

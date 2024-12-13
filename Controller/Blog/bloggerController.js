@@ -3,8 +3,12 @@ const {
   validateAdminLogin,
 } = require("../../Middleware/Validation/adminValidation");
 const { Blogger } = require("../../Model/Blog/bloggerModel");
-const { sendToken } = require("../../Util/features");
+const {
+  createAccessToken,
+  createRefreshToken,
+} = require("../../Util/jwtToken");
 const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 const { capitalizeFirstLetter } = require("../../Util/utility");
 const SALT = 10;
 
@@ -56,7 +60,19 @@ exports.registerBlogger = async (req, res, next) => {
       name: name,
       password: hashedPassword,
     });
-    sendToken(res, blogger, 201, "Blogger created", "blogger");
+
+    const token = createAccessToken("blogger", email, blogger._id);
+    const refreshToken = createRefreshToken("blogger", blogger._id);
+
+    await blogger.updateOne({ refreshToken });
+
+    res.status(201).json({
+      success: true,
+      AccessToken: token,
+      refreshToken,
+      user: blogger,
+      message: "Blogger created",
+    });
   } catch (err) {
     res.status(500).json({
       success: false,
@@ -94,17 +110,60 @@ exports.loginBlogger = async (req, res) => {
       });
     }
 
-    sendToken(
-      res,
-      isBlogger,
-      200,
-      `Welcome Back, ${isBlogger.name}`,
-      "blogger"
-    );
+    const token = createAccessToken("blogger", isBlogger.email, isBlogger._id);
+    const refreshToken = createRefreshToken("blogger", isBlogger._id);
+
+    await isBlogger.updateOne({ refreshToken });
+
+    res.status(200).json({
+      success: true,
+      AccessToken: token,
+      refreshToken,
+      user: isBlogger,
+      message: `Welcome Back, ${isBlogger.name}`,
+    });
   } catch (err) {
     res.status(500).json({
       success: false,
       message: err.message,
     });
+  }
+};
+
+exports.refreshAccessToken = async (req, res) => {
+  const { refreshToken } = req.body;
+  if (!refreshToken)
+    return res
+      .status(401)
+      .send({ success: false, message: "Refresh token required!" });
+
+  try {
+    const decoded = jwt.verify(
+      refreshToken,
+      process.env.JWT_SECRET_REFRESH_KEY_BLOGGER
+    );
+    const blogger = await Blogger.findById(decoded._id);
+
+    if (!blogger || blogger?.refreshToken !== refreshToken) {
+      return res.status(403).send({ success: false, message: "Unauthorized!" });
+    }
+
+    const token = createAccessToken("blogger", blogger.email, blogger._id);
+
+    res.status(200).json({ success: true, AccessToken: token, refreshToken });
+  } catch (err) {
+    res.status(403).send({ success: false, message: err.message });
+  }
+};
+
+exports.logout = async (req, res) => {
+  try {
+    await Blogger.updateOne(
+      { _id: req.blogger._id },
+      { refreshToken: undefined }
+    );
+    res.status(200).json({ success: true, message: "Loged out successfully" });
+  } catch (err) {
+    res.status(403).send({ success: false, message: err.message });
   }
 };

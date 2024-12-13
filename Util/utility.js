@@ -30,4 +30,19 @@ function capitalizeFirstLetter(str) {
     .join(" ");
 }
 
-module.exports = { ErrorHandler, deleteSingleFile, capitalizeFirstLetter };
+const getOtherExceptGivenFileName = (all, given) => {
+  const newAlls = [];
+  for (let i = 0; i < all.length; i++) {
+    if (all[i].fileName !== given) {
+      newAlls.push(all[i]);
+    }
+  }
+  return newAlls;
+};
+
+module.exports = {
+  ErrorHandler,
+  deleteSingleFile,
+  capitalizeFirstLetter,
+  getOtherExceptGivenFileName,
+};

@@ -6,6 +6,8 @@ const {
   loginByMobile,
   verifyMobileOTP,
   rolePage,
+  refreshAccessToken,
+  logout,
 } = require("../../Controller/User/userCont");
 
 // Middle
@@ -14,7 +16,9 @@ const { verifyUserJWT } = require("../../Middleware/verifyJWTToken");
 router.post("/register", register);
 router.post("/loginByMobile", loginByMobile);
 router.post("/verifyMobileOTP", verifyMobileOTP);
+router.post("/refresh", refreshAccessToken);
 
+router.put("/logout", verifyUserJWT, logout);
 router.put("/rolePage", verifyUserJWT, rolePage);
 
 module.exports = router;

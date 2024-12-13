@@ -13,6 +13,7 @@ const schema = new Schema(
     headLine: { type: String }, // Using as Bio
     bar_council_license_number: { type: String },
     userCode: { type: String },
+    refreshToken: { type: String },
     location: {
       country: { type: String },
       state: { type: String },

@@ -3,7 +3,7 @@ const {
   validateAdminRegistration,
   validateAdminLogin,
 } = require("../../Middleware/Validation/adminValidation");
-const { sendToken } = require("../../Util/features");
+const { createAccessToken } = require("../../Util/jwtToken");
 const bcrypt = require("bcryptjs");
 const { capitalizeFirstLetter } = require("../../Util/utility");
 const SALT = 10;
@@ -56,7 +56,14 @@ exports.registerAdmin = async (req, res, next) => {
       name: name,
       password: hashedPassword,
     });
-    sendToken(res, admin, 201, "Admin created", "admin");
+
+    const token = createAccessToken("admin", email, admin._id);
+    res.status(201).json({
+      success: true,
+      AccessToken: token,
+      user: admin,
+      message: "Admin created",
+    });
   } catch (err) {
     res.status(500).json({
       success: false,
@@ -94,7 +101,13 @@ exports.loginAdmin = async (req, res) => {
       });
     }
 
-    sendToken(res, isAdmin, 200, `Welcome Back, ${isAdmin.name}`, "admin");
+    const token = createAccessToken("admin", isAdmin.email, isAdmin._id);
+    res.status(200).json({
+      success: true,
+      AccessToken: token,
+      user: isAdmin,
+      message: `Welcome Back, ${isAdmin.name}`,
+    });
   } catch (err) {
     res.status(500).json({
       success: false,

@@ -13,8 +13,7 @@ const {
 } = require("../../../Model/User/Post/reactionOnPostModel");
 const { uploadFileToBunny, deleteFileToBunny } = require("../../../Util/bunny");
 const { emitEvent, NEW_LIKE } = require("../../../Socket/event");
-const { getOtherExceptGivenFileName } = require("../../../Util/features");
-const { deleteSingleFile } = require("../../../Util/utility");
+const { deleteSingleFile,getOtherExceptGivenFileName } = require("../../../Util/utility");
 const bunnyFolderName = "post";
 const fs = require("fs");
 
