@@ -41,11 +41,11 @@ exports.socketIO = (server) => {
   io.on("connection", (socket) => {
     const user = socket.user;
 
-    const existingSocket = userSocketIDs.get(user.id.toString());
+    const existingSocket = userSocketIDs.get(user._id.toString());
     if (existingSocket && existingSocket !== socket.id) {
       io.to(existingSocket).disconnectSockets(); // Disconnect previous socket
     }
-    userSocketIDs.set(user.id.toString(), socket.id);
+    userSocketIDs.set(user._id.toString(), socket.id);
 
     // New Message
     socket.on(NEW_MESSAGE, async ({ chatId, members, content }) => {
