@@ -996,8 +996,8 @@ exports.getAllUser = async (req, res) => {
         experience_year: user[i].experience_year,
         createdAt: user[i].createdAt,
         rating: rating ? rating[0] : null,
-        connection,
-        follow,
+        connection: connection || null,
+        follow: follow || null,
       });
     }
 
@@ -1160,7 +1160,11 @@ exports.getUserById = async (req, res) => {
       }),
     ]);
 
-    let transformData = { ...user, connection, follow };
+    let transformData = {
+      ...user,
+      connection: connection || null,
+      follow: follow || null,
+    };
 
     if (user.role === "Nun") {
       transformData = {
@@ -1177,8 +1181,8 @@ exports.getUserById = async (req, res) => {
         language: user.language || null,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
-        connection,
-        follow,
+        connection: connection || null,
+        follow: follow || null,
       };
     }
 
