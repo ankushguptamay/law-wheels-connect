@@ -26,6 +26,13 @@ exports.sendConnectionRequest = async (req, res) => {
     }
     const { userId } = req.body;
 
+    if (userId.toString() == req.user._id.toString()) {
+      return res.status(400).json({
+        success: false,
+        message: "You can not send connection request to yourself!",
+      });
+    }
+
     const connection = await Connection.findOne({
       $or: [
         { sender: req.user, receiver: userId },
@@ -35,7 +42,7 @@ exports.sendConnectionRequest = async (req, res) => {
     if (connection) {
       if (connection.status === "pending") {
         return res.status(400).json({
-          success: true,
+          success: false,
           message: "Connection request already present!",
         });
       } else if (
@@ -43,7 +50,7 @@ exports.sendConnectionRequest = async (req, res) => {
         connection.status === "rejected"
       ) {
         return res.status(400).json({
-          success: true,
+          success: false,
           message: "Already connected!",
         });
       }
@@ -123,8 +130,9 @@ exports.getMyConnection = async (req, res) => {
       Connection.countDocuments(query),
     ]);
 
-    const allConnection = connections.map(({ _id, sender }) => ({
+    const allConnection = connections.map(({ _id, sender, createdAt }) => ({
       _id,
+      createdAt,
       sender: {
         _id: sender._id,
         name: sender.name,

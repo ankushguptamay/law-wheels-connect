@@ -1136,6 +1136,12 @@ exports.getUserById = async (req, res) => {
         $project: {
           reviews: 0, // Exclude the reviews array if you don't need it
           lastLogin: 0,
+          mobileNumber: 0,
+          email: 0,
+          updatedAt: 0,
+          createdAt: 0,
+          isDelete: 0,
+          deleted_at: 0,
         },
       },
     ]);
@@ -1147,7 +1153,7 @@ exports.getUserById = async (req, res) => {
       });
     }
 
-    const [connection, follow] = await Promise.all([
+    const [connection, follow, follower, following] = await Promise.all([
       Connection.findOne({
         $or: [
           { sender: req.user._id, receiver: user[0]._id },
@@ -1158,29 +1164,28 @@ exports.getUserById = async (req, res) => {
         follower: req.user._id,
         followee: user[0]._id,
       }),
+      Follow.countDocuments({ followee: user[0]._id }),
+      Follow.countDocuments({ follower: user[0]._id }),
     ]);
 
     let transformData = {
       ...user[0],
       connection: connection || null,
       follow: follow || null,
+      follower,
+      following,
     };
 
     if (user[0].role === "Nun") {
       transformData = {
         _id: user[0]._id,
         name: user[0].name,
-        email: user[0].email,
         location: user[0].location || null,
-        mobileNumber: user[0].mobileNumber,
         profession_nun_user: user[0].profession_nun_user || null,
-        location: user[0].location,
         profilePic: user[0].profilePic || null,
         coverPic: user[0].coverPic || null,
         role: user[0].role,
         language: user[0].language || null,
-        createdAt: user[0].createdAt,
-        updatedAt: user[0].updatedAt,
         connection: connection || null,
         follow: follow || null,
       };

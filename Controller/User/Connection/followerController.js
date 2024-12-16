@@ -9,8 +9,15 @@ exports.follow = async (req, res) => {
     const followee = req.body.followee;
     if (!followee) {
       return res.status(400).json({
-        success: true,
+        success: false,
         message: "Select a followee!",
+      });
+    }
+
+    if (followee.toString() == req.user._id.toString()) {
+      return res.status(400).json({
+        success: false,
+        message: "you can not follow your self!",
       });
     }
     // Check
@@ -20,7 +27,7 @@ exports.follow = async (req, res) => {
     });
     if (isFollowed) {
       return res.status(400).json({
-        success: true,
+        success: false,
         message: "Already followed!",
       });
     }
@@ -70,6 +77,7 @@ exports.followCount = async (req, res) => {
   }
 };
 
+// Only for self Nun/Advocate/Student
 exports.follower = async (req, res) => {
   try {
     const resultPerPage = req.query.resultPerPage
@@ -127,6 +135,7 @@ exports.follower = async (req, res) => {
   }
 };
 
+// Only for self Nun/Advocate/Student
 exports.following = async (req, res) => {
   try {
     const resultPerPage = req.query.resultPerPage
@@ -194,7 +203,7 @@ exports.removeFollower = async (req, res) => {
     const follower = req.body.follower;
     if (!follower) {
       return res.status(400).json({
-        success: true,
+        success: false,
         message: "Select a follower!",
       });
     }
@@ -205,7 +214,7 @@ exports.removeFollower = async (req, res) => {
     });
     if (!isFollower) {
       return res.status(400).json({
-        success: true,
+        success: false,
         message: "This follower is not present!",
       });
     }
@@ -232,7 +241,7 @@ exports.unFollow = async (req, res) => {
     const followee = req.body.followee;
     if (!followee) {
       return res.status(400).json({
-        success: true,
+        success: false,
         message: "Select a followee!",
       });
     }
@@ -243,7 +252,7 @@ exports.unFollow = async (req, res) => {
     });
     if (!isFollowee) {
       return res.status(400).json({
-        success: true,
+        success: false,
         message: "This followee is not present!",
       });
     }
@@ -320,6 +329,153 @@ exports.getFollowerAnalytics = async (req, res) => {
       chart: follows,
     };
     return res.status(200).json({ success: true, message, data: status });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};
+
+exports.followerOfOther = async (req, res) => {
+  try {
+    if (!req.body.id) {
+     return res
+        .status(400)
+        .json({ success: false, message: "Please select a profile!" });
+    }
+    const resultPerPage = req.query.resultPerPage
+      ? parseInt(req.query.resultPerPage)
+      : 20;
+    const page = req.query.page ? parseInt(req.query.page) : 1;
+    const skip = (page - 1) * resultPerPage;
+
+    // follower
+    const [followers, totalFollow] = await Promise.all([
+      Follow.find({
+        followee: req.body.id,
+      })
+        .populate("follower", ["name", "profilePic"])
+        .select("-updatedAt -createdAt -followee")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(resultPerPage)
+        .lean(),
+      Follow.countDocuments({ followee: req.user.id }),
+    ]);
+
+    const followerIds = followers.map((f) => f.follower._id);
+
+    // Check in bulk if the logged-in user is following any of these followers
+    const areYouFollowingSet = new Set(
+      (
+        await Follow.find({
+          followee: { $in: followerIds },
+          follower: req.user._id,
+        })
+          .select("followee")
+          .lean()
+      ).map((f) => f.followee.toString())
+    );
+
+    const isHeFollowingSet = new Set(
+      (
+        await Follow.find({
+          followee: req.user._id,
+          follower: { $in: followerIds },
+        })
+          .select("follower")
+          .lean()
+      ).map((f) => f.follower.toString())
+    );
+
+    // Transform data
+    const transformData = followers.map((f) => ({
+      ...f,
+      areYouFollowing: areYouFollowingSet.has(f.follower._id.toString()),
+      isHeFollowing: isHeFollowingSet.has(f.follower._id.toString()),
+    }));
+
+    const totalPages = Math.ceil(totalFollow / resultPerPage) || 0;
+    res.status(200).json({
+      success: true,
+      data: transformData,
+      totalPages: totalPages,
+      currentPage: page,
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};
+
+exports.followingOfOther = async (req, res) => {
+  try {
+    if (!req.body.id) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Please select a profile!" });
+    }
+    const resultPerPage = req.query.resultPerPage
+      ? parseInt(req.query.resultPerPage)
+      : 20;
+    const page = req.query.page ? parseInt(req.query.page) : 1;
+    const skip = (page - 1) * resultPerPage;
+
+    // Following
+    const [following, totalFollowing] = await Promise.all([
+      Follow.find({
+        follower: req.body.id,
+      })
+        .populate("followee", ["name", "profilePic"])
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(resultPerPage)
+        .lean(),
+      Follow.countDocuments({ follower: req.body.id }),
+    ]);
+
+    const followeeIds = following.map((f) => f.followee._id);
+
+    // Check in bulk if the logged-in user is following any of these followers
+    const areYouFollowingSet = new Set(
+      (
+        await Follow.find({
+          followee: { $in: followeeIds },
+          follower: req.user._id,
+        })
+          .select("followee")
+          .lean()
+      ).map((f) => f.followee.toString())
+    );
+
+    const isHeFollowingSet = new Set(
+      (
+        await Follow.find({
+          follower: { $in: followeeIds },
+          followee: req.user._id,
+        })
+          .select("follower")
+          .lean()
+      ).map((f) => f.follower.toString())
+    );
+
+    // Transform data
+    const transformData = following.map((f) => ({
+      ...f,
+      isHeFollowing: isHeFollowingSet.has(f.followee._id.toString()),
+      areYouFollowing: areYouFollowingSet.has(f.followee._id.toString()),
+    }));
+
+    const totalPages = Math.ceil(totalFollowing / resultPerPage) || 0;
+    res.status(200).json({
+      success: true,
+      data: transformData,
+      totalPages: totalPages,
+      currentPage: page,
+    });
   } catch (err) {
     res.status(500).json({
       success: false,
