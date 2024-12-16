@@ -79,21 +79,43 @@ exports.follower = async (req, res) => {
     const skip = (page - 1) * resultPerPage;
 
     // follower
-    const [follower, totalFollow] = await Promise.all([
+    const [followers, totalFollow] = await Promise.all([
       Follow.find({
         followee: req.user._id,
       })
         .populate("follower", ["name", "profilePic"])
+        .select("-updatedAt -createdAt -followee")
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(resultPerPage)
         .lean(),
       Follow.countDocuments({ followee: req.user._id }),
     ]);
+
+    const followerIds = followers.map((f) => f.follower._id);
+
+    // Check in bulk if the logged-in user is following any of these followers
+    const areYouFollowingSet = new Set(
+      (
+        await Follow.find({
+          followee: { $in: followerIds },
+          follower: req.user._id,
+        })
+          .select("followee")
+          .lean()
+      ).map((f) => f.followee.toString())
+    );
+
+    // Transform data
+    const transformData = followers.map((f) => ({
+      ...f,
+      areYouFollowing: areYouFollowingSet.has(f.follower._id.toString()),
+    }));
+
     const totalPages = Math.ceil(totalFollow / resultPerPage) || 0;
     res.status(200).json({
       success: true,
-      data: follower,
+      data: transformData,
       totalPages: totalPages,
       currentPage: page,
     });

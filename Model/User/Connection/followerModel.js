@@ -12,13 +12,6 @@ const schema = new Schema(
       ref: "User",
       required: true,
     },
-    isDelete: {
-      type: Boolean,
-      default: false,
-    },
-    deleted_at: {
-      type: Date,
-    },
   },
   { timestamps: true }
 );

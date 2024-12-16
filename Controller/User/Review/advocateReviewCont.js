@@ -426,7 +426,7 @@ exports.getAdvocateReviewForAdvocate = async (req, res) => {
     const transformData = reviews.map(
       ({ _id, messages, rating, isDelete, client, createdAt, updatedAt }) => {
         const newMessage = messages.map(
-          ({ givenBy, _id, message, createAt }) => {
+          ({ givenBy, _id, message, createdAt }) => {
             const profilePic = givenBy.profilePic
               ? givenBy.profilePic.url
               : null;
@@ -434,7 +434,7 @@ exports.getAdvocateReviewForAdvocate = async (req, res) => {
               givenBy: { ...givenBy, profilePic },
               _id,
               message,
-              createAt,
+              createdAt,
             };
           }
         );
@@ -509,7 +509,7 @@ exports.getAdvocateReviewForUser = async (req, res) => {
     const transformData = reviews.map(
       ({ _id, messages, rating, isDelete, client, createdAt, updatedAt }) => {
         const newMessage = messages.map(
-          ({ givenBy, _id, message, createAt }) => {
+          ({ givenBy, _id, message, createdAt }) => {
             const profilePic = givenBy.profilePic
               ? givenBy.profilePic.url
               : null;
@@ -517,7 +517,7 @@ exports.getAdvocateReviewForUser = async (req, res) => {
               givenBy: { ...givenBy, profilePic },
               _id,
               message,
-              createAt,
+              createdAt,
             };
           }
         );

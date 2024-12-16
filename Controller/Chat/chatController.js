@@ -14,6 +14,8 @@ const bunnyFolderName = "chat";
 const fs = require("fs");
 const { Message } = require("../../Model/Chat/messageModel");
 const { Connection } = require("../../Model/User/Connection/connectionModel");
+const { ALERT, REFETCH_CHATS } = require("../../Socket/event");
+const { emitEvent } = require("../../Socket/io");
 
 const getOtherMember = (members, userId) => {
   const otherMembers = [];
@@ -41,18 +43,31 @@ exports.newGroupChat = async (req, res) => {
       });
     }
     const { chatName, members } = req.body;
-    const allMembers = [...members, req.user._id];
+    const allMembers = [...members, req.user._id.toString()];
 
-    await Chat.create({
+    if (allMembers.length < 2) {
+      return res.status(400).json({
+        success: false,
+        message: "Chose atleast two members!",
+      });
+    }
+
+    const chat = await Chat.create({
       chatName,
       groupChat: true,
       creator: req.user._id,
       admins: [req.user._id],
       members: allMembers,
     });
+
+    // Socket
+    emitEvent(req, ALERT, allMembers, `Welcome to ${chatName} group`);
+    emitEvent(req, REFETCH_CHATS, members);
+
     res.status(200).json({
       success: true,
       message: "Group Created",
+      data: { ...chat, avatar: null },
     });
   } catch (err) {
     res.status(500).json({
@@ -174,6 +189,14 @@ exports.addMembers = async (req, res) => {
     chat.members.push(...uniqueMembers);
 
     await chat.save();
+
+    emitEvent(
+      req,
+      ALERT,
+      chat.members,
+      `${allUsersName} has been added in the group`
+    );
+    emitEvent(req, REFETCH_CHATS, chat.members);
 
     return res.status(200).json({
       success: true,
