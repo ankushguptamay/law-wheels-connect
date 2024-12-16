@@ -153,10 +153,31 @@ exports.following = async (req, res) => {
         .lean(),
       Follow.countDocuments({ follower: req.user._id }),
     ]);
+
+    const followeeIds = following.map((f) => f.followee._id);
+
+    // Check in bulk if the logged-in user is following any of these followers
+    const isHeFollowingSet = new Set(
+      (
+        await Follow.find({
+          follower: { $in: followeeIds },
+          followee: req.user._id,
+        })
+          .select("follower")
+          .lean()
+      ).map((f) => f.follower.toString())
+    );
+
+    // Transform data
+    const transformData = following.map((f) => ({
+      ...f,
+      isHeFollowing: isHeFollowingSet.has(f.followee._id.toString()),
+    }));
+
     const totalPages = Math.ceil(totalFollowing / resultPerPage) || 0;
     res.status(200).json({
       success: true,
-      data: following,
+      data: transformData,
       totalPages: totalPages,
       currentPage: page,
     });
