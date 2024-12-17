@@ -49,10 +49,7 @@ exports.socketIO = (server) => {
 
     // New Message
     socket.on(NEW_MESSAGE, async ({ chatId, members, content }) => {
-      const [chat, me] = await Promise.all([
-        Chat.findById(chatId),
-        User.findById(user._id, "name"),
-      ]);
+      const chat = await Chat.findById(chatId);
 
       if (!chat) {
         throw new Error("Chat not found");
@@ -80,7 +77,7 @@ exports.socketIO = (server) => {
         _id: uuid(),
         sender: {
           _id: user._id,
-          name: user.fullName,
+          name: user.name,
           profilePic: user.profilePic ? user.profilePic.url : null,
         },
         chat: chatId,

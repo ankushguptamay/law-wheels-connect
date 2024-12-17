@@ -14,7 +14,15 @@ const bunnyFolderName = "chat";
 const fs = require("fs");
 const { Message } = require("../../Model/Chat/messageModel");
 const { Connection } = require("../../Model/User/Connection/connectionModel");
-const { ALERT, REFETCH_CHATS } = require("../../Socket/event");
+const {
+  ALERT,
+  REFETCH_CHATS,
+  NEW_MESSAGE,
+  NEW_MESSAGE_ALERT,
+  RENAME_GROUP,
+  CHANGE_GROUP_AVATAR,
+  REMOVE_GROUP_AVATAR,
+} = require("../../Socket/event");
 const { emitEvent } = require("../../Socket/io");
 
 const getOtherMember = (members, userId) => {
@@ -180,21 +188,23 @@ exports.addMembers = async (req, res) => {
     const allNewMembersPromise = members.map((i) => User.findById(i, "name"));
     const allNewMembers = await Promise.all(allNewMembersPromise);
 
-    const allUsersName = allNewMembers.map((i) => i.name).join(", "); // For socket
-
     const uniqueMembers = allNewMembers
       .filter((i) => !chat.members.includes(i._id.toString()))
       .map((i) => i._id);
+    const uniqueMembersName = allNewMembers
+      .filter((i) => !chat.members.includes(i._id.toString()))
+      .map((i) => i.name);
 
     chat.members.push(...uniqueMembers);
 
     await chat.save();
 
+    // Socket
     emitEvent(
       req,
       ALERT,
       chat.members,
-      `${allUsersName} has been added in the group`
+      `${uniqueMembersName} has been added in the group`
     );
     emitEvent(req, REFETCH_CHATS, chat.members);
 
@@ -254,8 +264,6 @@ exports.removeMember = async (req, res) => {
       });
     }
 
-    const allChatMembers = chat.members.map((i) => i.toString()); // For socket
-
     chat.members = chat.members.filter(
       (member) => member.toString() !== userId.toString()
     );
@@ -267,12 +275,12 @@ exports.removeMember = async (req, res) => {
 
     await chat.save();
 
-    // emitEvent(req, ALERT, chat.members, {
-    //   message: `${userThatWillBeRemoved.name} has been removed from the group`,
-    //   chatId,
-    // });
-
-    // emitEvent(req, REFETCH_CHATS, allChatMembers);
+    // Socket
+    emitEvent(req, ALERT, chat.members, {
+      message: `${userThatWillBeRemoved.name} has been removed from the group`,
+      chatId,
+    });
+    emitEvent(req, REFETCH_CHATS, chat.members);
 
     return res.status(200).json({
       success: true,
@@ -335,10 +343,12 @@ exports.leaveGroup = async (req, res) => {
       chat.save(),
     ]);
 
-    // emitEvent(req, ALERT, chat.members, {
-    //   chatId,
-    //   message: `User ${user.name} has left the group`,
-    // });
+    // Socket
+    emitEvent(req, ALERT, chat.members, {
+      chatId,
+      message: `User ${user.name} has left the group`,
+    });
+    emitEvent(req, REFETCH_CHATS, chat.members);
 
     return res.status(200).json({
       success: true,
@@ -383,10 +393,7 @@ exports.sendAttachments = async (req, res) => {
       });
     }
 
-    const [chat, me] = await Promise.all([
-      Chat.findById(chatId),
-      User.findById(req.user._id, "name"),
-    ]);
+    const chat = await Chat.findById(chatId);
 
     if (!chat) {
       for (let i = 0; i < files.length; i++) {
@@ -446,13 +453,21 @@ exports.sendAttachments = async (req, res) => {
       chat: chatId,
       attachments,
     });
+    const messageForRealTime = {
+      ...message,
+      sender: {
+        _id: req.user._id,
+        name: req.user.name,
+        profilePic: req.user.profilePic ? req.user.profilePic.url : null,
+      },
+    };
 
-    // emitEvent(req, NEW_MESSAGE, chat.members, {
-    //   message: messageForRealTime,
-    //   chatId,
-    // });
-
-    // emitEvent(req, NEW_MESSAGE_ALERT, chat.members, { chatId });
+    // Socket
+    emitEvent(req, NEW_MESSAGE, chat.members, {
+      message: messageForRealTime,
+      chatId,
+    });
+    emitEvent(req, NEW_MESSAGE_ALERT, chat.members, { chatId });
 
     return res.status(200).json({
       success: true,
@@ -553,7 +568,12 @@ exports.renameGroup = async (req, res) => {
 
     await chat.save();
 
-    // emitEvent(req, REFETCH_CHATS, chat.members);
+    // Socket
+    emitEvent(req, RENAME_GROUP, chat.members, {
+      chatId,
+      message: `${req.user.name} changed the group name!`,
+    });
+    emitEvent(req, REFETCH_CHATS, chat.members);
 
     return res.status(200).json({
       success: true,
@@ -666,7 +686,12 @@ exports.addUpdateGroupAvatar = async (req, res) => {
     chat.avatar = avatar;
     await chat.save();
 
-    // emitEvent(req, REFETCH_CHATS, chat.members);
+    // Socket
+    emitEvent(req, CHANGE_GROUP_AVATAR, chat.members, {
+      chatId,
+      message: `${req.user.name} changed the group avatar!`,
+    });
+    emitEvent(req, REFETCH_CHATS, chat.members);
 
     return res.status(200).json({
       success: true,
@@ -715,7 +740,12 @@ exports.removeGroupAvatar = async (req, res) => {
     chat.avatar = { url: null, fileName: null };
     await chat.save();
 
-    // emitEvent(req, REFETCH_CHATS, chat.members);
+    // Socket
+    emitEvent(req, REMOVE_GROUP_AVATAR, chat.members, {
+      chatId,
+      message: `${req.user.name} removed the group avatar!`,
+    });
+    emitEvent(req, REFETCH_CHATS, chat.members);
 
     return res.status(200).json({
       success: true,
@@ -812,10 +842,7 @@ exports.addAdmin = async (req, res) => {
     }
     const { userId, chatId } = req.body;
 
-    const [chat, newAdmin] = await Promise.all([
-      Chat.findById(chatId),
-      User.findById(userId, "name"),
-    ]);
+    const chat = await Chat.findById(chatId);
 
     if (!chat) {
       return res.status(404).json({
@@ -844,17 +871,11 @@ exports.addAdmin = async (req, res) => {
       });
     }
 
-    const allChatMembers = chat.members.map((i) => i.toString()); // For socket
-
     chat.admins.push(userId);
     await chat.save();
 
-    // emitEvent(req, ALERT, chat.members, {
-    //   message: `${userThatWillBeRemoved.name} has been removed from the group`,
-    //   chatId,
-    // });
-
-    // emitEvent(req, REFETCH_CHATS, allChatMembers);
+    // Socket
+    emitEvent(req, REFETCH_CHATS, chat.members);
 
     return res.status(200).json({
       success: true,
@@ -880,10 +901,7 @@ exports.removeAdmin = async (req, res) => {
     }
     const { userId, chatId } = req.body;
 
-    const [chat, removeAdmin] = await Promise.all([
-      Chat.findById(chatId),
-      User.findById(userId, "name"),
-    ]);
+    const chat = await Chat.findById(chatId);
 
     if (!chat) {
       return res.status(404).json({
@@ -912,24 +930,18 @@ exports.removeAdmin = async (req, res) => {
       });
     }
 
-    const allChatMembers = chat.members.map((i) => i.toString()); // For socket
-
     const newAdmin = [];
     for (let i = 0; i < chat.admins.length; i++) {
       if (chat.admins[i].toString() !== userId.toString()) {
         newAdmin.push(chat.admins[i]);
       }
     }
-    chat.admins = newAdmin;
 
+    chat.admins = newAdmin;
     await chat.save();
 
-    // emitEvent(req, ALERT, chat.members, {
-    //   message: `${userThatWillBeRemoved.name} has been removed from the group`,
-    //   chatId,
-    // });
-
-    // emitEvent(req, REFETCH_CHATS, allChatMembers);
+    // Socket
+    emitEvent(req, REFETCH_CHATS, chat.members);
 
     return res.status(200).json({
       success: true,

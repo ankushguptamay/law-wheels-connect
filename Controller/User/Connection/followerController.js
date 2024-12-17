@@ -339,8 +339,8 @@ exports.getFollowerAnalytics = async (req, res) => {
 
 exports.followerOfOther = async (req, res) => {
   try {
-    if (!req.body.id) {
-     return res
+    if (!req.query.id) {
+      return res
         .status(400)
         .json({ success: false, message: "Please select a profile!" });
     }
@@ -353,7 +353,7 @@ exports.followerOfOther = async (req, res) => {
     // follower
     const [followers, totalFollow] = await Promise.all([
       Follow.find({
-        followee: req.body.id,
+        followee: req.query.id,
       })
         .populate("follower", ["name", "profilePic"])
         .select("-updatedAt -createdAt -followee")
@@ -361,7 +361,7 @@ exports.followerOfOther = async (req, res) => {
         .skip(skip)
         .limit(resultPerPage)
         .lean(),
-      Follow.countDocuments({ followee: req.user.id }),
+      Follow.countDocuments({ followee: req.query.id }),
     ]);
 
     const followerIds = followers.map((f) => f.follower._id);
@@ -413,7 +413,7 @@ exports.followerOfOther = async (req, res) => {
 
 exports.followingOfOther = async (req, res) => {
   try {
-    if (!req.body.id) {
+    if (!req.query.id) {
       return res
         .status(400)
         .json({ success: false, message: "Please select a profile!" });
@@ -427,14 +427,14 @@ exports.followingOfOther = async (req, res) => {
     // Following
     const [following, totalFollowing] = await Promise.all([
       Follow.find({
-        follower: req.body.id,
+        follower: req.query.id,
       })
         .populate("followee", ["name", "profilePic"])
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(resultPerPage)
         .lean(),
-      Follow.countDocuments({ follower: req.body.id }),
+      Follow.countDocuments({ follower: req.query.id }),
     ]);
 
     const followeeIds = following.map((f) => f.followee._id);

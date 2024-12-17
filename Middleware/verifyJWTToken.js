@@ -19,7 +19,7 @@ exports.verifyUserJWT = async (req, res, next) => {
 
     const user = await User.findOne(
       { _id: decode._id },
-      "_id name email mobileNumber isLicenseVerified role isProfileVisible"
+      "_id name email mobileNumber isLicenseVerified role isProfileVisible profilePic"
     );
     if (!user) {
       return res.status(400).json({
