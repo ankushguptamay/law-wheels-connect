@@ -128,8 +128,13 @@ exports.getMyConnection = async (req, res) => {
         .skip(skip)
         .limit(resultPerPage)
         .lean()
-        .populate("sender", "name profilePic profession_nun_user")
-        .populate("receiver", "name profilePic"),
+        .populate("sender", "name profilePic profession_nun_user role")
+        .populate(
+          "receiver",
+          "name profilePic profession_nun_user role specialization"
+        )
+        .populate("receiver.specialization", "name")
+        .populate("sender.specialization", "name"),
       Connection.countDocuments(query),
     ]);
 
@@ -146,6 +151,11 @@ exports.getMyConnection = async (req, res) => {
               profession_nun_user: sender.profession_nun_user
                 ? sender.profession_nun_user
                 : null,
+              specialization:
+                sender.specialization.lenngth > 0
+                  ? sender.specialization[0]
+                  : [],
+              role: sender.role,
             },
       receiver:
         receiver._id.toString() == req.user._id.toString()
@@ -154,6 +164,14 @@ exports.getMyConnection = async (req, res) => {
               _id: receiver._id,
               name: receiver.name,
               profilePic: receiver.profilePic ? receiver.profilePic.url : null,
+              profession_nun_user: receiver.profession_nun_user
+                ? receiver.profession_nun_user
+                : null,
+              specialization:
+                receiver.specialization.lenngth > 0
+                  ? receiver.specialization[0]
+                  : [],
+              role: receiver.role,
             },
     }));
 
