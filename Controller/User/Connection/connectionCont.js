@@ -113,11 +113,13 @@ exports.getMyConnection = async (req, res) => {
     // Search
     if (search) {
       const containInString = new RegExp(req.query.search, "i");
-      query.$and = [
-        { "sender.name": containInString },
-        { receiver: req.user._id },
-        { status },
-      ];
+      query = {
+        ...query,
+        $or: [
+          { "sender.name": containInString },
+          { "receiver.name": containInString },
+        ],
+      };
     }
 
     const [connections, totalConnections] = await Promise.all([

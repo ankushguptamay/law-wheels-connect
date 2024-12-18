@@ -122,6 +122,7 @@ exports.connectionRequest = (data) => {
 exports.getMyConnection = (data) => {
   const schema = joi.object().keys({
     status: joi.string().valid("pending", "accepted").required(),
+    search: joi.string().optional(),
   });
   return schema.validate(data);
 };
