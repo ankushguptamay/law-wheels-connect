@@ -187,7 +187,7 @@ exports.getDetailsOfStudentAndAdvocate = async (req, res) => {
 exports.getDetailsOfNunUser = async (req, res) => {
   try {
     const user = await User.findOne({ _id: req.user._id }).select(
-      "_id name email mobileNumber profession_nun_user location profilePic coverPic role language createdAt updatedAt"
+      "_id name email mobileNumber profession_nun_user location profilePic coverPic headLine role language createdAt updatedAt"
     );
 
     res.status(200).json({
