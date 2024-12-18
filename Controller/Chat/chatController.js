@@ -772,7 +772,7 @@ exports.newPrivateChat = async (req, res) => {
     const { member } = req.body;
     const allMembers = [member, req.user._id];
 
-    const user = await User.findById(member);
+    const user = await User.findById(member).select("name");
     if (!user) {
       return res.status(400).json({
         success: false,
@@ -812,8 +812,9 @@ exports.newPrivateChat = async (req, res) => {
 
     const transformedChats = {
       _id: chat._id,
+      chatName: user.name,
       groupChat: false,
-      members: member,
+      members: [member],
       privateConnection: chat.privateConnection,
       avatar: user.profilePic ? user.profilePic.url : null,
       createdAt: chat.createdAt,
