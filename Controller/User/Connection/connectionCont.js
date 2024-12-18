@@ -9,6 +9,9 @@ const {
 } = require("../../../Model/User/Connection/connectionModel");
 const { Follow } = require("../../../Model/User/Connection/followerModel");
 const {
+  Experience,
+} = require("../../../Model/User/Experience/experienceModel");
+const {
   NEW_CONNECTION,
   INVITATION_ACCEPTED,
 } = require("../../../Socket/event");
@@ -132,54 +135,78 @@ exports.getMyConnection = async (req, res) => {
         .populate(
           "receiver",
           "name profilePic profession_nun_user role specialization"
-        )
-        .populate("receiver.specialization", "name")
-        .populate("sender.specialization", "name"),
+        ),
       Connection.countDocuments(query),
     ]);
 
-    const allConnection = connections.map(({ _id, sender, createdAt }) => ({
-      _id,
-      createdAt,
-      sender:
-        sender._id.toString() == req.user._id.toString()
-          ? null
-          : {
-              _id: sender._id,
-              name: sender.name,
-              profilePic: sender.profilePic ? sender.profilePic.url : null,
-              profession_nun_user: sender.profession_nun_user
-                ? sender.profession_nun_user
-                : null,
-              specialization:
-                sender.specialization.lenngth > 0
-                  ? sender.specialization[0]
-                  : [],
-              role: sender.role,
-            },
-      receiver:
-        receiver._id.toString() == req.user._id.toString()
-          ? null
-          : {
-              _id: receiver._id,
-              name: receiver.name,
-              profilePic: receiver.profilePic ? receiver.profilePic.url : null,
-              profession_nun_user: receiver.profession_nun_user
-                ? receiver.profession_nun_user
-                : null,
-              specialization:
-                receiver.specialization.lenngth > 0
-                  ? receiver.specialization[0]
-                  : [],
-              role: receiver.role,
-            },
-    }));
+    const allConnection = connections.map(
+      ({ _id, sender, receiver, createdAt }) => ({
+        _id,
+        createdAt,
+        sender:
+          sender._id.toString() == req.user._id.toString()
+            ? null
+            : {
+                _id: sender._id,
+                name: sender.name,
+                profilePic: sender.profilePic ? sender.profilePic.url : null,
+                profession_nun_user: sender.profession_nun_user
+                  ? sender.profession_nun_user
+                  : null,
+                role: sender.role,
+              },
+        receiver:
+          receiver._id.toString() == req.user._id.toString()
+            ? null
+            : {
+                _id: receiver._id,
+                name: receiver.name,
+                profilePic: receiver.profilePic
+                  ? receiver.profilePic.url
+                  : null,
+                profession_nun_user: receiver.profession_nun_user
+                  ? receiver.profession_nun_user
+                  : null,
+                role: receiver.role,
+              },
+      })
+    );
+
+    // Adding experience to show card
+    const transformData = [];
+    for (let i = 0; i < allConnection.length; i++) {
+      if (allConnection[i].sender) {
+        if (allConnection[i].sender.role === "Advocate") {
+          const experience = await Experience.findOne({
+            isRecent: true,
+            user: allConnection[i].sender._id,
+            isDelete: false,
+          }).select("jobTitle");
+          const sender = { ...allConnection[i].sender, experience };
+          transformData.push({ ...allConnection[i], sender });
+        } else {
+          transformData.push(allConnection[i]);
+        }
+      } else {
+        if (allConnection[i].receiver.role === "Advocate") {
+          const experience = await Experience.findOne({
+            isRecent: true,
+            user: allConnection[i].receiver._id,
+            isDelete: false,
+          }).select("jobTitle");
+          const receiver = { ...allConnection[i].receiver, experience };
+          transformData.push({ ...allConnection[i], receiver });
+        } else {
+          transformData.push(allConnection[i]);
+        }
+      }
+    }
 
     const totalPages = Math.ceil(totalConnections / resultPerPage) || 0;
 
     return res.status(200).json({
       success: true,
-      data: allConnection,
+      data: transformData,
       totalPages: totalPages,
       currentPage: page,
     });
