@@ -126,21 +126,33 @@ exports.getMyConnection = async (req, res) => {
         .skip(skip)
         .limit(resultPerPage)
         .lean()
-        .populate("sender", "name profilePic profession_nun_user createdAt"),
+        .populate("sender", "name profilePic profession_nun_user")
+        .populate("receiver", "name profilePic"),
       Connection.countDocuments(query),
     ]);
 
     const allConnection = connections.map(({ _id, sender, createdAt }) => ({
       _id,
       createdAt,
-      sender: {
-        _id: sender._id,
-        name: sender.name,
-        profilePic: sender.profilePic ? sender.profilePic.url : null,
-        profession_nun_user: sender.profession_nun_user
-          ? sender.profession_nun_user
-          : null,
-      },
+      sender:
+        sender._id.toString() == req.user._id.toString()
+          ? null
+          : {
+              _id: sender._id,
+              name: sender.name,
+              profilePic: sender.profilePic ? sender.profilePic.url : null,
+              profession_nun_user: sender.profession_nun_user
+                ? sender.profession_nun_user
+                : null,
+            },
+      receiver:
+        receiver._id.toString() == req.user._id.toString()
+          ? null
+          : {
+              _id: receiver._id,
+              name: receiver.name,
+              profilePic: receiver.profilePic ? receiver.profilePic.url : null,
+            },
     }));
 
     const totalPages = Math.ceil(totalConnections / resultPerPage) || 0;

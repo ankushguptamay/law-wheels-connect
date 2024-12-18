@@ -24,8 +24,8 @@ router.get("/follower", follower);
 router.get("/following", following);
 router.get("/followerOfOther", followerOfOther);
 router.get("/followingOfOther", followingOfOther);
-router.delete("/unFollow", unFollow);
-router.delete("/removeFollower", removeFollower);
+router.put("/unFollow", unFollow);
+router.put("/removeFollower", removeFollower);
 router.get("/followerAnalytics", getFollowerAnalytics);
 
 router.post("/connection", sendConnectionRequest);

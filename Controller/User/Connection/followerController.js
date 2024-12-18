@@ -91,7 +91,7 @@ exports.follower = async (req, res) => {
       Follow.find({
         followee: req.user._id,
       })
-        .populate("follower", ["name", "profilePic"])
+        .populate("follower", "name profilePic")
         .select("-updatedAt -createdAt -followee")
         .sort({ createdAt: -1 })
         .skip(skip)
@@ -155,7 +155,7 @@ exports.following = async (req, res) => {
       Follow.find({
         follower: req.user._id,
       })
-        .populate("followee", ["name", "profilePic"])
+        .populate("followee", "name profilePic")
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(resultPerPage)
