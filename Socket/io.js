@@ -1,7 +1,14 @@
 const { Server } = require("socket.io");
 const { ErrorHandler } = require("../Util/utility");
 const { socketAuthenticator } = require("../Middleware/verifyJWTToken");
-const { NEW_MESSAGE, NEW_MESSAGE_ALERT } = require("./event");
+const {
+  NEW_MESSAGE,
+  NEW_MESSAGE_ALERT,
+  START_TYPING,
+  STOP_TYPING,
+  CHAT_JOINED,
+  CHAT_LEAVED,
+} = require("./event");
 const { Chat } = require("../Model/Chat/chatModel");
 const { User } = require("../Model/User/userModel");
 const { Message } = require("../Model/Chat/messageModel");
@@ -9,6 +16,7 @@ const uuid = require("uuid").v4;
 
 const userSocketIDs = new Map();
 const onlineUsers = new Set();
+const chatOnlineUsers = new Map();
 const getSockets = (users = []) => {
   const sockets = users.map((user) => userSocketIDs.get(user.toString()));
   return sockets;
@@ -106,8 +114,76 @@ exports.socketIO = (server) => {
       }
     });
 
+    // Chat Joined
+    socket.on(CHAT_JOINED, ({ chatId }) => {
+      if (!chatOnlineUsers.has(chatId)) {
+        chatOnlineUsers.set(chatId, new Set());
+      }
+      chatOnlineUsers.get(chatId).add(user._id.toString());
+
+      const membersSocket = getSockets([...chatOnlineUsers.get(chatId)]);
+      socket
+        .to(membersSocket)
+        .emit(CHAT_JOINED, { chatId, userId: user._id.toString() });
+    });
+
+    // Chat Leaved
+    socket.on(CHAT_LEAVED, ({ chatId }) => {
+      if (chatOnlineUsers.has(chatId)) {
+        chatOnlineUsers.get(chatId).delete(user._id.toString());
+
+        // Clean up empty chat
+        if (chatOnlineUsers.get(chatId).size === 0) {
+          chatOnlineUsers.delete(chatId);
+        }
+
+        const membersSocket = getSockets([...chatOnlineUsers.get(chatId)]);
+        socket
+          .to(membersSocket)
+          .emit(CHAT_LEAVED, { chatId, userId: user._id.toString() });
+      }
+    });
+
+    // Start Typing
+    socket.on(START_TYPING, ({ chatId }) => {
+      if (chatOnlineUsers.has(chatId)) {
+        const membersSockets = getSockets([...chatOnlineUsers.get(chatId)]);
+
+        socket
+          .to(membersSockets)
+          .emit(START_TYPING, { chatId, userId: user._id.toString() });
+      }
+    });
+
+    // Stop Typing
+    socket.on(STOP_TYPING, ({ chatId }) => {
+      if (chatOnlineUsers.has(chatId)) {
+        const membersSockets = getSockets([...chatOnlineUsers.get(chatId)]);
+
+        socket
+          .to(membersSockets)
+          .emit(STOP_TYPING, { chatId, userId: user._id.toString() });
+      }
+    });
+
     // Handle disconnection
     socket.on("disconnect", () => {
+      // Also disconnect user from chats
+      for (const [chatId, members] of chatOnlineUsers) {
+        if (members.has(user._id.toString())) {
+          members.delete(user._id.toString());
+
+          // Notify remaining members in the chat
+          const membersSockets = getSockets([...members]);
+          socket
+            .to(membersSockets)
+            .emit(CHAT_LEAVED, { chatId, userId: user._id.toString() });
+
+          if (members.size === 0) {
+            chatOnlineUsers.delete(chatId); // Clean up empty chat
+          }
+        }
+      }
       userSocketIDs.delete(user.id.toString());
     });
   });

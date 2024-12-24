@@ -592,7 +592,7 @@ exports.getMessages = async (req, res) => {
     const chatId = req.params.id;
     const { page = 1 } = req.query;
 
-    const resultPerPage = 20;
+    const resultPerPage = 50;
     const skip = (page - 1) * resultPerPage;
 
     const chat = await Chat.findById(chatId);
@@ -626,6 +626,7 @@ exports.getMessages = async (req, res) => {
     return res.status(200).json({
       success: true,
       messages: messages.reverse(),
+      userId: req.user._id,
       totalPages,
     });
   } catch (err) {
@@ -772,7 +773,7 @@ exports.newPrivateChat = async (req, res) => {
     const { member } = req.body;
     const allMembers = [member, req.user._id];
 
-    const user = await User.findById(member).select("name");
+    const user = await User.findById(member).select("name profilePic");
     if (!user) {
       return res.status(400).json({
         success: false,
