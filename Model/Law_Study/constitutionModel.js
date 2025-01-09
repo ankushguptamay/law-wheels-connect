@@ -5,7 +5,7 @@ const schema = new Schema(
     part_number: { type: Number },
     part_number_romanise: { type: String },
     part_title: { type: String },
-    chapter_number: { type: Number },
+    chapter_number: { type: String },
     chapter_title: { type: String },
     article_type: { type: String },
     article_order: { type: Number },

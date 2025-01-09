@@ -17,11 +17,12 @@ const { verifyAdminJWT } = require("../../Middleware/verifyJWTToken");
 router.post("/register", registerAdmin);
 router.post("/login", loginAdmin);
 
+router.use("/law-study", lawStudy);
+
 router.use(verifyAdminJWT);
 router.get("/", getAdmin);
 
 router.use("/mst", master);
 router.use("/users", user);
-router.use("/law-study", lawStudy);
 
 module.exports = router;

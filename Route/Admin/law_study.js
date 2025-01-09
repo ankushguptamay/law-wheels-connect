@@ -15,6 +15,7 @@ const {
   addArticle,
   updateArticle,
   deleteArticle,
+  channgeArticleOrder,
 } = require("../../Controller/Law_study/constitutionController");
 
 // Dictionary
@@ -30,6 +31,7 @@ router.get("/parts", getPart);
 router.get("/articles/:article_order", getArticleDetails);
 router.get("/chapterOrArticle/:part_number_romanise", getChapterOrArticle);
 router.put("/articles/:_id", updateArticle);
+router.put("/reorder_articles/:_id", channgeArticleOrder);
 router.delete("/articles/:_id", deleteArticle);
 
 module.exports = router;

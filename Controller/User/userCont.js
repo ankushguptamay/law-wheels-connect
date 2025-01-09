@@ -171,6 +171,21 @@ exports.getDetailsOfStudentAndAdvocate = async (req, res) => {
       },
     ]);
 
+    const [connection, follower, following] = await Promise.all([
+      Connection.countDocuments({
+        $or: [
+          { sender: req.user._id, receiver: user[0]._id },
+          { sender: user[0]._id, receiver: req.user._id },
+        ],
+      }),
+      Follow.countDocuments({ followee: user[0]._id }),
+      Follow.countDocuments({ follower: user[0]._id }),
+    ]);
+
+    user[0].connection = connection || null;
+    user[0].follower = follower || null;
+    user[0].following = following || null;
+
     res.status(200).json({
       success: true,
       message: "User fetched successfully!",

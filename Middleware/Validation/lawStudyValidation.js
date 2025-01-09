@@ -13,8 +13,8 @@ exports.articleValidation = (data) => {
     part_number: joi.number().required(),
     part_number_romanise: joi.string().required(),
     part_title: joi.string().required(),
-    chapter_number: joi.string().required(),
-    chapter_title: joi.string().required(),
+    chapter_number: joi.string().optional(),
+    chapter_title: joi.string().optional(),
     article_type: joi.string().required(),
     article_order: joi.number().required(),
     article_number: joi.string().required(),
@@ -25,7 +25,7 @@ exports.articleValidation = (data) => {
       .items(
         joi.object({
           ponit_number: joi.number().required(),
-          point_content: joi.number().required(),
+          point_content: joi.string().required(),
         })
       )
       .min(1)
@@ -50,11 +50,19 @@ exports.articleUpdateValidation = (data) => {
       .items(
         joi.object({
           ponit_number: joi.number().required(),
-          point_content: joi.number().required(),
+          point_content: joi.string().required(),
         })
       )
       .min(1)
       .optional(),
+  });
+  return schema.validate(data);
+};
+
+exports.channgeArticleOrderValidation = (data) => {
+  const schema = joi.object().keys({
+    new_article_order: joi.number().required(),
+    old_article_order: joi.number().required(),
   });
   return schema.validate(data);
 };

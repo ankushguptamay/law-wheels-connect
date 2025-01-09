@@ -1,6 +1,7 @@
 const {
   articleValidation,
   articleUpdateValidation,
+  channgeArticleOrderValidation,
 } = require("../../Middleware/Validation/lawStudyValidation");
 const { Constitution } = require("../../Model/Law_Study/constitutionModel");
 
@@ -75,9 +76,8 @@ exports.getPart = async (req, res) => {
 
 exports.getChapterOrArticle = async (req, res) => {
   try {
-    const chapters = await Constitution.find({
-      part_number_romanise: req.params.part_number_romanise,
-    });
+    const part_number_romanise = req.params.part_number_romanise;
+    const chapters = await Constitution.find({ part_number_romanise });
 
     if (chapters.length < 1) {
       return (
@@ -124,13 +124,14 @@ exports.getChapterOrArticle = async (req, res) => {
       const articles = [];
       for (let i = 0; i < chapters.length; i++) {
         articles.push({
-          article_type: current.article_type,
-          _id: current._id,
-          article_order: current.article_order,
-          article_number: current.article_number,
-          article_title: current.article_title,
+          article_type: chapters[i].article_type,
+          _id: chapters[i]._id,
+          article_order: chapters[i].article_order,
+          article_number: chapters[i].article_number,
+          article_title: chapters[i].article_title,
         });
       }
+      data = { ...data, articles };
     }
 
     res.status(200).json({ success: true, data, isChapters });
@@ -258,28 +259,47 @@ exports.channgeArticleOrder = async (req, res) => {
     const _id = req.params._id;
     const { new_article_order, old_article_order } = req.body;
 
-    const articles = await Constitution.find({article_order: { $gte: 5, $lte: 10 }});
-   
-
-    // checking any copy
-    if (
-      article_number !== articles.article_number ||
-      article_title !== articles.article_title
-    ) {
-      const isCopied = await Constitution.findOne({
+    let query;
+    if (parseInt(old_article_order) > parseInt(new_article_order)) {
+      query = {
         _id: { $ne: _id },
-        $or: [{ article_number }, { article_title }],
+        article_order: {
+          $gte: parseInt(new_article_order),
+          $lte: parseInt(old_article_order),
+        },
+      };
+    } else if (parseInt(new_article_order) > parseInt(old_article_order)) {
+      query = {
+        _id: { $ne: _id },
+        article_order: {
+          $gte: parseInt(old_article_order),
+          $lte: parseInt(new_article_order),
+        },
+      };
+    } else {
+      return res.status(404).json({
+        success: false,
+        message: `Same position!`,
       });
-      if (isCopied) {
-        return res.status(404).json({
-          success: false,
-          message: `Article Number or article should be uniqe!`,
-        });
+    }
+
+    const articles = await Constitution.find(query).sort({ article_order: 1 });
+
+    if (parseInt(old_article_order) > parseInt(new_article_order)) {
+      for (let i = 0; i < articles.length; i++) {
+        articles[i].article_order = parseInt(articles[i].article_order) + 1;
+      }
+    } else {
+      for (let i = 0; i < articles.length; i++) {
+        articles[i].article_order = parseInt(articles[i].article_order) - 1;
       }
     }
 
-    // Create Article
-    await articles.updateOne({ ...req.body });
+    // Update Article
+    for (let i = 0; i < articles.length; i++) {
+      await articles[i].save();
+    }
+    await Constitution.updateOne({ _id }, { article_order: new_article_order });
     res.status(200).json({
       success: true,
       message: "Article updated successfully!",
