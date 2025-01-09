@@ -16,7 +16,7 @@ exports.articleValidation = (data) => {
     chapter_number: joi.string().required(),
     chapter_title: joi.string().required(),
     article_type: joi.string().required(),
-    number: joi.number().required(),
+    article_order: joi.number().required(),
     article_number: joi.string().required(),
     article_title: joi.string().required(),
     article_content: joi.string().required(),

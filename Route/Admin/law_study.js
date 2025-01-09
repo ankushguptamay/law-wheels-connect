@@ -27,7 +27,7 @@ router.delete("/dictionries/:id", deleteDictionaryWord);
 // Constitution
 router.post("/articles", addArticle);
 router.get("/parts", getPart);
-router.get("/articles", getArticleDetails);
+router.get("/articles/:article_order", getArticleDetails);
 router.get("/chapterOrArticle/:part_number_romanise", getChapterOrArticle);
 router.put("/articles/:_id", updateArticle);
 router.delete("/articles/:_id", deleteArticle);

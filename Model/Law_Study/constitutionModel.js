@@ -8,7 +8,7 @@ const schema = new Schema(
     chapter_number: { type: Number },
     chapter_title: { type: String },
     article_type: { type: String },
-    number: { type: Number },
+    article_order: { type: Number },
     article_number: { type: String },
     article_title: { type: String },
     article_content: { type: String },

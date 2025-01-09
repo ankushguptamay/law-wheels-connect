@@ -14,9 +14,9 @@ exports.addArticle = async (req, res) => {
         message: error.details[0].message,
       });
     }
-    const { number, article_number, article_title } = req.body;
+    const { article_order, article_number, article_title } = req.body;
     const articles = await Constitution.findOne({
-      $or: [{ number }, { article_number }, { article_title }],
+      $or: [{ article_order }, { article_number }, { article_title }],
     });
     if (articles) {
       return res.status(404).json({
@@ -30,7 +30,7 @@ exports.addArticle = async (req, res) => {
     res.status(200).json({
       success: true,
       message: "Article added successfully!",
-      data: { number, article_number, article_title },
+      data: { article_order, article_number, article_title },
     });
   } catch (err) {
     res.status(500).json({
@@ -98,7 +98,7 @@ exports.getChapterOrArticle = async (req, res) => {
           existingChapter.articles.push({
             article_type: current.article_type,
             _id: current._id,
-            number: current.number,
+            article_order: current.article_order,
             article_number: current.article_number,
             article_title: current.article_title,
           });
@@ -110,7 +110,7 @@ exports.getChapterOrArticle = async (req, res) => {
               {
                 article_type: current.article_type,
                 _id: current._id,
-                number: current.number,
+                article_order: current.article_order,
                 article_number: current.article_number,
                 article_title: current.article_title,
               },
@@ -126,7 +126,7 @@ exports.getChapterOrArticle = async (req, res) => {
         articles.push({
           article_type: current.article_type,
           _id: current._id,
-          number: current.number,
+          article_order: current.article_order,
           article_number: current.article_number,
           article_title: current.article_title,
         });
@@ -144,21 +144,19 @@ exports.getChapterOrArticle = async (req, res) => {
 
 exports.getArticleDetails = async (req, res) => {
   try {
-    const { number, _id } = req.query;
-    let query;
-    if (number) {
-      query = { number };
-    } else if (_id) {
-      query = { _id };
+    const { previous, forward } = req.query;
+
+    let article_order;
+    if (previous) {
+      article_order = parseInt(req.params.article_order) - 1;
+    } else if (forward) {
+      article_order = parseInt(req.params.article_order) + 1;
     } else {
-      return res.status(404).json({
-        success: false,
-        message: "Please select article number or _id!",
-      });
+      article_order = parseInt(req.params.article_order);
     }
 
-    const articles = await Constitution.findOne(query).select(
-      "_id part_number_romanise part_title chapter_number chapter_title article_type number article_number article_title article_content extras"
+    const articles = await Constitution.findOne({ article_order }).select(
+      "_id part_number_romanise part_title chapter_number chapter_title article_type article_order article_number article_title article_content extras"
     );
 
     res.status(200).json({ success: true, data: articles });
@@ -247,25 +245,45 @@ exports.deleteArticle = async (req, res) => {
   }
 };
 
-exports.getPreviousOrForwardArticleDetails = async (req, res) => {
+exports.channgeArticleOrder = async (req, res) => {
   try {
-    const { previous, forward } = req.query;
-    let number;
-    if (previous) {
-      number = parseInt(req.params.number) - 1;
-    } else if (forward) {
-      number = parseInt(req.params.number) + 1;
-    } else {
-      number = parseInt(req.params.number);
+    // Body Validation
+    const { error } = channgeArticleOrderValidation(req.body);
+    if (error) {
+      return res.status(400).json({
+        success: false,
+        message: error.details[0].message,
+      });
+    }
+    const _id = req.params._id;
+    const { new_article_order, old_article_order } = req.body;
+
+    const articles = await Constitution.find({article_order: { $gte: 5, $lte: 10 }});
+   
+
+    // checking any copy
+    if (
+      article_number !== articles.article_number ||
+      article_title !== articles.article_title
+    ) {
+      const isCopied = await Constitution.findOne({
+        _id: { $ne: _id },
+        $or: [{ article_number }, { article_title }],
+      });
+      if (isCopied) {
+        return res.status(404).json({
+          success: false,
+          message: `Article Number or article should be uniqe!`,
+        });
+      }
     }
 
-    const articles = await Constitution.findOne({
-      number,
-    }).select(
-      "_id part_number_romanise part_title chapter_number chapter_title article_type number article_number article_title article_content extras"
-    );
-
-    res.status(200).json({ success: true, data: articles });
+    // Create Article
+    await articles.updateOne({ ...req.body });
+    res.status(200).json({
+      success: true,
+      message: "Article updated successfully!",
+    });
   } catch (err) {
     res.status(500).json({
       success: false,
