@@ -3,9 +3,6 @@ const jwt = require("jsonwebtoken");
 exports.createAccessToken = (tokenFor = "user", email, _id) => {
   let token;
   if (tokenFor === "admin") {
-    console.log("HERE");
-    console.log(process.env.JWT_SECRET_KEY_ADMIN);
-    console.log(process.env.JWT_ACCESS_VALIDITY);
     token = jwt.sign({ _id, email }, process.env.JWT_SECRET_KEY_ADMIN, {
       expiresIn: process.env.JWT_ACCESS_VALIDITY,
     });

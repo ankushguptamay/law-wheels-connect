@@ -14,7 +14,7 @@ const {
 //middleware
 const { verifyAdminJWT } = require("../../Middleware/verifyJWTToken");
 
-router.post("/register", registerAdmin);
+// router.post("/register", registerAdmin);
 router.post("/login", loginAdmin);
 
 router.use(verifyAdminJWT);

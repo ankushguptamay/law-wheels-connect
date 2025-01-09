@@ -100,7 +100,6 @@ exports.loginAdmin = async (req, res) => {
         message: "Invalid email or password!",
       });
     }
-console.log(isAdmin);
     const token = createAccessToken("admin", isAdmin.email, isAdmin._id);
     res.status(200).json({
       success: true,
