@@ -995,7 +995,7 @@ exports.getAllUser = async (req, res) => {
         experiences,
         experience_year: user[i].experience_year,
         createdAt: user[i].createdAt,
-        rating: rating ? rating[0] : null,
+        rating: Array.isArray(rating) && rating.length > 0 ? rating[0] : null,
         connection: connection || null,
         follow: follow || null,
       });
@@ -1352,7 +1352,7 @@ exports.getAllUserForAdmin = async (req, res) => {
         language: user[i].language,
         experience_year: user[i].experience_year,
         createdAt: user[i].createdAt,
-        rating: rating[0],
+        rating: rating[0] || null,
       });
     }
 

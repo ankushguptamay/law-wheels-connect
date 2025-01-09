@@ -89,7 +89,7 @@ exports.socketIO = (server) => {
           profilePic: user.profilePic ? user.profilePic.url : null,
         },
         chat: chatId,
-        createdAt: new Date().toISOString(),
+        createdAt: new Date(),
       };
 
       const messageForDB = {

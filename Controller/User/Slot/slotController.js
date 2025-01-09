@@ -51,6 +51,57 @@ exports.createSlote = async (req, res) => {
       today.setDate(today.getDate() + i);
       dates.push(today.toISOString().slice(0, 10));
     }
+
+    // Checking over lapping
+    const newTimeSlot = [];
+    const runningTimeSlotonDatabase = [];
+    const startOfDay = new Date(new Date().setHours(0, 0, 0, 0));
+    const runningTimeSlots = await Slot.find({
+      advocate: req.user._id,
+      date: { $gte: startOfDay },
+    });
+    for (let i = 0; i < runningTimeSlots.length; i++) {
+      runningTimeSlotonDatabase.push({
+        startTimeInMili: new Date(
+          `${new Date(runningTimeSlots.date).toISOString().slice(0, 10)}T${
+            runningTimeSlots.time
+          }:00.000Z`
+        ).getTime(),
+        endTimeInMili:
+          new Date(
+            `${new Date(runningTimeSlots.date).toISOString().slice(0, 10)}T${
+              runningTimeSlots.time
+            }:00.000Z`
+          ).getTime() +
+          parseInt(runningTimeSlots.timeInMin) * 60 * 1000,
+      });
+    }
+    for (let i = 0; i < dates.length; i++) {
+      for (let j = 0; j < times.length; j++) {
+        newTimeSlot.push({
+          newStartTimeInMili: new Date(
+            `${dates[i]}T${times[j]}:00.000Z`
+          ).getTime(),
+          newEndTimeInMili:
+            new Date(`${dates[i]}T${times[j]}:00.000Z`).getTime() +
+            parseInt(timeInMin) * 60 * 1000,
+        });
+      }
+    }
+    const isOverlapping = newTimeSlot.some((newSlot) =>
+      runningTimeSlotonDatabase.some(
+        (runningSlot) =>
+          newSlot.newStartTimeInMili < runningSlot.endTimeInMili &&
+          newSlot.newEndTimeInMili > runningSlot.startTimeInMili
+      )
+    );
+    if (isOverlapping) {
+      return res.status(400).send({
+        success: false,
+        message: "New slot is overlapping with existing slots!",
+      });
+    }
+
     // Create
     for (let i = 0; i < dates.length; i++) {
       for (let j = 0; j < times.length; j++) {
@@ -432,8 +483,8 @@ exports.sloteByIdForUser = async (req, res) => {
         avatar: slot.advocate.profilePic.url
           ? slot.advocate.profilePic.url
           : null,
-        totalReviews: rating[0].totalReviews,
-        averageRating: rating[0].averageRating,
+        totalReviews: rating[0] ? rating[0].totalReviews : null,
+        averageRating: rating[0] ? rating[0].averageRating : null,
       },
     };
     res.status(200).json({
@@ -506,7 +557,6 @@ exports.sloteForUser = async (req, res) => {
     };
 
     // Filter
-
     const yesterday = new Date();
     yesterday.setMinutes(yesterday.getMinutes() - 1110);
     const day = String(yesterday.getUTCDate()).padStart(2, "0");

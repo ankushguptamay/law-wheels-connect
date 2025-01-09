@@ -2,12 +2,8 @@ const { Schema, model, models } = require("mongoose");
 
 const schema = new Schema(
   {
-    word: {
-      type: String,
-    },
-    definition: {
-      type: String,
-    },
+    word: { type: String },
+    definition: { type: String },
   },
   { timestamps: true }
 );

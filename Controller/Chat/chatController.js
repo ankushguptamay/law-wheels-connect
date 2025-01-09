@@ -436,15 +436,15 @@ exports.sendAttachments = async (req, res) => {
       }
     }
     //   Upload files here
-    let attachments = [];
+    const attachments = [];
     for (let i = 0; i < files.length; i++) {
       const fileStream = fs.createReadStream(files[i].path);
       await uploadFileToBunny(bunnyFolderName, fileStream, files[i].filename);
-      attachments = {
+      attachments.push({
         fileName: files[i].filename,
         mimeType: files[i].mimetype,
         url: `${process.env.SHOW_BUNNY_FILE_HOSTNAME}/${bunnyFolderName}/${files[i].filename}`,
-      };
+      });
       deleteSingleFile(files[i].path);
     }
 
