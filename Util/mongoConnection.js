@@ -7,8 +7,8 @@ exports.connectDB = (uri) => {
       console.log("Database Connected successfully!");
 
       // Drop the entire database
-      await mongoose.connection.db.dropDatabase();
-      console.log("Database dropped");
+      // await mongoose.connection.db.dropDatabase();
+      // console.log("Database dropped");
     })
     .catch((err) => {
       throw err;
