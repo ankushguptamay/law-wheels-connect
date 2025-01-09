@@ -246,3 +246,30 @@ exports.deleteArticle = async (req, res) => {
     });
   }
 };
+
+exports.getPreviousOrForwardArticleDetails = async (req, res) => {
+  try {
+    const { previous, forward } = req.query;
+    let number;
+    if (previous) {
+      number = parseInt(req.params.number) - 1;
+    } else if (forward) {
+      number = parseInt(req.params.number) + 1;
+    } else {
+      number = parseInt(req.params.number);
+    }
+
+    const articles = await Constitution.findOne({
+      number,
+    }).select(
+      "_id part_number_romanise part_title chapter_number chapter_title article_type number article_number article_title article_content extras"
+    );
+
+    res.status(200).json({ success: true, data: articles });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};

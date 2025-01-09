@@ -59,21 +59,21 @@ exports.createSlote = async (req, res) => {
     const runningTimeSlots = await Slot.find({
       advocate: req.user._id,
       date: { $gte: startOfDay },
-    });
+    }).select("_id date time timeInMin");
     for (let i = 0; i < runningTimeSlots.length; i++) {
       runningTimeSlotonDatabase.push({
         startTimeInMili: new Date(
-          `${new Date(runningTimeSlots.date).toISOString().slice(0, 10)}T${
-            runningTimeSlots.time
+          `${new Date(runningTimeSlots[i].date).toISOString().slice(0, 10)}T${
+            runningTimeSlots[i].time
           }:00.000Z`
         ).getTime(),
         endTimeInMili:
           new Date(
-            `${new Date(runningTimeSlots.date).toISOString().slice(0, 10)}T${
-              runningTimeSlots.time
+            `${new Date(runningTimeSlots[i].date).toISOString().slice(0, 10)}T${
+              runningTimeSlots[i].time
             }:00.000Z`
           ).getTime() +
-          parseInt(runningTimeSlots.timeInMin) * 60 * 1000,
+          parseInt(runningTimeSlots[i].timeInMin) * 60 * 1000,
       });
     }
     for (let i = 0; i < dates.length; i++) {
