@@ -241,7 +241,7 @@ exports.softDeleteEducation = async (req, res) => {
     } else {
       await EducationUpdationHistory.deleteMany({
         user: req.user._id,
-        education: experience._id,
+        education: education._id,
       });
       await education.deleteOne();
     }
