@@ -2,7 +2,7 @@ const joi = require("joi");
 
 exports.validateExperience = (data) => {
   const schema = joi.object().keys({
-    jobTitle: joi.string().min(3).max(30).required(),
+    jobTitle: joi.string().min(3).required(),
     firmName: joi.string().min(3).required(),
     startDate: joi.string().optional(),
     endDate: joi.string().optional(),
@@ -15,13 +15,13 @@ exports.validateExperience = (data) => {
 
 exports.validateEducation = (data) => {
   const schema = joi.object().keys({
-    school_university: joi.string().min(3).max(30).required(),
-    fieldOfStudy: joi.string().min(3).max(30).optional(),
-    grade: joi.string().min(3).max(30).optional(),
+    school_university: joi.string().min(3).required(),
+    fieldOfStudy: joi.string().min(3).optional(),
+    grade: joi.string().min(3).optional(),
     startDate: joi.string().optional(),
     endDate: joi.string().optional(),
     activities: joi.string().min(20).max(1000).optional(),
-    degreeType: joi.string().min(3).max(30).optional(),
+    degreeType: joi.string().min(3).optional(),
     isRecent: joi.boolean().optional(),
     isOngoing: joi.boolean().optional(),
     description: joi.string().min(20).max(1000).optional(),

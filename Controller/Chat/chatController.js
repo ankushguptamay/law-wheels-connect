@@ -19,6 +19,7 @@ const {
   REFETCH_CHATS,
   NEW_MESSAGE,
   NEW_MESSAGE_ALERT,
+  MESSAGE_VIEWED,
   RENAME_GROUP,
   CHANGE_GROUP_AVATAR,
   REMOVE_GROUP_AVATAR,
@@ -949,6 +950,46 @@ exports.removeAdmin = async (req, res) => {
       success: true,
       message: "Admin removed successfully",
     });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};
+
+exports.viewMessagesPrivateChat = async (req, res) => {
+  try {
+    const chatId = req.params.id;
+    const userId = req.user._id;
+
+    const chat = await Chat.findById(chatId).select("_id groupChat members");
+    if (!chat) {
+      return res.status(404).json({
+        success: false,
+        message: "Chat not found",
+      });
+    }
+
+    if (!chat.groupChat) {
+      if (chat.members.includes(userId.toString())) {
+        const otherMember = chat.members.find(
+          (member) => member !== userId.toString()
+        );
+        if (otherMember) {
+          await Message.updateMany(
+            { chat: chatId, sender: otherMember },
+            { isView: true }
+          );
+        }
+      }
+    } else {
+      // Nothing
+    }
+    // Socket
+    emitEvent(req, MESSAGE_VIEWED, chat.members, { chatId });
+
+    return res.status(200).json({ success: true });
   } catch (err) {
     res.status(500).json({
       success: false,

@@ -98,7 +98,7 @@ exports.createSlote = async (req, res) => {
     if (isOverlapping) {
       return res.status(400).send({
         success: false,
-        message: "New slot is overlapping with existing slots!",
+        message: "You already have a slot at this time frame. Please check your existing slots!",
       });
     }
 
