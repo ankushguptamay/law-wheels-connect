@@ -98,7 +98,8 @@ exports.createSlote = async (req, res) => {
     if (isOverlapping) {
       return res.status(400).send({
         success: false,
-        message: "You already have a slot at this time frame. Please check your existing slots!",
+        message:
+          "You already have a slot at this time frame. Please check your existing slots!",
       });
     }
 
@@ -767,6 +768,38 @@ exports.rescheduleSloteForUser = async (req, res) => {
         message: `This slote have been booked!`,
       });
     }
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};
+
+exports.countSlot = async (req, res) => {
+  try {
+    const advocate = req.user._id;
+
+    const [totalSlot, completedSlot, missedSlot, upcomingSlot] =
+      await Promise.all([
+        Slot.countDocuments({
+          $and: [{ advocate }, { isDelete: false }],
+        }),
+        Slot.countDocuments({
+          $and: [{ advocate }, { isDelete: false }, { status: "Completed" }],
+        }),
+        Slot.countDocuments({
+          $and: [{ advocate }, { isDelete: false }, { status: "Missed" }],
+        }),
+        Slot.countDocuments({
+          $and: [{ advocate }, { isDelete: false }, { status: "Upcoming" }],
+        }),
+      ]);
+
+    res.status(200).json({
+      success: true,
+      data: { totalSlot, completedSlot, missedSlot, upcomingSlot },
+    });
   } catch (err) {
     res.status(500).json({
       success: false,

@@ -360,7 +360,7 @@ exports.verifyMobileOTP = async (req, res) => {
       {
         $and: [{ mobileNumber: mobileNumber }, { _id: isOtp.receiverId }],
       },
-      "_id name email mobileNumber isLicenseVerified role lastLogin"
+      "_id name email mobileNumber isLicenseVerified bar_council_license_number role lastLogin"
     );
     if (!user) {
       return res.status(400).send({

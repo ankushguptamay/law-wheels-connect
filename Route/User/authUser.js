@@ -9,6 +9,7 @@ const {
   refreshAccessToken,
   logout,
 } = require("../../Controller/User/userCont");
+const chat = require("./chatRoute");
 
 // Middle
 const { verifyUserJWT } = require("../../Middleware/verifyJWTToken");
@@ -20,5 +21,7 @@ router.post("/refresh", refreshAccessToken);
 
 router.put("/logout", verifyUserJWT, logout);
 router.put("/rolePage", verifyUserJWT, rolePage);
+
+router.use("/chat", verifyUserJWT, chat);
 
 module.exports = router;
