@@ -8,6 +8,7 @@ const {
   STOP_TYPING,
   CHAT_JOINED,
   CHAT_LEAVED,
+  ERROR,
 } = require("./event");
 const { Chat } = require("../Model/Chat/chatModel");
 const { User } = require("../Model/User/userModel");
@@ -60,10 +61,18 @@ exports.socketIO = (server) => {
       const chat = await Chat.findById(chatId);
 
       if (!chat) {
-        throw new Error("Chat not found");
+        socket.emit(ERROR, {
+          success: false,
+          message: "Chat not found!",
+        });
+        return;
       }
       if (!chat.members.includes(user._id.toString())) {
-        throw new Error("You are not allowed to send attachments");
+        socket.emit(ERROR, {
+          success: false,
+          message: "You are not allowed to send attachments!",
+        });
+        return;
       }
 
       if (!chat.groupChat && !chat.privateConnection) {
@@ -72,7 +81,11 @@ exports.socketIO = (server) => {
           const message = await Message.find({ chat: chatId });
 
           if (message[0].sender.toString() == user._id.toString()) {
-            throw new Error("Wait for response!");
+            socket.emit(ERROR, {
+              success: false,
+              message: "Wait for response!",
+            });
+            return;
           } else {
             chat.privateConnection = true;
             await Chat.save();
@@ -110,7 +123,12 @@ exports.socketIO = (server) => {
       try {
         await Message.create(messageForDB);
       } catch (error) {
-        throw new Error(error);
+        socket.emit(ERROR, {
+          success: false,
+          message: "An unexpected error occurred.",
+          details: error.message,
+        });
+        return;
       }
     });
 

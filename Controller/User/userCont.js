@@ -400,6 +400,8 @@ exports.verifyMobileOTP = async (req, res) => {
       await user.updateOne({ lastLogin: new Date(), refreshToken });
     }
 
+    user.bar_council_license_number = user.bar_council_license_number || null;
+
     const token = createAccessToken("user", user.email, user._id);
     res.status(200).json({
       success: true,
