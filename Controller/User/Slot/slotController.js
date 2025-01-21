@@ -286,7 +286,7 @@ exports.bookASlote = async (req, res) => {
         message: error.details[0].message,
       });
     }
-    const { sloteId, client_legal_issue } = req.body;
+    const { sloteId, client_legal_issue, client_meeting_type } = req.body;
 
     // Check is this slot present
     const slot = await Slot.findOne({ _id: sloteId, isDelete: false });
@@ -301,6 +301,13 @@ exports.bookASlote = async (req, res) => {
       return res.status(400).send({
         success: false,
         message: `You can not book your own slot!`,
+      });
+    }
+    // Check is advocate provide pericular meeting tyle
+    if (!slot.serviceType.includes(client_meeting_type)) {
+      return res.status(400).send({
+        success: false,
+        message: `Advocate do not provide ${client_meeting_type} meeting functionality on this slot!`,
       });
     }
     // Check is date have been passed
@@ -321,6 +328,7 @@ exports.bookASlote = async (req, res) => {
       slot.isBooked = true;
       slot.client_legal_issue = client_legal_issue;
       slot.status = "Upcoming";
+      slot.client_meeting_type = client_meeting_type;
       await slot.save();
       return res.status(200).json({
         success: true,
@@ -383,6 +391,7 @@ exports.mySloteForUser = async (req, res) => {
           status: current.status,
           serviceType: current.serviceType,
           client_legal_issue: current.client_legal_issue,
+          client_meeting_type: current.client_meeting_type,
           createdAt: current.createdAt,
           advocate: current.advocate
             ? {
@@ -409,6 +418,7 @@ exports.mySloteForUser = async (req, res) => {
               serviceType: current.serviceType,
               createdAt: current.createdAt,
               client_legal_issue: current.client_legal_issue,
+              client_meeting_type: current.client_meeting_type,
               advocate: {
                 _id: current.advocate._id,
                 name: current.advocate.name,
@@ -476,6 +486,7 @@ exports.sloteByIdForUser = async (req, res) => {
       status: slot.status,
       serviceType: slot.serviceType,
       client_legal_issue: slot.client_legal_issue,
+      client_meeting_type: slot.client_meeting_type,
       createdAt: slot.createdAt,
       advocate: {
         _id: slot.advocate._id,
@@ -524,6 +535,7 @@ exports.sloteByIdForAdvocate = async (req, res) => {
       status: slot.status,
       serviceType: slot.serviceType,
       client_legal_issue: slot.client_legal_issue,
+      client_meeting_type: slot.client_meeting_type,
       createdAt: slot.createdAt,
       client: slot.client
         ? {
@@ -667,8 +679,9 @@ exports.cancelSloteForUser = async (req, res) => {
     slot.lastcancelClient = req.user._id;
     slot.isCancel = true;
     slot.isBooked = false;
-    slot.client_legal_issue = null;
-    slot.client = null;
+    slot.client_legal_issue = undefined;
+    slot.client_meeting_type = undefined;
+    slot.client = undefined;
     slot.status = "Vacant";
     await slot.save();
     return res.status(200).json({
@@ -747,11 +760,13 @@ exports.rescheduleSloteForUser = async (req, res) => {
       newSlot.client = req.user._id;
       newSlot.isBooked = true;
       newSlot.client_legal_issue = oldSlot.client_legal_issue;
+      newSlot.client_meeting_type = oldSlot.client_meeting_type;
       newSlot.status = "Upcoming";
 
-      oldSlot.client = null;
+      oldSlot.client = undefined;
       oldSlot.isBooked = false;
-      oldSlot.client_legal_issue = null;
+      oldSlot.client_legal_issue = undefined;
+      oldSlot.client_meeting_type = undefined;
       oldSlot.status = "Vacant";
       oldSlot.lastcancelClient = req.user._id;
       oldSlot.isCancel = true;

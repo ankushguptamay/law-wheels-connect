@@ -172,6 +172,7 @@ exports.bookSloteValidation = (data) => {
   const schema = joi.object().keys({
     client_legal_issue: joi.string().min(20).max(1000).required(),
     sloteId: joi.string().required(),
+    client_meeting_type: joi.string().valid("Audio", "Video", "Visit").required(),
   });
   return schema.validate(data);
 };

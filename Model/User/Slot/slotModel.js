@@ -17,6 +17,13 @@ const schema = new Schema(
       default: "Vacant",
     },
     client_legal_issue: { type: String },
+    client_meeting_type: {
+      type: String,
+      enum: {
+        values: ["Audio", "Video", "Visit"],
+        message: "{VALUE} is not supported",
+      },
+    },
     reviewGiven: { type: Boolean },
     isDelete: { type: Boolean, default: false },
     deleted_at: { type: Date },
