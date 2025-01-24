@@ -22,7 +22,7 @@ exports.verifyUserJWT = async (req, res, next) => {
       "_id name email mobileNumber isLicenseVerified role isProfileVisible profilePic"
     );
     if (!user) {
-      return res.status(400).json({
+      return res.status(401).json({
         success: false,
         message: "Unauthorized!",
       });
@@ -53,7 +53,7 @@ exports.verifyAdminJWT = async (req, res, next) => {
       "_id name email mobileNumber isLicenseVerified role"
     );
     if (!admin) {
-      return res.status(400).json({
+      return res.status(401).json({
         success: false,
         message: "Unauthorized!",
       });
@@ -84,7 +84,7 @@ exports.verifyBloggerJWT = async (req, res, next) => {
       "_id name email mobileNumber isLicenseVerified role"
     );
     if (!blogger) {
-      return res.status(400).json({
+      return res.status(401).json({
         success: false,
         message: "Unauthorized!",
       });

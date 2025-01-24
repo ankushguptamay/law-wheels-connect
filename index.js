@@ -3,6 +3,7 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const cors = require("cors");
 const authAdmin = require("./Route/Admin/authAdmin");
+const version = require("./Route/versionRoute");
 const authUser = require("./Route/User/authUser");
 const advocate = require("./Route/User/Advocate/indexRoute");
 const student = require("./Route/User/Student/indexRoute");
@@ -35,6 +36,7 @@ app.use("/student", student);
 app.use("/user", advise_seeker);
 app.use("/admin", authAdmin);
 app.use("/blogger", blogger);
+app.use("/version", version);
 
 // Initialize Socket.io and attach to app
 const io = socketIO(server);

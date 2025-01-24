@@ -3,7 +3,7 @@ exports.isNunUser = async (req, res, next) => {
     if (req.user.role === "Nun") {
       return next();
     }
-    return res.status(400).json({
+    return res.status(403).json({
       success: false,
       message: "Unauthorized!",
     });
@@ -20,7 +20,7 @@ exports.isStudentUser = async (req, res, next) => {
     if (req.user.role === "Student") {
       return next();
     }
-    return res.status(400).json({
+    return res.status(403).json({
       success: false,
       message: "Unauthorized!",
     });
@@ -38,7 +38,7 @@ exports.isAdvocateUser = async (req, res, next) => {
     if (req.user.role === "Advocate") {
       return next();
     }
-    return res.status(400).json({
+    return res.status(403).json({
       success: false,
       message: "Unauthorized!",
     });
@@ -55,7 +55,7 @@ exports.isAdvocateVerified = async (req, res, next) => {
     if (req.user.role === "Advocate" && req.user.isLicenseVerified) {
       return next();
     }
-    return res.status(400).json({
+    return res.status(403).json({
       success: false,
       message: "Wait for license verification!",
     });
