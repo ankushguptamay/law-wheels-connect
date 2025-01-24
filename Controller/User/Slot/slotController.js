@@ -5,9 +5,6 @@ const {
   cancelSloteValidation,
   rescheduleSloteValidation,
 } = require("../../../Middleware/Validation/userValidation");
-const {
-  AdvocateReview,
-} = require("../../../Model/User/Review/advocateReviewModel");
 const { Slot } = require("../../../Model/User/Slot/slotModel");
 const { generateFixedLengthRandomNumber } = require("../../../Util/otp");
 
@@ -452,7 +449,7 @@ exports.sloteByIdForUser = async (req, res) => {
     const _id = req.params.id;
     const slot = await Slot.findOne({ _id, isDelete: false }).populate(
       "advocate",
-      "name profilePic headLine"
+      "name profilePic headLine averageRating"
     );
     if (!slot) {
       return res.status(400).send({
@@ -460,21 +457,6 @@ exports.sloteByIdForUser = async (req, res) => {
         message: `This slote is not present!`,
       });
     }
-
-    // Review
-    const rating = await AdvocateReview.aggregate([
-      { $match: { isDelete: false, advocate: slot.advocate._id } },
-      {
-        $group: {
-          _id: "$advocate",
-          averageRating: { $avg: "$rating" }, // Calculate the average rating
-          totalReviews: { $sum: 1 }, // Optional: Count total reviews
-        },
-      },
-      {
-        $project: { averageRating: 1, totalReviews: 1 },
-      },
-    ]);
 
     const transformData = {
       isBooked: slot.isBooked,
@@ -495,8 +477,7 @@ exports.sloteByIdForUser = async (req, res) => {
         avatar: slot.advocate.profilePic.url
           ? slot.advocate.profilePic.url
           : null,
-        totalReviews: rating[0] ? rating[0].totalReviews : null,
-        averageRating: rating[0] ? rating[0].averageRating : null,
+        averageRating: slot.averageRating,
       },
     };
     res.status(200).json({
@@ -525,7 +506,7 @@ exports.sloteByIdForAdvocate = async (req, res) => {
         message: `This slote is not present!`,
       });
     }
-    console.log(slot);
+
     const transformData = {
       date: slot.date,
       isBooked: slot.isBooked,
@@ -580,7 +561,7 @@ exports.sloteForUser = async (req, res) => {
       if (new Date(date).getTime() <= yesterday.getTime()) {
         return res.status(400).send({
           success: false,
-          message: `This date is not allowed!`,
+          message: `You cannot select a past date. Please choose a valid date.`,
         });
       }
       query.$and.push({ date: new Date(date) });

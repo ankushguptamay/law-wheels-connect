@@ -39,6 +39,13 @@ const schema = new Schema(
         message: "{VALUE} is not supported",
       },
     },
+    averageRating: {
+      type: Number,
+      default: 0,
+      min: 0,
+      max: 5,
+      set: (value) => Math.round(value * 10) / 10,// Rounds to 1 decimal place
+    },
     specialization: [{ type: Types.ObjectId, ref: "Specialization" }],
     practiceArea: [{ type: Types.ObjectId, ref: "PracticeArea" }],
     language: [],

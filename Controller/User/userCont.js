@@ -14,9 +14,6 @@ const {
   UserUpdationHistory,
 } = require("../../Model/User/userUpdationHistoryModel");
 const { Specialization } = require("../../Model/Master/specializationModel");
-const {
-  AdvocateReview,
-} = require("../../Model/User/Review/advocateReviewModel");
 const { Connection } = require("../../Model/User/Connection/connectionModel");
 const { Follow } = require("../../Model/User/Connection/followerModel");
 
@@ -49,7 +46,6 @@ const bunnyFolderName = "profile";
 
 exports.getDetailsOfStudentAndAdvocate = async (req, res) => {
   try {
-    // const user = await User.findOne({ email: req.user.email });
     const id = new mongoose.Types.ObjectId(req.user._id);
     const user = await User.aggregate([
       {
@@ -133,40 +129,12 @@ exports.getDetailsOfStudentAndAdvocate = async (req, res) => {
         },
       },
       {
-        $lookup: {
-          from: "advocatereviews",
-          let: { advocate: "$_id" },
-          pipeline: [
-            {
-              $match: {
-                $expr: {
-                  $and: [
-                    { $eq: ["$advocate", "$$advocate"] },
-                    { $eq: ["$isDelete", false] },
-                  ],
-                },
-              },
-            },
-          ],
-          as: "reviews",
-        },
-      },
-      {
-        $addFields: {
-          totalReviews: { $size: "$reviews" },
-          averageRating: {
-            $cond: {
-              if: { $gt: [{ $size: "$reviews" }, 0] },
-              then: { $avg: "$reviews.rating" },
-              else: 0,
-            },
-          },
-        },
-      },
-      {
         $project: {
-          reviews: 0, // Exclude the reviews array if you don't need it
           lastLogin: 0,
+          updatedAt: 0,
+          createdAt: 0,
+          isDelete: 0,
+          deleted_at: 0,
         },
       },
     ]);
@@ -572,129 +540,6 @@ exports.addUpdateLicensePic = async (req, res) => {
   }
 };
 
-// exports.isAdvocatePage = async (req, res) => {
-//   try {
-//     // Body Validation
-//     const { error } = validateIsAdvocatePage(req.body);
-//     if (error) {
-//       return res.status(400).json({
-//         success: false,
-//         message: error.details[0].message,
-//       });
-//     }
-//     const {
-//       isAdvocate,
-//       school_university,
-//       startDate,
-//       jobTitle,
-//       firmName,
-//       location,
-//     } = req.body;
-
-//     // Validate body
-//     let newJobTitle = null,
-//       newFirmName = null,
-//       newSchool_university = null,
-//       codePreFix = "LWUN",
-//       message = "user";
-//     if (isAdvocate) {
-//       if (jobTitle && firmName) {
-//         newJobTitle = capitalizeFirstLetter(
-//           jobTitle.replace(/\s+/g, " ").trim()
-//         );
-//         newFirmName = capitalizeFirstLetter(
-//           firmName.replace(/\s+/g, " ").trim()
-//         );
-//         message = "advocate";
-//         codePreFix = "LWUA";
-//         // Create this firm if not exist
-//         await FirmCompany.findOneAndUpdate(
-//           { name: newFirmName }, // Query
-//           { updatedAt: new Date() }, // update
-//           { upsert: true, new: true, setDefaultsOnInsert: true } // Options
-//         );
-//         // Create this job title if not exist
-//         await JobTitle.findOneAndUpdate(
-//           { name: newJobTitle }, // Query
-//           { updatedAt: new Date() }, // update
-//           { upsert: true, new: true, setDefaultsOnInsert: true } // Options
-//         );
-//         // Create Advocate Experience
-//         await Experience.create({
-//           isRecent: true,
-//           firmName: newFirmName,
-//           jobTitle: newJobTitle,
-//           user: req.user._id,
-//         });
-//       } else {
-//         return res.status(400).json({
-//           success: false,
-//           message: "Please select required fields!",
-//         });
-//       }
-//     } else if (isAdvocate == false) {
-//       if (school_university && startDate) {
-//         newSchool_university = capitalizeFirstLetter(
-//           school_university.replace(/\s+/g, " ").trim()
-//         );
-//         message = "student";
-//         codePreFix = "LWUS";
-//         // Create this university if not exist
-//         await SchoolUniversity.findOneAndUpdate(
-//           { name: newSchool_university },
-//           { updatedAt: new Date() },
-//           { upsert: true, new: true, setDefaultsOnInsert: true }
-//         );
-//         // Create Student Education
-//         await Education.create({
-//           isRecent: true,
-//           user: req.user._id,
-//           school_university: newSchool_university,
-//           startDate,
-//         });
-//       } else {
-//         return res.status(400).json({
-//           success: false,
-//           message: "Please select required fields!",
-//         });
-//       }
-//     }
-
-//     // generate User code
-//     let code;
-//     const query = new RegExp("^" + codePreFix);
-//     const isUserCode = await User.find({ userCode: query }).sort({
-//       createdAt: 1,
-//     });
-//     console.log(isUserCode);
-//     if (isUserCode.length == 0) {
-//       code = codePreFix + 1000;
-//     } else {
-//       let lastCode = isUserCode[isUserCode.length - 1];
-//       let lastDigits = lastCode.userCode.substring(4);
-//       let incrementedDigits = parseInt(lastDigits, 10) + 1;
-//       code = codePreFix + incrementedDigits;
-//     }
-//     // Update user
-//     await User.findOneAndUpdate(
-//       {
-//         _id: req.user._id,
-//       },
-//       { isAdvocate: isAdvocate, location: location, userCode: code }
-//     );
-//     // Final response
-//     res.status(200).send({
-//       success: true,
-//       message: `Welcome ${message}!`,
-//     });
-//   } catch (err) {
-//     res.status(500).send({
-//       success: false,
-//       message: err.message,
-//     });
-//   }
-// };
-
 exports.updateUser = async (req, res) => {
   try {
     // Body Validation
@@ -905,7 +750,7 @@ exports.rolePage = async (req, res) => {
     // Final response
     res.status(200).send({
       success: true,
-      message: `Welcome ${message}!`,
+      message: `You are successfully register as ${message}!`,
       data: { ...req.user._doc, role },
     });
   } catch (err) {
@@ -918,7 +763,8 @@ exports.rolePage = async (req, res) => {
 
 exports.getAllUser = async (req, res) => {
   try {
-    const { search } = req.query;
+    const { search, experienceLowerLimit, experienceUpperLimit, starRating } =
+      req.query;
     const role = req.query.role;
 
     const resultPerPage = req.query.resultPerPage
@@ -938,6 +784,21 @@ exports.getAllUser = async (req, res) => {
     if (role && role === "Advocate") {
       query.$and.push({ role });
       query.$and.push({ isProfileVisible: true });
+      // Filter
+      if ((experienceLowerLimit, experienceUpperLimit)) {
+        query.$and.push({
+          experience_year: {
+            $gte: parseInt(experienceLowerLimit),
+            $lte: parseInt(experienceUpperLimit),
+          },
+        });
+      }
+      // Average rating
+      if (starRating) {
+        query.$and.push({
+          averageRating: { $gte: Math.round(parseFloat(starRating) * 10) / 10 },
+        });
+      }
     } else if (role) {
       query.$and.push({ role });
     } else {
@@ -959,33 +820,7 @@ exports.getAllUser = async (req, res) => {
     // Transform Data
     const transformData = [];
     for (let i = 0; i < user.length; i++) {
-      let specialization, experiences, rating;
-      if (user[i].role === "Advocate") {
-        const [aSpecialization, aExperiences, aRating] = await Promise.all([
-          Specialization.find({ _id: { $in: user[i].specialization } })
-            .sort({ createAt: -1 })
-            .limit(1),
-          Experience.find({ user: user[i]._id, isRecent: true }).limit(1),
-          AdvocateReview.aggregate([
-            { $match: { isDelete: false, advocate: user[i]._id } },
-            {
-              $group: {
-                _id: "$advocate", // Group by advocate ID
-                averageRating: { $avg: "$rating" }, // Calculate the average rating
-                totalReviews: { $sum: 1 }, // Optional: Count total reviews
-              },
-            },
-            {
-              $project: { _id: 0, averageRating: 1, totalReviews: 1 },
-            },
-          ]),
-        ]);
-        specialization = aSpecialization;
-        experiences = aExperiences;
-        rating = aRating;
-      }
-
-      const [connection, follow] = await Promise.all([
+      const promise = [
         Connection.findOne({
           $or: [
             { sender: req.user._id, receiver: user[i]._id },
@@ -996,7 +831,20 @@ exports.getAllUser = async (req, res) => {
           follower: req.user._id,
           followee: user[i]._id,
         }),
-      ]);
+      ];
+      if (user[i].role === "Advocate") {
+        promise.push(
+          Specialization.find({ _id: { $in: user[i].specialization } })
+            .sort({ createAt: -1 })
+            .limit(1)
+        );
+        promise.push(
+          Experience.find({ user: user[i]._id, isRecent: true }).limit(1)
+        );
+      }
+
+      const [connection, follow, specialization = null, experiences = null] =
+        await Promise.all(promise);
 
       transformData.push({
         _id: user[i]._id,
@@ -1011,7 +859,7 @@ exports.getAllUser = async (req, res) => {
         experiences,
         experience_year: user[i].experience_year,
         createdAt: user[i].createdAt,
-        rating: Array.isArray(rating) && rating.length > 0 ? rating[0] : null,
+        rating: user[i].averageRating,
         connection: connection || null,
         follow: follow || null,
       });
@@ -1118,39 +966,7 @@ exports.getUserById = async (req, res) => {
         },
       },
       {
-        $lookup: {
-          from: "advocatereviews",
-          let: { advocate: "$_id" },
-          pipeline: [
-            {
-              $match: {
-                $expr: {
-                  $and: [
-                    { $eq: ["$advocate", "$$advocate"] },
-                    { $eq: ["$isDelete", false] },
-                  ],
-                },
-              },
-            },
-          ],
-          as: "reviews",
-        },
-      },
-      {
-        $addFields: {
-          totalReviews: { $size: "$reviews" },
-          averageRating: {
-            $cond: {
-              if: { $gt: [{ $size: "$reviews" }, 0] },
-              then: { $avg: "$reviews.rating" },
-              else: 0,
-            },
-          },
-        },
-      },
-      {
         $project: {
-          reviews: 0, // Exclude the reviews array if you don't need it
           lastLogin: 0,
           mobileNumber: 0,
           email: 0,
@@ -1339,22 +1155,6 @@ exports.getAllUserForAdmin = async (req, res) => {
     // Transform Data
     const transformData = [];
     for (let i = 0; i < user.length; i++) {
-      const [rating] = await Promise.all([
-        AdvocateReview.aggregate([
-          { $match: { isDelete: false, advocate: user[i]._id } },
-          {
-            $group: {
-              _id: "$advocate", // Group by advocate ID
-              averageRating: { $avg: "$rating" }, // Calculate the average rating
-              totalReviews: { $sum: 1 }, // Optional: Count total reviews
-            },
-          },
-          {
-            $project: { _id: 0, averageRating: 1, totalReviews: 1 },
-          },
-        ]),
-      ]);
-
       transformData.push({
         _id: user[i]._id,
         name: user[i].name,
@@ -1368,7 +1168,7 @@ exports.getAllUserForAdmin = async (req, res) => {
         language: user[i].language,
         experience_year: user[i].experience_year,
         createdAt: user[i].createdAt,
-        rating: rating[0] || null,
+        rating: user[i].averageRating,
       });
     }
 

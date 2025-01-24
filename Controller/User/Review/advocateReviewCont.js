@@ -9,6 +9,27 @@ const {
   AdvocateReview,
 } = require("../../../Model/User/Review/advocateReviewModel");
 const { Slot } = require("../../../Model/User/Slot/slotModel");
+const { User } = require("../../../Model/User/userModel");
+
+const updateAverageRating = async (advocate) => {
+  const rating = await AdvocateReview.aggregate([
+    { $match: { isDelete: false, advocate } },
+    {
+      $group: {
+        _id: "$advocate", // Group by advocate ID
+        averageRating: { $avg: "$rating" }, // Calculate the average rating
+      },
+    },
+    {
+      $project: { _id: 0, averageRating: { $round: ["$averageRating", 1] } },
+    },
+  ]);
+  // New Average rating
+  const averageRating =
+    Array.isArray(rating) && rating.length > 0 ? rating[0].averageRating : 0;
+
+  await User.updateOne({ _id: advocate }, { averageRating });
+};
 
 exports.giveAdvocateReviews = async (req, res) => {
   try {
@@ -70,6 +91,9 @@ exports.giveAdvocateReviews = async (req, res) => {
         });
       }
     }
+
+    // Update Average rating of advocate
+    updateAverageRating(advocate);
 
     // Update Slot
     await Slot.updateMany(
@@ -217,6 +241,9 @@ exports.updateAdvocateReviewsByUser = async (req, res) => {
     review.updatedAt = updatedAt;
     await review.save();
 
+    // Update Average rating of advocate
+    updateAverageRating(review.advocate);
+
     // Update Slot
     await Slot.updateMany(
       {
@@ -306,6 +333,9 @@ exports.deleteAdvocateReviewMessageByUser = async (req, res) => {
     review.updatedAt = updatedAt;
     await review.save();
 
+    // Update Average rating of advocate
+    updateAverageRating(review.advocate);
+
     res.status(200).json({
       success: true,
       message: "Message deleted!",
@@ -377,6 +407,9 @@ exports.deleteAdvocateReviewByUser = async (req, res) => {
         });
       }
     }
+
+    // Update Average rating of advocate
+    updateAverageRating(review.advocate);
 
     res.status(200).json({
       success: true,
