@@ -16,16 +16,16 @@ exports.connectDB = (uri) => {
     });
 };
 
-// async function updateExistingUsers() {
-//   try {
-//     const result = await User.updateMany(
-//       { averageRating: { $exists: false } },
-//       { $set: { averageRating: 0 } }
-//     );
-//     console.log(`${result.modifiedCount} documents updated.`);
-//   } catch (error) {
-//     console.error("Error updating documents:", error);
-//   }
-// }
+async function updateExistingUsers() {
+  try {
+    const result = await User.updateMany(
+      { averageRating: { $exists: false } },
+      { $set: { averageRating: 0 } }
+    );
+    console.log(`${result.modifiedCount} documents updated.`);
+  } catch (error) {
+    console.error("Error updating documents:", error);
+  }
+}
 
-// updateExistingUsers();
+updateExistingUsers();
