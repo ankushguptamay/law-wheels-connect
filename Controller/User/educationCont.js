@@ -70,7 +70,8 @@ exports.addEducation = async (req, res) => {
     });
     res.status(200).json({
       success: true,
-      message: "Education added successfully!",
+      message:
+        "Your educational details have been successfully added to your profile. This information helps clients trust your expertise.",
     });
   } catch (err) {
     res.status(500).json({

@@ -263,24 +263,25 @@ exports.loginByMobile = async (req, res) => {
     }
 
     // Testing
-    if (
-      mobileNumber === "9675355345" || // Ankush
-      mobileNumber === "8171156708" || // Laxmi
-      mobileNumber === "8938065100" // Amit
-    ) {
-      return res.status(200).send({
-        success: true,
-        message: `OTP send successfully! Valid for ${
-          OTP_VALIDITY_IN_MILLISECONDS / (60 * 1000)
-        } minutes!`,
-        data: { mobileNumber: mobileNumber },
-      });
-    }
+    // if (
+    //   mobileNumber === "9675355345" || // Ankush
+    //   mobileNumber === "8171156708" || // Laxmi
+    //   mobileNumber === "8938065100" // Amit
+    // ) {
+    //   return res.status(200).send({
+    //     success: true,
+    //     message: `OTP send successfully! Valid for ${
+    //       OTP_VALIDITY_IN_MILLISECONDS / (60 * 1000)
+    //     } minutes!`,
+    //     data: { mobileNumber: mobileNumber },
+    //   });
+    // }
 
     // Generate OTP for Email
     const otp = generateFixedLengthRandomNumber(OTP_DIGITS_LENGTH);
     // Sending OTP to mobile number
-    await sendOTPToMoblie(mobileNumber, otp);
+    const resss = await sendOTPToMoblie(mobileNumber, otp);
+    console.log(resss.data);
     //  Store OTP
     await OTP.create({
       validTill: new Date().getTime() + parseInt(OTP_VALIDITY_IN_MILLISECONDS),
@@ -598,7 +599,8 @@ exports.updateUser = async (req, res) => {
     // Final response
     res.status(200).send({
       success: true,
-      message: "Updated successfully!",
+      message:
+        "Your updates have been saved successfully. Your profile reflects the latest information.",
     });
   } catch (err) {
     res.status(500).send({
@@ -1048,7 +1050,10 @@ exports.isProfileVisible = async (req, res) => {
     }
     const { isProfileVisible } = req.body;
     const user = await User.findOne({ _id: req.user._id });
+    let message = "Your profile is now not live and visible to users.";
     if (isProfileVisible) {
+      message =
+        "Your profile is now live and visible to users. Start receiving inquiries and consultations from potential clients.";
       // Experience
       const isRecentExperience = await Experience.findOne({
         user: req.user._id,
@@ -1098,7 +1103,7 @@ exports.isProfileVisible = async (req, res) => {
     // Final response
     res.status(200).send({
       success: true,
-      message: "Successfully!",
+      message,
     });
   } catch (err) {
     res.status(500).send({

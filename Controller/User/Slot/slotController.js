@@ -116,7 +116,8 @@ exports.createSlote = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: "Created successfully!",
+      message:
+        "Your availability slots have been added. Clients can now view your schedule and book consultations accordingly.",
     });
   } catch (err) {
     res.status(500).json({

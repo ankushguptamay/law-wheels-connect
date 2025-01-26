@@ -155,7 +155,8 @@ exports.socketIO = (server) => {
           chatOnlineUsers.delete(chatId);
         }
 
-        const membersSocket = getSockets([...chatOnlineUsers.get(chatId)]);
+        const members = chatOnlineUsers.get(chatId) || new Set();
+        const membersSocket = getSockets([...members]);
         socket
           .to(membersSocket)
           .emit(CHAT_LEAVED, { chatId, userId: user._id.toString() });

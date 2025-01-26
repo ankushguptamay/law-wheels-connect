@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const { User } = require("../Model/User/userModel");
 
 exports.connectDB = (uri) => {
   mongoose
@@ -14,3 +15,17 @@ exports.connectDB = (uri) => {
       throw err;
     });
 };
+
+// async function updateExistingUsers() {
+//   try {
+//     const result = await User.updateMany(
+//       { averageRating: { $exists: false } },
+//       { $set: { averageRating: 0 } }
+//     );
+//     console.log(`${result.modifiedCount} documents updated.`);
+//   } catch (error) {
+//     console.error("Error updating documents:", error);
+//   }
+// }
+
+// updateExistingUsers();
