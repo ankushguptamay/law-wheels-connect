@@ -815,7 +815,7 @@ exports.getAllUser = async (req, res) => {
     const [user, totalUser] = await Promise.all([
       User.find(query)
         .select(
-          "name role location profilePic headLine specialization language experience_year isProfileVisible createdAt"
+          "name role location profilePic headLine specialization language experience_year isProfileVisible createdAt averageRating"
         )
         .sort({ name: -1 })
         .skip(skip)

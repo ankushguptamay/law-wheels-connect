@@ -12,23 +12,34 @@ const { Slot } = require("../../../Model/User/Slot/slotModel");
 const { User } = require("../../../Model/User/userModel");
 
 const updateAverageRating = async (advocate) => {
-  const rating = await AdvocateReview.aggregate([
-    { $match: { isDelete: false, advocate } },
-    {
-      $group: {
-        _id: "$advocate", // Group by advocate ID
-        averageRating: { $avg: "$rating" }, // Calculate the average rating
+  try {
+    const rating = await AdvocateReview.aggregate([
+      {
+        $match: {
+          isDelete: false,
+          advocate: new mongoose.Types.ObjectId(advocate),
+        },
       },
-    },
-    {
-      $project: { _id: 0, averageRating: { $round: ["$averageRating", 1] } },
-    },
-  ]);
-  // New Average rating
-  const averageRating =
-    Array.isArray(rating) && rating.length > 0 ? rating[0].averageRating : 0;
+      {
+        $group: {
+          _id: "$advocate", // Group by advocate ID
+          averageRating: { $avg: "$rating" }, // Calculate the average rating
+        },
+      },
+      {
+        $project: { _id: 0, averageRating: 1 },
+      },
+    ]);
+    // New Average rating
+    const averageRating =
+      Array.isArray(rating) && rating.length > 0
+        ? Math.round(rating[0].averageRating * 10) / 10
+        : 0;
 
-  await User.updateOne({ _id: advocate }, { averageRating });
+    await User.updateOne({ _id: advocate }, { $set: { averageRating } });
+  } catch (error) {
+    console.log(error);
+  }
 };
 
 exports.giveAdvocateReviews = async (req, res) => {
