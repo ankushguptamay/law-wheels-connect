@@ -15,20 +15,28 @@ exports.addSkill = async (req, res) => {
         message: error.details[0].message,
       });
     }
-    const skillName = capitalizeFirstLetter(
-      req.body.skillName.replace(/\s+/g, " ").trim()
+
+    // Capitalize First Letter
+    const skills = req.body.skillName.map((skill) =>
+      capitalizeFirstLetter(skill.replace(/\s+/g, " ").trim())
     );
-    // Create this firm if not exist
-    await Skill.findOneAndUpdate(
-      { name: skillName },
-      { updatedAt: new Date() },
-      { upsert: true, new: true, setDefaultsOnInsert: true }
-    );
-    // Store user skill
-    await UserSkill.create({
-      skillName,
-      user: req.user._id,
-    });
+
+    for (const skillName of skills) {
+      // Create this skill if not exist
+      await Skill.findOneAndUpdate(
+        { name: skillName },
+        { updatedAt: new Date() },
+        { upsert: true, new: true, setDefaultsOnInsert: true }
+      );
+
+      // Store user skill
+      await UserSkill.create({
+        skillName,
+        user: req.user._id,
+      });
+    }
+
+    // Final Response
     res.status(200).json({
       success: true,
       message: "Skill added successfully!",

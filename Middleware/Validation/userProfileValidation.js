@@ -31,7 +31,10 @@ exports.validateEducation = (data) => {
 
 exports.validateUserSkill = (data) => {
   const schema = joi.object().keys({
-    skillName: joi.string().required(),
+    skillName: joi
+      .array()
+      .items(joi.string().trim().replace(/\s+/g, " ").required())
+      .required(),
   });
   return schema.validate(data);
 };
