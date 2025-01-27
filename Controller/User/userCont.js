@@ -36,7 +36,13 @@ const {
   sendOTPToMoblie,
 } = require("../../Util/otp");
 
-const { OTP_DIGITS_LENGTH, OTP_VALIDITY_IN_MILLISECONDS } = process.env;
+const {
+  OTP_DIGITS_LENGTH,
+  OTP_VALIDITY_IN_MILLISECONDS,
+  TEST_NUMBER_1,
+  TEST_NUMBER_2,
+  TEST_NUMBER_3,
+} = process.env;
 
 const { uploadFileToBunny, deleteFileToBunny } = require("../../Util/bunny");
 const {
@@ -263,19 +269,19 @@ exports.loginByMobile = async (req, res) => {
     }
 
     // Testing
-    // if (
-    //   mobileNumber === "9675355345" || // Ankush
-    //   mobileNumber === "8171156708" || // Laxmi
-    //   mobileNumber === "8938065100" // Amit
-    // ) {
-    //   return res.status(200).send({
-    //     success: true,
-    //     message: `OTP send successfully! Valid for ${
-    //       OTP_VALIDITY_IN_MILLISECONDS / (60 * 1000)
-    //     } minutes!`,
-    //     data: { mobileNumber: mobileNumber },
-    //   });
-    // }
+    if (
+      mobileNumber === TEST_NUMBER_1 || // Ankush
+      mobileNumber === TEST_NUMBER_2 || // Amit
+      mobileNumber === TEST_NUMBER_3 // Laxmi
+    ) {
+      return res.status(200).send({
+        success: true,
+        message: `OTP send successfully! Valid for ${
+          OTP_VALIDITY_IN_MILLISECONDS / (60 * 1000)
+        } minutes!`,
+        data: { mobileNumber: mobileNumber },
+      });
+    }
 
     // Generate OTP for Email
     const otp = generateFixedLengthRandomNumber(OTP_DIGITS_LENGTH);
