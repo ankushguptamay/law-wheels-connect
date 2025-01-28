@@ -44,8 +44,10 @@ const schema = new Schema(
       default: 0,
       min: 0,
       max: 5,
-      set: (value) => Math.round(value * 10) / 10,// Rounds to 1 decimal place
+      set: (value) => Math.round(value * 10) / 10, // Rounds to 1 decimal place
     },
+    isAadharVerified: { type: Boolean, default: false },
+    aadharDetails: { type: Object },
     specialization: [{ type: Types.ObjectId, ref: "Specialization" }],
     practiceArea: [{ type: Types.ObjectId, ref: "PracticeArea" }],
     language: [],

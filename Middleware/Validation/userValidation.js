@@ -172,7 +172,10 @@ exports.bookSloteValidation = (data) => {
   const schema = joi.object().keys({
     client_legal_issue: joi.string().min(20).max(1000).required(),
     sloteId: joi.string().required(),
-    client_meeting_type: joi.string().valid("Audio", "Video", "Visit").required(),
+    client_meeting_type: joi
+      .string()
+      .valid("Audio", "Video", "Visit")
+      .required(),
   });
   return schema.validate(data);
 };
@@ -195,6 +198,14 @@ exports.rescheduleSloteValidation = (data) => {
   const schema = joi.object().keys({
     oldSloteId: joi.string().required(),
     newSloteId: joi.string().required(),
+  });
+  return schema.validate(data);
+};
+
+exports.validateAadharVerification = (data) => {
+  const schema = joi.object().keys({
+    client_id: joi.string().required(),
+    aadharOTP: joi.string().length(6).required(),
   });
   return schema.validate(data);
 };

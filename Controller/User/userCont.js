@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 const jwt = require("jsonwebtoken");
 const fs = require("fs");
+const axios = require("axios");
 
 const { User } = require("../../Model/User/userModel");
 const { OTP } = require("../../Model/otpModel");
@@ -25,6 +26,7 @@ const {
   validateUpdateUser,
   validateRolePage,
   validateProfileVisible,
+  validateAadharVerification,
 } = require("../../Middleware/Validation/userValidation");
 
 const {
@@ -42,6 +44,9 @@ const {
   TEST_NUMBER_1,
   TEST_NUMBER_2,
   TEST_NUMBER_3,
+  SPRINT_AADHAR_AUTHORISED_KEY,
+  SPRINT_AADHAR_JWT_TOKEN,
+  SPRINT_AADHAR_PARTNER_ID,
 } = process.env;
 
 const { uploadFileToBunny, deleteFileToBunny } = require("../../Util/bunny");
@@ -343,10 +348,11 @@ exports.verifyMobileOTP = async (req, res) => {
       });
     }
 
+    // Testing Credentials
     if (
-      mobileNumber === "9675355345" || // Ankush
-      mobileNumber === "8171156708" || // Laxmi
-      mobileNumber === "8938065100" // Amit
+      mobileNumber === TEST_NUMBER_1 || // Ankush
+      mobileNumber === TEST_NUMBER_3 || // Laxmi
+      mobileNumber === TEST_NUMBER_2 // Amit
     ) {
       // Do Nothing
     } else {
@@ -1097,6 +1103,14 @@ exports.isProfileVisible = async (req, res) => {
           message: "NOLICENSE!",
         });
       }
+
+      // Aadhar verification
+      if (!user.isAadharVerified) {
+        return res.status(400).send({
+          success: false,
+          message: "NOAADHARVERIFIED!",
+        });
+      }
     }
     // Storing When user changed their profile visibility
     await UserUpdationHistory.create({
@@ -1296,5 +1310,118 @@ exports.logout = async (req, res) => {
     res.status(200).json({ success: true, message: "Loged out successfully" });
   } catch (err) {
     res.status(403).send({ success: false, message: err.message });
+  }
+};
+
+exports.sendAadharOTP = async (req, res) => {
+  try {
+    const aadharNumber = req.body.aadharNumber;
+    if (!aadharNumber || aadharNumber.length != 12) {
+      return res.status(400).send({
+        success: false,
+        message: "Aadhar number is required!",
+      });
+    }
+
+    // Send Aadhar OTP
+    const url = "https://api.verifya2z.com/api/v1/verification/aadhaar_sendotp";
+    const headers = {
+      "Content-Type": "application/json",
+      Token: SPRINT_AADHAR_JWT_TOKEN,
+      accept: "application/json",
+      authorisedkey: SPRINT_AADHAR_AUTHORISED_KEY,
+      "User-Agent": SPRINT_AADHAR_PARTNER_ID,
+    };
+    const data = { id_number: aadharNumber };
+    // Store in database
+    await User.updateOne(
+      { _id: req.user._id },
+      { $set: { aadharDetails: { aadharNumber } } }
+    );
+    const aadhar = await axios.post(url, JSON.stringify(data), { headers });
+
+    if (aadhar.data.status) {
+      // Final response
+      res.status(200).send({
+        success: true,
+        message: "OTP sent successfully",
+        data: { client_id: aadhar.data.data.client_id },
+      });
+    } else {
+      // Final response
+      res.status(400).send({
+        success: false,
+        message: aadhar.data.message,
+      });
+    }
+  } catch (err) {
+    res.status(500).send({
+      success: false,
+      message: err.message,
+    });
+  }
+};
+
+exports.verifyAadharOTP = async (req, res) => {
+  try {
+    // Body Validation
+    const { error } = validateAadharVerification(req.body);
+    if (error) {
+      return res.status(400).json({
+        success: false,
+        message: error.details[0].message,
+      });
+    }
+    const { client_id, aadharOTP } = req.body;
+
+    // Verify Aadhar OTP
+    const url =
+      "https://api.verifya2z.com/api/v1/verification/aadhaar_verifyotp";
+    const headers = {
+      "Content-Type": "application/json",
+      Token: SPRINT_AADHAR_JWT_TOKEN,
+      accept: "application/json",
+      authorisedkey: SPRINT_AADHAR_AUTHORISED_KEY,
+      "User-Agent": SPRINT_AADHAR_PARTNER_ID,
+    };
+    const refid = generateFixedLengthRandomNumber(6);
+    const data = {
+      client_id: client_id,
+      otp: aadharOTP,
+      refid,
+    };
+    const aadhar = await axios.post(url, JSON.stringify(data), { headers });
+
+    if (aadhar.data.status) {
+      const data = {
+        aadharNumber: aadhar.data.data.aadhaar_number,
+        full_name: aadhar.data.data.full_name,
+        gender: aadhar.data.data.gender,
+        dob: aadhar.data.data.dob,
+        address: aadhar.data.data.address,
+      };
+      // Store in database
+      await User.updateOne(
+        { _id: req.user._id },
+        { $set: { isAadharVerified: true, aadharDetails: data } }
+      );
+      // Final response
+      res.status(200).send({
+        success: true,
+        message: "Aadhar verified successfully",
+        data,
+      });
+    } else {
+      // Final response
+      res.status(400).send({
+        success: false,
+        message: "Not verified",
+      });
+    }
+  } catch (err) {
+    res.status(500).send({
+      success: false,
+      message: err.message,
+    });
   }
 };

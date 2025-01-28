@@ -19,8 +19,8 @@ exports.connectDB = (uri) => {
 // async function updateExistingUsers() {
 //   try {
 //     const result = await User.updateMany(
-//       { averageRating: { $exists: false } },
-//       { $set: { averageRating: 0 } }
+//       { isAadharVerified: { $exists: false } },
+//       { $set: { isAadharVerified: false } }
 //     );
 //     console.log(`${result.modifiedCount} documents updated.`);
 //   } catch (error) {

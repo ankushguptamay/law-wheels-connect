@@ -20,6 +20,8 @@ const {
   getAllUser,
   getUserById,
   isProfileVisible,
+  sendAadharOTP,
+  verifyAadharOTP,
 } = require("../../../Controller/User/userCont");
 
 //middleware
@@ -62,6 +64,10 @@ router.delete("/licensePic", deleteLicensePic);
 // review
 router.get("/myReviews", getAdvocateReviewForAdvocate);
 router.get("/reviews/:id", getAdvocateReviewForUser);
+
+// Aadhar
+router.post("/sendAadharOTP", sendAadharOTP);
+router.post("/verifyAadharOTP", verifyAadharOTP);
 
 router.use("/profile", userProfile);
 router.use("/conn", connection);
