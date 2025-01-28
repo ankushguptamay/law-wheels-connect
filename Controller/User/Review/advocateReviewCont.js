@@ -20,15 +20,8 @@ const updateAverageRating = async (advocate) => {
           advocate: new mongoose.Types.ObjectId(advocate),
         },
       },
-      {
-        $group: {
-          _id: "$advocate", // Group by advocate ID
-          averageRating: { $avg: "$rating" }, // Calculate the average rating
-        },
-      },
-      {
-        $project: { _id: 0, averageRating: 1 },
-      },
+      { $group: { _id: "$advocate", averageRating: { $avg: "$rating" } } },
+      { $project: { _id: 0, averageRating: 1 } },
     ]);
     // New Average rating
     const averageRating =

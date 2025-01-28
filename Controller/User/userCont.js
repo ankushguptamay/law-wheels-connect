@@ -809,7 +809,7 @@ exports.getAllUser = async (req, res) => {
       // Average rating
       if (starRating) {
         query.$and.push({
-          averageRating: { $gte: Math.round(parseFloat(starRating) * 10) / 10 },
+          averageRating: { $gte: parseInt(starRating) },
         });
       }
     } else if (role) {
