@@ -16,7 +16,7 @@ const {
   removeMember,
   sendAttachments,
   leaveGroup,
-  renameGroup,viewMessagesPrivateChat
+  renameGroup,
 } = require("../../Controller/Chat/chatController.js");
 
 //middleware
@@ -44,7 +44,5 @@ router.put("/removeMember", removeMember);
 router.put("/addAdmin", addAdmin);
 router.put("/leaveGroup/:id", leaveGroup);
 router.put("/renameGroup/:id", renameGroup);
-
-router.put("/viewMessages/:id", viewMessagesPrivateChat); // id=chatId
 
 module.exports = router;

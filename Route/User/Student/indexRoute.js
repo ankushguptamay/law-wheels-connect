@@ -5,7 +5,6 @@ const userProfile = require("../userProfile");
 const connection = require("../userConnection");
 const post = require("../userPost");
 const allUserSlot = require("../sloteForAllUser");
-const master = require("../master");
 const lawStudy = require("../law_study");
 
 const {
@@ -50,7 +49,6 @@ router.use("/profile", userProfile);
 router.use("/conn", connection);
 router.use("/post", post);
 router.use("/slot", allUserSlot);
-router.use("/master", master);
 router.use("/law-study", lawStudy);
 
 // review

@@ -5,7 +5,7 @@ const userProfile = require("../userProfile");
 const connection = require("../userConnection");
 const post = require("../userPost");
 const allUserSlot = require("../sloteForAllUser");
-const master = require("../master");
+
 const {
   giveAdvocateReviews,
   notGiveAdvocateReviews,

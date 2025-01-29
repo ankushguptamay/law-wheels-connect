@@ -23,7 +23,7 @@ const getSockets = (users = []) => {
   return sockets;
 };
 
-exports.emitEvent = (req, event, users, data) => {
+const emitEvent = (req, event, users, data) => {
   const io = req.app.get("io");
   if (!io) {
     return next(new ErrorHandler("io instance not found in app", 401));
@@ -32,7 +32,7 @@ exports.emitEvent = (req, event, users, data) => {
   io.to(usersSocket).emit(event, data);
 };
 
-exports.socketIO = (server) => {
+const socketIO = (server) => {
   const io = new Server(server, {
     cors: {
       origin: "*", // Update with your allowed origins
@@ -103,13 +103,27 @@ exports.socketIO = (server) => {
         },
         chat: chatId,
         createdAt: new Date(),
+        isView: false,
       };
 
       const messageForDB = {
         content,
         sender: user._id,
         chat: chatId,
+        isView: false,
       };
+
+      // View message condition
+      if (!chat.groupChat) {
+        if (
+          chatOnlineUsers.has(chatId) &&
+          chatOnlineUsers.get(chatId).has(chat.members[0]?.toString()) &&
+          chatOnlineUsers.get(chatId).has(chat.members[1]?.toString())
+        ) {
+          messageForRealTime.isView = true;
+          messageForDB.isView = true;
+        }
+      }
 
       const membersSocket = getSockets(members);
       io.to(membersSocket).emit(NEW_MESSAGE, {
@@ -209,3 +223,5 @@ exports.socketIO = (server) => {
 
   return io;
 };
+
+module.exports = { chatOnlineUsers, emitEvent, socketIO };

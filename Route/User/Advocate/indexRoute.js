@@ -6,7 +6,6 @@ const connection = require("../userConnection");
 const post = require("../userPost");
 const advocateSlot = require("./slotRouteForAdvocate");
 const allUserSlot = require("../sloteForAllUser");
-const master = require("../master");
 
 const {
   getDetailsOfStudentAndAdvocate,
@@ -74,6 +73,5 @@ router.use("/conn", connection);
 router.use("/post", post);
 router.use("/slot", allUserSlot); // When advocate want to book other advocate slot
 router.use("/aSlot", advocateSlot);
-router.use("/master", master);
 
 module.exports = router;

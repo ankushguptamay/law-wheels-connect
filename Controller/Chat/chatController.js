@@ -24,8 +24,9 @@ const {
   CHANGE_GROUP_AVATAR,
   REMOVE_GROUP_AVATAR,
 } = require("../../Socket/event");
-const { emitEvent } = require("../../Socket/io");
+const { emitEvent, chatOnlineUsers } = require("../../Socket/io");
 
+// Helper Function
 const getOtherMember = (members, userId) => {
   const otherMembers = [];
   for (let i = 0; i < members.length; i++) {
@@ -41,6 +42,7 @@ const getOtherMember = (members, userId) => {
   return otherMembers;
 };
 
+// Main Controller
 exports.newGroupChat = async (req, res) => {
   try {
     // Body Validation
@@ -61,6 +63,7 @@ exports.newGroupChat = async (req, res) => {
       });
     }
 
+    // Create Chat
     const chat = await Chat.create({
       chatName,
       groupChat: true,
@@ -156,39 +159,40 @@ exports.addMembers = async (req, res) => {
     }
     const { chatId, members } = req.body;
 
+    // Find Chat
     const chat = await Chat.findById(chatId);
-
     if (!chat) {
       return res.status(404).json({
         success: false,
         message: "Chat not found",
       });
     }
-
+    // Check group chat
     if (!chat.groupChat) {
       return res.status(400).json({
         success: false,
         message: "This is not a group chat",
       });
     }
-
+    // Check member length
     if (chat.members.length + members.length > 1000) {
       return res.status(400).json({
         success: false,
         message: "Group members limit reached",
       });
     }
-
+    // Is user admin
     if (!chat.admins.includes(req.user._id.toString())) {
       return res.status(403).json({
         success: false,
         message: "You are not allowed to add members",
       });
     }
-
+    // Fetch all members name
     const allNewMembersPromise = members.map((i) => User.findById(i, "name"));
     const allNewMembers = await Promise.all(allNewMembersPromise);
 
+    // Filter out unique member
     const uniqueMembers = allNewMembers
       .filter((i) => !chat.members.includes(i._id.toString()))
       .map((i) => i._id);
@@ -196,8 +200,9 @@ exports.addMembers = async (req, res) => {
       .filter((i) => !chat.members.includes(i._id.toString()))
       .map((i) => i.name);
 
+    // Push in members array
     chat.members.push(...uniqueMembers);
-
+    // Save chat
     await chat.save();
 
     // Socket
@@ -375,15 +380,14 @@ exports.sendAttachments = async (req, res) => {
     }
     const { chatId } = req.body;
 
+    // File validation
     const files = req.files || [];
-
     if (files.length < 1) {
       return res.status(400).json({
         success: false,
         message: "Please Upload Attachments",
       });
     }
-
     if (files.length > 10) {
       for (let i = 0; i < files.length; i++) {
         deleteSingleFile(files[i].path);
@@ -394,8 +398,8 @@ exports.sendAttachments = async (req, res) => {
       });
     }
 
+    // Find Chat
     const chat = await Chat.findById(chatId);
-
     if (!chat) {
       for (let i = 0; i < files.length; i++) {
         deleteSingleFile(files[i].path);
@@ -406,6 +410,7 @@ exports.sendAttachments = async (req, res) => {
       });
     }
 
+    // Check is user member of this chat or not
     if (!chat.members.includes(req.user._id.toString())) {
       for (let i = 0; i < files.length; i++) {
         deleteSingleFile(files[i].path);
@@ -436,7 +441,7 @@ exports.sendAttachments = async (req, res) => {
         }
       }
     }
-    //   Upload files here
+    // Upload files here
     const attachments = [];
     for (let i = 0; i < files.length; i++) {
       const fileStream = fs.createReadStream(files[i].path);
@@ -449,20 +454,38 @@ exports.sendAttachments = async (req, res) => {
       deleteSingleFile(files[i].path);
     }
 
-    const message = await Message.create({
-      sender: req.user._id,
-      chat: chatId,
-      attachments,
-    });
+    // Message for socket
     const messageForRealTime = {
-      ...message,
+      isView: false,
       sender: {
         _id: req.user._id,
         name: req.user.name,
         profilePic: req.user.profilePic ? req.user.profilePic.url : null,
       },
     };
+    const messageForDB = {
+      sender: req.user._id,
+      chat: chatId,
+      attachments,
+      isView: false,
+    };
 
+    // View message condition
+    if (!chat.groupChat) {
+      if (
+        chatOnlineUsers.has(chatId) &&
+        chatOnlineUsers.get(chatId).has(chat.members[0]?.toString()) &&
+        chatOnlineUsers.get(chatId).has(chat.members[1]?.toString())
+      ) {
+        messageForRealTime.isView = true;
+        messageForDB.isView = true;
+      }
+    }
+
+    // Create message
+    const message = await Message.create(messageForDB);
+
+    messageForRealTime = { ...message, ...messageForRealTime };
     // Socket
     emitEvent(req, NEW_MESSAGE, chat.members, {
       message: messageForRealTime,
@@ -810,6 +833,12 @@ exports.newPrivateChat = async (req, res) => {
         groupChat: false,
         members: allMembers,
       });
+    } else {
+      // Message viewed
+      await Message.updateMany(
+        { chat: chat._id, isView: false, sender: { $nin: [req.user._id] } },
+        { $set: { isView: true } }
+      );
     }
 
     const transformedChats = {
@@ -950,46 +979,6 @@ exports.removeAdmin = async (req, res) => {
       success: true,
       message: "Admin removed successfully",
     });
-  } catch (err) {
-    res.status(500).json({
-      success: false,
-      message: err.message,
-    });
-  }
-};
-
-exports.viewMessagesPrivateChat = async (req, res) => {
-  try {
-    const chatId = req.params.id;
-    const userId = req.user._id;
-
-    const chat = await Chat.findById(chatId).select("_id groupChat members");
-    if (!chat) {
-      return res.status(404).json({
-        success: false,
-        message: "Chat not found",
-      });
-    }
-
-    if (!chat.groupChat) {
-      if (chat.members.includes(userId.toString())) {
-        const otherMember = chat.members.find(
-          (member) => member !== userId.toString()
-        );
-        if (otherMember) {
-          await Message.updateMany(
-            { chat: chatId, sender: otherMember },
-            { isView: true }
-          );
-        }
-      }
-    } else {
-      // Nothing
-    }
-    // Socket
-    emitEvent(req, MESSAGE_VIEWED, chat.members, { chatId });
-
-    return res.status(200).json({ success: true });
   } catch (err) {
     res.status(500).json({
       success: false,
