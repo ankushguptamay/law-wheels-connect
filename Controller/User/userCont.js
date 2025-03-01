@@ -1106,12 +1106,12 @@ exports.isProfileVisible = async (req, res) => {
       }
 
       // Aadhar verification
-      // if (!user.isAadharVerified) {
-      //   return res.status(400).send({
-      //     success: false,
-      //     message: "NOAADHARVERIFIED!",
-      //   });
-      // }
+      if (!user.isAadharVerified) {
+        return res.status(400).send({
+          success: false,
+          message: "NOAADHARVERIFIED!",
+        });
+      }
     }
     // Storing When user changed their profile visibility
     await UserUpdationHistory.create({
