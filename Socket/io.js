@@ -83,7 +83,8 @@ const socketIO = (server) => {
           if (message[0].sender.toString() == user._id.toString()) {
             socket.emit(ERROR, {
               success: false,
-              message: "Wait for response!",
+              message:
+                "You’ve already sent a message to this advocate. To continue the conversation, wait for their response. Once they reply, you can chat freely.",
             });
             return;
           } else {

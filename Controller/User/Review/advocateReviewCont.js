@@ -436,7 +436,7 @@ exports.getAdvocateReviewForAdvocate = async (req, res) => {
     const skip = (page - 1) * resultPerPage;
 
     const advocate = await AdvocateReview.aggregate([
-      { $match: { isDelete: false, advocate: req.user._id } },
+      { $match: { isDelete: false, advocate: new mongoose.Types.ObjectId(req.user._id) } },
       {
         $group: {
           _id: "$advocate", // Group by advocate ID

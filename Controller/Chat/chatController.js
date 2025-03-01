@@ -433,7 +433,8 @@ exports.sendAttachments = async (req, res) => {
           }
           return res.status(404).json({
             success: false,
-            message: "Wait for response!",
+            message:
+              "You’ve already sent a message to this advocate. To continue the conversation, wait for their response. Once they reply, you can chat freely.",
           });
         } else {
           chat.privateConnection = true;

@@ -19,9 +19,9 @@ exports.verifyUserJWT = async (req, res, next) => {
 
     const user = await User.findOne(
       { _id: decode._id },
-      "_id name email mobileNumber isLicenseVerified role isProfileVisible profilePic"
+      "_id name email mobileNumber isLicenseVerified role isProfileVisible profilePic refreshToken"
     );
-    if (!user) {
+    if (!user && !user.refreshToken) {
       return res.status(401).json({
         success: false,
         message: "Unauthorized!",
@@ -50,7 +50,7 @@ exports.verifyAdminJWT = async (req, res, next) => {
 
     const admin = await Admin.findOne(
       { _id: decode._id },
-      "_id name email mobileNumber isLicenseVerified role"
+      "_id name email mobileNumber"
     );
     if (!admin) {
       return res.status(401).json({
@@ -81,9 +81,9 @@ exports.verifyBloggerJWT = async (req, res, next) => {
 
     const blogger = await Blogger.findOne(
       { _id: decode._id },
-      "_id name email mobileNumber isLicenseVerified role"
+      "_id name email mobileNumber isLicenseVerified role refreshToken"
     );
-    if (!blogger) {
+    if (!blogger && !blogger.refreshToken) {
       return res.status(401).json({
         success: false,
         message: "Unauthorized!",
@@ -112,10 +112,10 @@ exports.socketAuthenticator = async (socket, next) => {
 
     const user = await User.findOne(
       { _id: decodedData._id },
-      "_id name email mobileNumber isLicenseVerified role profilePic"
+      "_id name email mobileNumber isLicenseVerified role profilePic refreshToken"
     );
 
-    if (!user)
+    if (!user && !user.refreshToken)
       return next(new ErrorHandler("Please login to access this route", 401));
     socket.user = user;
 

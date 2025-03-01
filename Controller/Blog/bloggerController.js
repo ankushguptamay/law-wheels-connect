@@ -160,7 +160,7 @@ exports.logout = async (req, res) => {
   try {
     await Blogger.updateOne(
       { _id: req.blogger._id },
-      { refreshToken: undefined }
+      { refreshToken: null }
     );
     res.status(200).json({ success: true, message: "Loged out successfully" });
   } catch (err) {

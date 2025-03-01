@@ -358,14 +358,13 @@ exports.verifyMobileOTP = async (req, res) => {
     } else {
       // is email otp expired?
       const isOtpExpired = new Date().getTime() > parseInt(isOtp.validTill);
+      await OTP.deleteMany({ receiverId: isOtp.receiverId });
       if (isOtpExpired) {
-        await OTP.deleteMany({ receiverId: isOtp.receiverId });
         return res.status(400).send({
           success: false,
           message: `OTP expired!`,
         });
       }
-      await OTP.deleteMany({ receiverId: isOtp.receiverId });
     }
 
     const refreshToken = createRefreshToken("user", user._id);
@@ -632,7 +631,7 @@ exports.deleteProfilePic = async (req, res) => {
         isProfilePic.profilePic.fileName
       );
     }
-    const profilePic = { fileName: undefined, url: undefined };
+    const profilePic = { fileName: null, url: null };
     await isProfilePic.updateOne({ profilePic });
     // Final response
     res.status(200).send({
@@ -655,7 +654,7 @@ exports.deleteCoverPic = async (req, res) => {
     if (isCoverPic?.coverPic?.fileName) {
       await deleteFileToBunny(bunnyFolderName, isCoverPic.coverPic.fileName);
     }
-    const coverPic = { fileName: undefined, url: undefined };
+    const coverPic = { fileName: null, url: null };
     await isCoverPic.updateOne({ coverPic });
     // Final response
     res.status(200).send({
@@ -681,7 +680,7 @@ exports.deleteLicensePic = async (req, res) => {
         isLicensePic.licensePic.fileName
       );
     }
-    const licensePic = { fileName: undefined, url: undefined };
+    const licensePic = { fileName: null, url: null };
 
     // Storing History
     if (isLicensePic.isLicenseVerified || isLicensePic.isProfileVisible) {
@@ -1069,6 +1068,7 @@ exports.isProfileVisible = async (req, res) => {
       const isRecentExperience = await Experience.findOne({
         user: req.user._id,
         isRecent: true,
+        isDelete: false,
       });
       if (!isRecentExperience) {
         return res.status(400).send({
@@ -1081,6 +1081,7 @@ exports.isProfileVisible = async (req, res) => {
       const isRecentEducation = await Education.findOne({
         user: req.user._id,
         isRecent: true,
+        isDelete: false,
       });
       if (!isRecentEducation) {
         return res.status(400).send({
@@ -1306,7 +1307,7 @@ exports.refreshAccessToken = async (req, res) => {
 
 exports.logout = async (req, res) => {
   try {
-    await User.updateOne({ _id: req.user._id }, { refreshToken: undefined });
+    await User.updateOne({ _id: req.user._id }, { refreshToken: null });
     res.status(200).json({ success: true, message: "Loged out successfully" });
   } catch (err) {
     res.status(403).send({ success: false, message: err.message });

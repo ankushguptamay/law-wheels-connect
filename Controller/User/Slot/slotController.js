@@ -661,9 +661,9 @@ exports.cancelSloteForUser = async (req, res) => {
     slot.lastcancelClient = req.user._id;
     slot.isCancel = true;
     slot.isBooked = false;
-    slot.client_legal_issue = undefined;
-    slot.client_meeting_type = undefined;
-    slot.client = undefined;
+    slot.client_legal_issue = null;
+    slot.client_meeting_type = null;
+    slot.client = null;
     slot.status = "Vacant";
     await slot.save();
     return res.status(200).json({
@@ -745,10 +745,10 @@ exports.rescheduleSloteForUser = async (req, res) => {
       newSlot.client_meeting_type = oldSlot.client_meeting_type;
       newSlot.status = "Upcoming";
 
-      oldSlot.client = undefined;
+      oldSlot.client = null;
       oldSlot.isBooked = false;
-      oldSlot.client_legal_issue = undefined;
-      oldSlot.client_meeting_type = undefined;
+      oldSlot.client_legal_issue = null;
+      oldSlot.client_meeting_type = null;
       oldSlot.status = "Vacant";
       oldSlot.lastcancelClient = req.user._id;
       oldSlot.isCancel = true;

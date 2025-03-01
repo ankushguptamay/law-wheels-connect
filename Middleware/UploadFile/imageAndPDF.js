@@ -7,7 +7,7 @@ const filter = (req, file, cb) => {
     } else if (file.mimetype.startsWith("application/pdf")) {
         cb(null, true);
     } else {
-        cb("Please upload only Image and PDF.", false);
+        cb("Please upload only Image or PDF.", false);
     }
 };
 
