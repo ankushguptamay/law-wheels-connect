@@ -448,10 +448,10 @@ exports.mySloteForUser = async (req, res) => {
 exports.sloteByIdForUser = async (req, res) => {
   try {
     const _id = req.params.id;
-    const slot = await Slot.findOne({ _id, isDelete: false }).populate(
-      "advocate",
-      "name profilePic headLine averageRating"
-    );
+    const slot = await Slot.findOne({ _id, isDelete: false })
+      .populate("advocate", "name profilePic headLine averageRating")
+      .populate("client", "name profilePic")
+      .lean();
     if (!slot) {
       return res.status(400).send({
         success: false,
@@ -472,15 +472,20 @@ exports.sloteByIdForUser = async (req, res) => {
       client_meeting_type: slot.client_meeting_type,
       createdAt: slot.createdAt,
       advocate: {
-        _id: slot.advocate._id,
-        name: slot.advocate.name,
-        headLine: slot.advocate.headLine,
-        avatar: slot.advocate.profilePic.url
-          ? slot.advocate.profilePic.url
+        ...slot.advocate,
+        avatar: slot.advocate.profilePic
+          ? slot.advocate.profilePic.url || null
           : null,
-        averageRating: slot.averageRating,
       },
     };
+    if (slot.isBooked) {
+      transformData.client = {
+        ...slot.client,
+        avatar: slot.client.profilePic
+          ? slot.client.profilePic.url || null
+          : null,
+      };
+    }
     res.status(200).json({
       success: true,
       message: `Slot details fetched successfully!`,
@@ -497,10 +502,10 @@ exports.sloteByIdForUser = async (req, res) => {
 exports.sloteByIdForAdvocate = async (req, res) => {
   try {
     const _id = req.params.id;
-    const slot = await Slot.findOne({ _id, isDelete: false }).populate(
-      "client",
-      "name profilePic"
-    );
+    const slot = await Slot.findOne({ _id, isDelete: false })
+      .populate("client", "name profilePic")
+      .populate("advocate", "name profilePic")
+      .lean();
     if (!slot) {
       return res.status(400).send({
         success: false,
@@ -523,11 +528,17 @@ exports.sloteByIdForAdvocate = async (req, res) => {
         ? {
             _id: slot.client._id,
             name: slot.client.name,
-            avatar: slot.client.profilePic.url
-              ? slot.client.profilePic.url
+            avatar: slot.client.profilePic
+              ? slot.client.profilePic.url || null
               : null,
           }
         : {},
+      advocate: {
+        ...slot.advocate,
+        avatar: slot.advocate.profilePic
+          ? slot.advocate.profilePic.url || null
+          : null,
+      },
     };
     res.status(200).json({
       success: true,
